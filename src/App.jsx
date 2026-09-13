@@ -12,6 +12,7 @@ import { TelemetryChart } from './components/dashboard/TelemetryChart';
 import { LiveTelemetryTicker } from './components/dashboard/LiveTelemetryTicker';
 import { FailureForecast } from './components/dashboard/FailureForecast';
 import { WorkOrderHistory } from './components/dashboard/WorkOrderHistory';
+import { CorrelationChart } from './components/dashboard/CorrelationChart';
 
 import { OperationalReality } from './components/workflow/OperationalReality';
 import { ComparisonMatrix } from './components/workflow/ComparisonMatrix';
@@ -418,7 +419,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
           </div>
 
           <div ref={actionRef} className="grid lg:grid-cols-12 gap-4 scroll-mt-[120px]">
-            <div className="lg:col-span-8">
+            <div className="lg:col-span-8 space-y-4">
               <Card>
                 <CardHeader>
                   <CardTitle>24-Hour Operational Telemetry Chart • Baseline vs Actual • Correlation View</CardTitle>
@@ -429,9 +430,23 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
                 </CardHeader>
                 <TelemetryChart mode={feedMode} range={range} />
               </Card>
+              <CorrelationChart mode={feedMode} />
             </div>
-            <div className="lg:col-span-4">
+            <div className="lg:col-span-4 space-y-4">
               <MaintenanceChecklist onExport={handleExport} />
+              <Card>
+                <CardHeader>
+                  <CardTitle>Public Good Guardrail • Open Access</CardTitle>
+                  <Badge variant="nominal">MIT Licensed</Badge>
+                </CardHeader>
+                <div className="space-y-2 font-mono text-[10px] leading-relaxed text-slate-400">
+                  <div>• Democratizes predictive maintenance using low-cost COTS sensors • No vendor lock-in</div>
+                  <div>• Transparent algorithms: Seasonal ARIMA, Isolation Forest, FFT — no black box</div>
+                  <div>• Eliminates alert fatigue: learns normal, flags subtle multi-param drift</div>
+                  <div>• Built for resource-constrained public infrastructure: schools, municipal, community hubs</div>
+                  <div className="mt-2 p-2 bg-[#0EA5E9]/5 border border-[#0EA5E9]/20 rounded text-[#0EA5E9]">Open Architecture: github.com/aegis-open • Docs • Sensor Kit • Edge Gateway • MIT</div>
+                </div>
+              </Card>
             </div>
           </div>
         </section>
@@ -492,8 +507,9 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
                       <div className="font-mono text-[10px] uppercase tracking-wider text-slate-500 mb-2">Multi-line Trend • Last 24H • Correlation: Current ↑ + Vibration ↑</div>
                       <TelemetryChart mode={feedMode} range="24H" />
                     </div>
-                    <div>
+                    <div className="space-y-4">
                       <FailureForecast mode={feedMode} />
+                      <CorrelationChart mode={feedMode} />
                     </div>
                   </div>
                 </Card>

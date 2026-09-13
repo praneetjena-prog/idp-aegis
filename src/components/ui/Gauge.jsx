@@ -1,0 +1,44 @@
+import React from 'react';
+
+export const Gauge = ({ value = 87, max = 100, label = "HEALTH", delta = "+2.1%" }) => {
+  const radius = 58;
+  const circumference = 2 * Math.PI * radius;
+  const progress = value / max;
+  const offset = circumference - progress * circumference * 0.75; // 270 deg arc
+  const rotation = 135; // start angle
+
+  return (
+    <div className="relative flex flex-col items-center">
+      <div className="relative w-[160px] h-[160px]">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 160 160">
+          <circle
+            cx="80" cy="80" r={radius}
+            fill="none"
+            stroke="#1E2638"
+            strokeWidth="10"
+            strokeLinecap="round"
+            strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
+            transform={`rotate(${rotation} 80 80)`}
+          />
+          <circle
+            cx="80" cy="80" r={radius}
+            fill="none"
+            stroke={value > 80 ? "#10B981" : value > 60 ? "#F59E0B" : "#EF4444"}
+            strokeWidth="10"
+            strokeLinecap="round"
+            strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
+            strokeDashoffset={offset}
+            transform={`rotate(${rotation} 80 80)`}
+            style={{ transition: 'stroke-dashoffset 1s ease-out' }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="font-mono text-[36px] font-bold tracking-tight text-white">{value}</span>
+          <span className="font-mono text-[11px] text-slate-500 -mt-1">/ {max}</span>
+          <div className="mt-1 px-1.5 py-0.5 rounded bg-[#10B981]/10 border border-[#10B981]/20 text-[10px] font-mono text-[#10B981]">{delta} 7D</div>
+        </div>
+      </div>
+      <span className="mt-1 font-mono text-[10px] tracking-[0.2em] text-slate-500 uppercase">{label}</span>
+    </div>
+  );
+};

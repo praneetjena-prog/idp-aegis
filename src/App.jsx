@@ -14,6 +14,7 @@ import { FailureForecast } from './components/dashboard/FailureForecast';
 import { WorkOrderHistory } from './components/dashboard/WorkOrderHistory';
 import { CorrelationChart } from './components/dashboard/CorrelationChart';
 import { PredictiveSimulator } from './components/dashboard/PredictiveSimulator';
+import { FacilityOverview } from './components/dashboard/FacilityOverview';
 import { SettingsPanel } from './components/settings/SettingsPanel';
 import { useFacilityParams } from './lib/facility';
 import { useLiveFeed } from './lib/liveFeed';
@@ -375,52 +376,15 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
         {/* Platform Header & Mission Overview */}
         <section ref={overviewRef} className="space-y-6 scroll-mt-[120px]">
           {tab === 'overview' && (
-          <div className="grid lg:grid-cols-12 gap-6 items-start">
-            <div className="lg:col-span-8">
-              <div className="flex items-start gap-4">
-                <div className="w-12 h-12 rounded-[10px] bg-gradient-to-br from-[#2C6E9B] to-[#2F8A7E] flex items-center justify-center shadow-lg shadow-[#2C6E9B]/20">
-                  <Shield size={24} className="text-[#1F2933]" />
-                </div>
-                <div>
-                  <h1 className="font-display text-[34px] sm:text-[42px] font-bold text-[#1F2933] leading-none uppercase">AEGIS</h1>
-                  <p className="mt-2 font-mono text-[13px] leading-relaxed text-[#6E6558] max-w-[720px]">
-                    Democratizing predictive maintenance and building health through open, explainable telemetry intelligence.
-                  </p>
-                  <p className="mt-3 font-mono text-[11px] leading-[1.7] text-[#8A8175] max-w-[720px] bg-[#FFFFFF] border border-[#E6E0D6] rounded-lg p-3">
-                    <span className="text-[#3E4650] font-semibold">Core Mission:</span> "Existing building management systems are proprietary, costly, and alert-heavy. Aegis is a non-profit, open intelligence layer that unifies multi-parameter monitoring, explainable anomaly detection, and predictive maintenance to empower maintenance teams and protect shared infrastructure."
-                    <br /><br />
-                    <span className="text-[#2F8A7E]">Technician-First Flow:</span> Observe Multi-Parameter Data → Understand True Baselines → Flag Early Drift → Correlate Physical Systems → Explain Probable Failure → Generate Field Maintenance Plan
-                  </p>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <span className="font-mono text-[9px] px-2 py-1 bg-[#2C6E9B]/10 border border-[#2C6E9B]/20 rounded text-[#2C6E9B]">Open Hardware • ESP32 • MQTT</span>
-                    <span className="font-mono text-[9px] px-2 py-1 bg-[#2F8A7E]/10 border border-[#2F8A7E]/20 rounded text-[#2F8A7E]">Explainable AI • No Black Box</span>
-                    <span className="font-mono text-[9px] px-2 py-1 bg-[#2E7D5B]/10 border border-[#2E7D5B]/20 rounded text-[#2E7D5B]">94% Pre-Failure Catch Rate</span>
-                    <span className="font-mono text-[9px] px-2 py-1 bg-[#E6E0D6] border border-[#D2C9BA] rounded text-[#6E6558]">MIT Licensed • Non-Profit</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="lg:col-span-4 grid grid-cols-2 gap-3">
-              {[
-                { label: "Total Assets Monitored", value: "38 Units", icon: Cpu, delta: "+2 this week" },
-                { label: "Active Sensory Data Streams", value: "1,428 Points", icon: Radio, delta: "1m avg sampling" },
-                { label: "Operational Uptime", value: "99.8%", icon: Activity, delta: "30D rolling" },
-                { label: "Preventative Intervention Rate", value: "94% pre-failure catch", icon: Shield, delta: "vs 22% industry" },
-              ].map((m, i) => {
-                const Icon = m.icon;
-                return (
-                  <Card key={i} className="p-3 hover:border-[#D2C9BA] transition-colors">
-                    <div className="flex items-center gap-2 mb-1.5">
-                      <Icon size={12} className="text-[#2C6E9B]" />
-                      <span className="font-mono text-[9px] uppercase tracking-wider text-[#8A8175] leading-none">{m.label}</span>
-                    </div>
-                    <div className="font-mono text-[14px] font-bold text-[#1F2933]">{m.value}</div>
-                    <div className="font-mono text-[9px] text-[#8A8175] mt-1">{m.delta}</div>
-                  </Card>
-                );
-              })}
-            </div>
-          </div>
+            <FacilityOverview
+              feedMode={feedMode}
+              liveValues={liveValues}
+              isLive={isLive}
+              setTab={setTab}
+              onCreateWorkOrder={handleCreateWorkOrder}
+              workOrders={workOrders}
+              onExport={handleExport}
+            />
           )}
 
 

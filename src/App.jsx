@@ -36,11 +36,53 @@ const SectionLabel = ({ k, title, id }) => (
 );
 
 const TABS = [
-  { id: 'overview', label: 'Overview', shortLabel: 'Overview', icon: LayoutDashboard },
-  { id: 'console', label: 'Live Console', shortLabel: 'Console', icon: Radio },
-  { id: 'analysis', label: 'Analysis & Action', shortLabel: 'Analysis', icon: ChartNoAxesCombined },
-  { id: 'simulator', label: 'Scenario Simulator', shortLabel: 'Simulator', icon: Gauge },
-  { id: 'platform', label: 'Platform & Hardware', shortLabel: 'Platform', icon: Cable },
+  { 
+    id: 'overview', 
+    label: 'Overview', 
+    shortLabel: 'Overview', 
+    subtitle: 'Command Center',
+    tooltipTitle: 'Facility Overview',
+    tooltipDesc: 'Overall health score, problem spotlight & system status',
+    icon: LayoutDashboard 
+  },
+  { 
+    id: 'console', 
+    label: 'Live Console', 
+    shortLabel: 'Console', 
+    subtitle: 'Telemetry & Equipment',
+    tooltipTitle: 'Live Operations Console',
+    tooltipDesc: 'Real-time telemetry streams, equipment grid & sensor tiles',
+    icon: Radio,
+    alertOnFault: true
+  },
+  { 
+    id: 'analysis', 
+    label: 'Analysis & Action', 
+    shortLabel: 'Analysis', 
+    subtitle: 'Root Cause & Triage',
+    tooltipTitle: 'Analysis & Triage Queue',
+    tooltipDesc: 'Vibration spectrum, failure forecasting & work orders',
+    icon: ChartNoAxesCombined,
+    alertOnFault: true
+  },
+  { 
+    id: 'simulator', 
+    label: 'Scenario Simulator', 
+    shortLabel: 'Simulator', 
+    subtitle: 'Physics Wear Engine',
+    tooltipTitle: 'Predictive Simulator',
+    tooltipDesc: 'Run what-if wear scenarios and verify early warning limits',
+    icon: Gauge 
+  },
+  { 
+    id: 'platform', 
+    label: 'Platform & Hardware', 
+    shortLabel: 'Platform', 
+    subtitle: 'ESP32 & Schematics',
+    tooltipTitle: 'Hardware & Architecture',
+    tooltipDesc: 'Democratized sensor specs, gateway pinouts & open docs',
+    icon: Cable 
+  },
 ];
 
 const TabBar = ({ tab, setTab, onSettings }) => (
@@ -71,72 +113,232 @@ const TabBar = ({ tab, setTab, onSettings }) => (
   </div>
 );
 
-const SideRail = ({ tab, setTab, onSettings, settingsOpen, isLive, collapsed, onToggleCollapse }) => (
-  <div className={`hidden xl:block transition-[width] duration-300 ${collapsed ? 'w-0' : 'w-[76px]'}`}>
-  <aside className={`hidden xl:flex fixed inset-y-0 left-0 z-[60] w-[76px] flex-col items-center bg-[#FFFFFF] dark:bg-[#141B22] border-r-2 border-[#1F2933] dark:border-[#2C3847] transition-transform duration-300 ${collapsed ? '-translate-x-full' : 'translate-x-0'}`}>
-    {/* Top Header: 3-line hamburger menu icon to collapse sidebar */}
-    <div className="h-[76px] w-full flex items-center justify-center border-b-2 border-[#1F2933] dark:border-[#2C3847]">
-      <button 
-        type="button" 
-        onClick={onToggleCollapse} 
-        title="Collapse navigation sidebar" 
-        aria-label="Collapse navigation sidebar" 
-        className="w-10 h-10 bg-[#FAF8F4] dark:bg-[#1A222B] border-2 border-[#1F2933] dark:border-[#2C3847] text-[#1F2933] dark:text-[#FAF8F4] flex items-center justify-center shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:bg-[#2C6E9B] hover:text-[#FFFFFF] hover:border-[#1F2933] active:translate-x-[1px] active:translate-y-[1px] transition-all"
-      >
-        <Menu size={20} />
-      </button>
-    </div>
-    <nav className="w-full py-4 flex flex-col items-center gap-2" aria-label="Primary workspace navigation">
-      {TABS.map((item) => {
-        const Icon = item.icon;
-        return (
-          <button
-            key={item.id}
-            type="button"
-            onClick={() => { setTab(item.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            title={item.label}
-            aria-label={item.label}
-            aria-current={tab === item.id ? 'page' : undefined}
-            className={`relative w-12 h-12 flex items-center justify-center border transition-colors ${tab === item.id ? 'bg-[#2C6E9B] border-[#1F2933] text-[#FFFFFF] shadow-[3px_3px_0_#D2C9BA] dark:shadow-[3px_3px_0_#0F151C]' : 'bg-[#FAF8F4] dark:bg-[#1A222B] border-[#E6E0D6] dark:border-[#2C3847] text-[#6E6558] dark:text-[#C5BCAD] hover:border-[#2C6E9B] hover:text-[#2C6E9B]'}`}
-          >
-            <Icon size={18} />
-            {tab === item.id && <span className="absolute -left-[15px] h-6 w-1 bg-[#2C6E9B]" />}
-          </button>
-        );
-      })}
-    </nav>
+const SideRail = ({ 
+  tab, 
+  setTab, 
+  onSettings, 
+  settingsOpen, 
+  isLive, 
+  feedMode,
+  collapsed, 
+  onToggleCollapse,
+  expanded,
+  onToggleExpand
+}) => {
+  const isFault = feedMode === 'fault';
+  const widthClass = collapsed ? 'w-0' : (expanded ? 'w-[230px]' : 'w-[76px]');
 
-    {/* Bottom Action: Upgraded Settings Button */}
-    <div className="mt-auto mb-5 relative group">
-      <button 
-        type="button" 
-        onClick={onSettings} 
-        title="Facility Settings & Sensor Calibration" 
-        aria-label="Facility Settings & Sensor Calibration"
-        aria-expanded={settingsOpen}
-        className={`relative w-12 h-12 flex items-center justify-center border-2 transition-all ${
-          settingsOpen
-            ? 'bg-[#2C6E9B] border-[#1F2933] dark:border-[#2C3847] text-[#FFFFFF] shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C]'
-            : 'border-[#1F2933] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:border-[#2C6E9B] hover:text-[#2C6E9B] active:translate-x-[1px] active:translate-y-[1px]'
-        }`}
-      >
-        <Settings size={20} className="transition-transform duration-500 ease-out group-hover:rotate-90" />
-        <span 
-          className={`absolute top-1 right-1 w-2 h-2 rounded-full border border-white dark:border-gray-900 ${isLive ? 'bg-[#2E7D5B] animate-pulse' : 'bg-[#B07B1C]'}`} 
-          title={isLive ? 'ESP32 Hardware Connected' : 'Demonstration Mode'} 
-        />
-      </button>
-
-      {/* Floating Tooltip */}
-      <div className="absolute left-[64px] top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[100] pointer-events-none">
-        <div className="bg-[#1F2933] text-white text-[11px] font-mono px-2.5 py-1 rounded shadow-lg whitespace-nowrap border border-[#3E4650]">
-          Facility Settings & Calibration
+  return (
+    <div className={`hidden xl:block transition-[width] duration-300 ${widthClass}`}>
+      <aside className={`hidden xl:flex fixed inset-y-0 left-0 z-[60] flex-col bg-[#FFFFFF] dark:bg-[#141B22] border-r-2 border-[#1F2933] dark:border-[#2C3847] transition-[width,transform] duration-300 ${
+        collapsed ? '-translate-x-full w-[76px]' : `translate-x-0 ${expanded ? 'w-[230px]' : 'w-[76px]'}`
+      }`}>
+        
+        {/* Top Header Section */}
+        <div className={`h-[76px] w-full border-b-2 border-[#1F2933] dark:border-[#2C3847] flex items-center ${
+          expanded ? 'justify-between px-4' : 'justify-center'
+        }`}>
+          {expanded ? (
+            <>
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-lg bg-[#2C6E9B] flex items-center justify-center shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C]">
+                  <Shield size={16} className="text-[#FFFFFF]" />
+                </div>
+                <div>
+                  <div className="font-display text-[15px] font-bold leading-none uppercase text-[#1F2933] dark:text-[#FAF8F4] tracking-wider">
+                    AEGIS
+                  </div>
+                  <div className="font-mono text-[9px] uppercase tracking-widest text-[#8A8175] mt-0.5">
+                    Console
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={onToggleExpand}
+                  title="Collapse to compact icon rail"
+                  aria-label="Collapse to compact icon rail"
+                  className="w-8 h-8 rounded border border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#6E6558] dark:text-[#FAF8F4] hover:text-[#2C6E9B] hover:border-[#2C6E9B] flex items-center justify-center transition-colors"
+                >
+                  <Menu size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={onToggleCollapse}
+                  title="Hide sidebar navigation"
+                  aria-label="Hide sidebar navigation"
+                  className="w-8 h-8 rounded border border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#6E6558] dark:text-[#FAF8F4] hover:text-[#C05043] hover:border-[#C05043] flex items-center justify-center transition-colors"
+                >
+                  <PanelLeftClose size={15} />
+                </button>
+              </div>
+            </>
+          ) : (
+            <button 
+              type="button" 
+              onClick={onToggleExpand} 
+              title="Expand sidebar navigation (Show full labels)" 
+              aria-label="Expand sidebar navigation" 
+              className="w-10 h-10 bg-[#FAF8F4] dark:bg-[#1A222B] border-2 border-[#1F2933] dark:border-[#2C3847] text-[#1F2933] dark:text-[#FAF8F4] flex items-center justify-center shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:bg-[#2C6E9B] hover:text-[#FFFFFF] hover:border-[#1F2933] active:translate-x-[1px] active:translate-y-[1px] transition-all"
+            >
+              <Menu size={20} />
+            </button>
+          )}
         </div>
-      </div>
+
+        {/* Primary Workspace Navigation Items */}
+        <nav className={`w-full py-4 flex flex-col gap-2 ${expanded ? 'px-3 items-stretch' : 'items-center'}`} aria-label="Primary workspace navigation">
+          {TABS.map((item) => {
+            const Icon = item.icon;
+            const isActive = tab === item.id;
+            const hasAlert = isFault && item.alertOnFault;
+
+            if (expanded) {
+              return (
+                <button
+                  key={item.id}
+                  type="button"
+                  onClick={() => { setTab(item.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className={`w-full p-2.5 rounded-lg border text-left flex items-center justify-between transition-all ${
+                    isActive
+                      ? 'bg-[#2C6E9B] border-[#1F2933] text-[#FFFFFF] shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C]'
+                      : 'bg-[#FAF8F4] dark:bg-[#1A222B] border-[#E6E0D6] dark:border-[#2C3847] text-[#554D42] dark:text-[#C5BCAD] hover:border-[#2C6E9B] hover:text-[#1F2933] dark:hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${
+                      isActive ? 'bg-[#FFFFFF]/20 text-[#FFFFFF]' : 'bg-[#E6E0D6] dark:bg-[#141B22] text-[#2C6E9B]'
+                    }`}>
+                      <Icon size={16} />
+                    </div>
+                    <div className="min-w-0 truncate">
+                      <div className={`font-display text-[12px] font-bold uppercase tracking-wider leading-tight truncate ${
+                        isActive ? 'text-[#FFFFFF]' : 'text-[#1F2933] dark:text-[#FAF8F4]'
+                      }`}>
+                        {item.label}
+                      </div>
+                      <div className={`font-mono text-[9px] truncate mt-0.5 ${
+                        isActive ? 'text-[#FFFFFF]/80' : 'text-[#8A8175]'
+                      }`}>
+                        {item.subtitle}
+                      </div>
+                    </div>
+                  </div>
+
+                  {hasAlert && (
+                    <span className="shrink-0 font-mono text-[8px] font-bold px-1.5 py-0.5 rounded uppercase bg-[#C05043] text-white animate-pulse">
+                      Alert
+                    </span>
+                  )}
+                </button>
+              );
+            }
+
+            // Compact Icon Rail Button with instant floating tooltip
+            return (
+              <div key={item.id} className="relative group flex items-center justify-center">
+                <button
+                  type="button"
+                  onClick={() => { setTab(item.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  aria-label={item.label}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`relative w-12 h-12 flex items-center justify-center border transition-all ${
+                    isActive 
+                      ? 'bg-[#2C6E9B] border-[#1F2933] text-[#FFFFFF] shadow-[3px_3px_0_#D2C9BA] dark:shadow-[3px_3px_0_#0F151C]' 
+                      : 'bg-[#FAF8F4] dark:bg-[#1A222B] border-[#E6E0D6] dark:border-[#2C3847] text-[#6E6558] dark:text-[#C5BCAD] hover:border-[#2C6E9B] hover:text-[#2C6E9B]'
+                  }`}
+                >
+                  <Icon size={18} />
+                  {isActive && <span className="absolute -left-[15px] h-6 w-1 bg-[#2C6E9B]" />}
+                  
+                  {/* Fault Alert Pulsing Pip */}
+                  {hasAlert && (
+                    <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#C05043] ring-2 ring-white dark:ring-[#141B22] animate-pulse" />
+                  )}
+                </button>
+
+                {/* Instant Floating Hover Tooltip */}
+                <div className="absolute left-[64px] top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[100] pointer-events-none">
+                  <div className="bg-[#1F2933] dark:bg-[#0F151C] text-white border-2 border-[#1F2933] dark:border-[#2C3847] shadow-[3px_3px_0_rgba(0,0,0,0.3)] rounded-lg px-3 py-2 whitespace-nowrap">
+                    <div className="flex items-center gap-2 font-display text-[11px] font-bold uppercase tracking-wider text-white">
+                      <span>{item.tooltipTitle}</span>
+                      {hasAlert && (
+                        <span className="px-1.5 py-0.2 rounded bg-[#C05043] text-[8px] font-mono">
+                          Attention Needed
+                        </span>
+                      )}
+                    </div>
+                    <div className="font-mono text-[9px] text-[#A99F90] mt-0.5 max-w-[200px] text-wrap leading-tight">
+                      {item.tooltipDesc}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </nav>
+
+        {/* Bottom Action Section: Settings & Controls */}
+        <div className={`mt-auto mb-5 ${expanded ? 'px-3 w-full' : 'relative group'}`}>
+          {expanded ? (
+            <button
+              type="button"
+              onClick={onSettings}
+              className={`w-full p-2.5 rounded-lg border text-left flex items-center justify-between transition-all ${
+                settingsOpen
+                  ? 'bg-[#2C6E9B] border-[#1F2933] text-white shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C]'
+                  : 'bg-[#FAF8F4] dark:bg-[#1A222B] border-[#E6E0D6] dark:border-[#2C3847] text-[#554D42] dark:text-[#C5BCAD] hover:border-[#2C6E9B]'
+              }`}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Settings size={18} className="transition-transform duration-500 ease-out group-hover:rotate-90 shrink-0 text-[#2C6E9B]" />
+                <div className="min-w-0">
+                  <div className="font-display text-[11px] font-bold uppercase tracking-wider text-[#1F2933] dark:text-[#FAF8F4]">
+                    Facility Settings
+                  </div>
+                  <div className="font-mono text-[9px] text-[#8A8175] truncate">
+                    Thresholds & Node Tare
+                  </div>
+                </div>
+              </div>
+              <span className={`w-2 h-2 rounded-full shrink-0 ${isLive ? 'bg-[#2E7D5B] animate-pulse' : 'bg-[#B07B1C]'}`} />
+            </button>
+          ) : (
+            <>
+              <button 
+                type="button" 
+                onClick={onSettings} 
+                title="Facility Settings & Sensor Calibration" 
+                aria-label="Facility Settings & Sensor Calibration"
+                aria-expanded={settingsOpen}
+                className={`relative w-12 h-12 flex items-center justify-center border-2 transition-all ${
+                  settingsOpen
+                    ? 'bg-[#2C6E9B] border-[#1F2933] dark:border-[#2C3847] text-[#FFFFFF] shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C]'
+                    : 'border-[#1F2933] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:border-[#2C6E9B] hover:text-[#2C6E9B] active:translate-x-[1px] active:translate-y-[1px]'
+                }`}
+              >
+                <Settings size={20} className="transition-transform duration-500 ease-out group-hover:rotate-90" />
+                <span 
+                  className={`absolute top-1 right-1 w-2 h-2 rounded-full border border-white dark:border-gray-900 ${isLive ? 'bg-[#2E7D5B] animate-pulse' : 'bg-[#B07B1C]'}`} 
+                  title={isLive ? 'ESP32 Hardware Connected' : 'Demonstration Mode'} 
+                />
+              </button>
+
+              {/* Floating Tooltip */}
+              <div className="absolute left-[64px] top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[100] pointer-events-none">
+                <div className="bg-[#1F2933] text-white text-[11px] font-mono px-2.5 py-1 rounded shadow-lg whitespace-nowrap border border-[#3E4650]">
+                  Facility Settings & Calibration
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+
+      </aside>
     </div>
-  </aside>
-  </div>
-);
+  );
+};
 
 export default function App() {
   const [range, setRange] = useState('24H');
@@ -152,6 +354,7 @@ export default function App() {
   const [tab, setTab] = useState('console');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [railCollapsed, setRailCollapsed] = useState(false);
+  const [railExpanded, setRailExpanded] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
   const { params, save: saveParams, saving } = useFacilityParams();
@@ -325,42 +528,65 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
         onSettings={() => setSettingsOpen(true)} 
         settingsOpen={settingsOpen} 
         isLive={isLive} 
+        feedMode={feedMode}
         collapsed={railCollapsed} 
         onToggleCollapse={() => setRailCollapsed(true)} 
+        expanded={railExpanded}
+        onToggleExpand={() => setRailExpanded(v => !v)}
       />
 
-      <div className={`min-w-0 transition-[margin] duration-300 ${railCollapsed ? 'xl:ml-0' : 'xl:ml-[76px]'}`}>
+      <div className={`min-w-0 transition-[margin] duration-300 ${railCollapsed ? 'xl:ml-0' : (railExpanded ? 'xl:ml-[230px]' : 'xl:ml-[76px]')}`}>
       {/* Top Integrity Bar */}
       <div className="sticky top-0 z-50 bg-[#FFFFFF] dark:bg-[#141B22] border-b-2 border-[#1F2933] dark:border-[#2C3847] shadow-[0_2px_0_rgba(31,41,51,0.06)]">
-        <div className="min-h-[46px] px-3 lg:px-5 flex items-center justify-between gap-3 border-b border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B]">
+        <div className="min-h-[48px] px-3 lg:px-5 flex items-center justify-between gap-3 border-b border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B]">
           <div className="flex items-center gap-3">
             {/* 3-line hamburger menu icon to expand sidebar when collapsed */}
             {railCollapsed && (
               <button
                 type="button"
                 onClick={() => setRailCollapsed(false)}
-                title="Expand navigation sidebar"
-                aria-label="Expand navigation sidebar"
+                title="Open navigation sidebar"
+                aria-label="Open navigation sidebar"
                 className="hidden xl:flex w-8 h-8 items-center justify-center rounded border-2 border-[#1F2933] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:bg-[#2C6E9B] hover:text-[#FFFFFF] hover:border-[#1F2933] active:translate-x-[1px] active:translate-y-[1px] transition-all"
               >
                 <Menu size={16} />
               </button>
             )}
-            <div className="flex items-center gap-2">
-              <div className="w-6 h-6 rounded bg-[#2C6E9B] flex items-center justify-center shadow-sm">
-                <Shield size={14} className="text-[#FFFFFF]" />
+            <div className="flex items-center gap-2.5">
+              <div className="w-7 h-7 rounded-lg bg-[#2C6E9B] flex items-center justify-center shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C]">
+                <Shield size={15} className="text-[#FFFFFF]" />
               </div>
-              <span className="font-display text-[20px] sm:text-[24px] leading-none font-bold text-[#1F2933] dark:text-[#FAF8F4] uppercase">AEGIS</span>
+              <div className="flex items-baseline gap-2">
+                <span className="font-display text-[20px] sm:text-[24px] leading-none font-bold text-[#1F2933] dark:text-[#FAF8F4] uppercase tracking-wide">
+                  AEGIS
+                </span>
+                <span className="hidden sm:inline font-mono text-[10px] text-[#6E6558] dark:text-[#A99F90] tracking-wider uppercase pl-2 border-l border-[#D2C9BA] dark:border-[#2C3847]">
+                  Telemetry & Predictive Maintenance
+                </span>
+              </div>
             </div>
-            <div className="hidden md:flex items-center gap-2 ml-4 pl-4 border-l border-[#E6E0D6] dark:border-[#2C3847]">
-              <div className="w-1.5 h-1.5 rounded-full bg-[#2E7D5B] animate-pulse" />
-                <span className="font-mono text-[10px] tracking-wide text-[#2E7D5B]">Sensor status: {isLive ? 'Connected and receiving readings' : 'Using demonstration readings'}</span>
+            <div className="hidden lg:flex items-center gap-2 ml-3 pl-3 border-l border-[#E6E0D6] dark:border-[#2C3847]">
+              <div className={`w-1.5 h-1.5 rounded-full ${isLive ? 'bg-[#2E7D5B] animate-pulse' : 'bg-[#B07B1C]'}`} />
+              <span className="font-mono text-[10px] tracking-wide text-[#6E6558] dark:text-[#A99F90]">
+                {isLive ? 'ESP32 Hardware Stream: Connected' : 'Demonstration Mode (Simulated Physics)'}
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-2 sm:gap-3">
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#E6E0D6] dark:bg-[#141B22] border border-[#D2C9BA] dark:border-[#2C3847]">
-              <div className="w-1 h-1 rounded-full bg-[#2E7D5B] animate-pulse" />
-               <span className="font-mono text-[9px] text-[#6E6558] dark:text-[#A99F90]">Vibration {liveValues.vib} mm/s</span>
+            {/* Live Facility Health Pill in Header */}
+            <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border font-mono text-[10px] font-bold ${
+              feedMode === 'fault'
+                ? 'bg-[#C05043]/10 dark:bg-[#C05043]/20 border-[#C05043]/40 text-[#C05043]'
+                : 'bg-[#2E7D5B]/10 dark:bg-[#2E7D5B]/20 border-[#2E7D5B]/40 text-[#2E7D5B]'
+            }`}>
+              <div className={`w-1.5 h-1.5 rounded-full ${feedMode === 'fault' ? 'bg-[#C05043] animate-pulse' : 'bg-[#2E7D5B]'}`} />
+              <span>{feedMode === 'fault' ? '74% Health • AHU-03 Advisory' : '91% Health • Nominal'}</span>
+            </div>
+
+            {/* Live Vibration reading */}
+            <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#E6E0D6] dark:bg-[#141B22] border border-[#D2C9BA] dark:border-[#2C3847]">
+              <Activity size={12} className="text-[#2C6E9B]" />
+              <span className="font-mono text-[9px] text-[#6E6558] dark:text-[#A99F90]">Vibration {liveValues.vib} mm/s</span>
             </div>
 
             {/* Dark Mode Theme Toggle with Sun / Moon symbol "above at the dashboard" */}

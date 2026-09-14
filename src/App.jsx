@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { Shield, Activity, MapPin, Clock, Zap, Cpu, Layers, Radio, ChevronRight, ArrowLeft, Printer, FileJson, FileSpreadsheet, Thermometer, Waves, Volume2, Search, Filter, X, AlertTriangle, CheckCircle2, Settings, LayoutDashboard, ChartNoAxesCombined, Gauge, Cable, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
+import { Shield, Activity, MapPin, Clock, Zap, Cpu, Layers, Radio, ChevronRight, ArrowLeft, Printer, FileJson, FileSpreadsheet, Thermometer, Waves, Volume2, Search, Filter, X, AlertTriangle, CheckCircle2, Settings, LayoutDashboard, ChartNoAxesCombined, Gauge, Cable, PanelLeftClose, PanelLeftOpen, Menu, Sun, Moon } from 'lucide-react';
 
 import { Card, CardHeader, CardTitle } from './components/ui/Card';
 import { Badge } from './components/ui/Badge';
@@ -71,12 +71,19 @@ const TabBar = ({ tab, setTab, onSettings }) => (
   </div>
 );
 
-const SideRail = ({ tab, setTab, onSettings, settingsOpen, isLive, collapsed, onToggleCollapse, darkMode, toggleTheme }) => (
+const SideRail = ({ tab, setTab, onSettings, settingsOpen, isLive, collapsed, onToggleCollapse }) => (
   <div className={`hidden xl:block transition-[width] duration-300 ${collapsed ? 'w-0' : 'w-[76px]'}`}>
   <aside className={`hidden xl:flex fixed inset-y-0 left-0 z-[60] w-[76px] flex-col items-center bg-[#FFFFFF] dark:bg-[#141B22] border-r-2 border-[#1F2933] dark:border-[#2C3847] transition-transform duration-300 ${collapsed ? '-translate-x-full' : 'translate-x-0'}`}>
+    {/* Top Header: 3-line hamburger menu icon to collapse sidebar */}
     <div className="h-[76px] w-full flex items-center justify-center border-b-2 border-[#1F2933] dark:border-[#2C3847]">
-      <button type="button" onClick={toggleTheme} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} className="w-9 h-9 bg-[#2C6E9B] flex items-center justify-center shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C] hover:bg-[#2E7D5B] transition-colors">
-        <Shield size={19} className="text-[#FFFFFF]" />
+      <button 
+        type="button" 
+        onClick={onToggleCollapse} 
+        title="Collapse navigation sidebar" 
+        aria-label="Collapse navigation sidebar" 
+        className="w-10 h-10 bg-[#FAF8F4] dark:bg-[#1A222B] border-2 border-[#1F2933] dark:border-[#2C3847] text-[#1F2933] dark:text-[#FAF8F4] flex items-center justify-center shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:bg-[#2C6E9B] hover:text-[#FFFFFF] hover:border-[#1F2933] active:translate-x-[1px] active:translate-y-[1px] transition-all"
+      >
+        <Menu size={20} />
       </button>
     </div>
     <nav className="w-full py-4 flex flex-col items-center gap-2" aria-label="Primary workspace navigation">
@@ -99,45 +106,31 @@ const SideRail = ({ tab, setTab, onSettings, settingsOpen, isLive, collapsed, on
       })}
     </nav>
 
-    {/* Bottom Actions: Collapse Sidebar & Settings */}
-    <div className="mt-auto mb-5 flex flex-col items-center gap-3">
-      {/* Hide/Collapse Sidebar Button placed directly in the sidebar */}
-      <button
-        type="button"
-        onClick={onToggleCollapse}
-        title="Hide sidebar navigation"
-        aria-label="Hide sidebar navigation"
-        className="w-8 h-8 rounded border border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#6E6558] dark:text-[#C5BCAD] hover:border-[#2C6E9B] hover:text-[#2C6E9B] flex items-center justify-center transition-colors"
+    {/* Bottom Action: Upgraded Settings Button */}
+    <div className="mt-auto mb-5 relative group">
+      <button 
+        type="button" 
+        onClick={onSettings} 
+        title="Facility Settings & Sensor Calibration" 
+        aria-label="Facility Settings & Sensor Calibration"
+        aria-expanded={settingsOpen}
+        className={`relative w-12 h-12 flex items-center justify-center border-2 transition-all ${
+          settingsOpen
+            ? 'bg-[#2C6E9B] border-[#1F2933] dark:border-[#2C3847] text-[#FFFFFF] shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C]'
+            : 'border-[#1F2933] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:border-[#2C6E9B] hover:text-[#2C6E9B] active:translate-x-[1px] active:translate-y-[1px]'
+        }`}
       >
-        <PanelLeftClose size={15} />
+        <Settings size={20} className="transition-transform duration-500 ease-out group-hover:rotate-90" />
+        <span 
+          className={`absolute top-1 right-1 w-2 h-2 rounded-full border border-white dark:border-gray-900 ${isLive ? 'bg-[#2E7D5B] animate-pulse' : 'bg-[#B07B1C]'}`} 
+          title={isLive ? 'ESP32 Hardware Connected' : 'Demonstration Mode'} 
+        />
       </button>
 
-      {/* Upgraded Settings Button with rotating gear animation, active state, status pip, and tooltip */}
-      <div className="relative group">
-        <button 
-          type="button" 
-          onClick={onSettings} 
-          title="Facility Settings & Sensor Calibration" 
-          aria-label="Facility Settings & Sensor Calibration"
-          aria-expanded={settingsOpen}
-          className={`relative w-12 h-12 flex items-center justify-center border-2 transition-all ${
-            settingsOpen
-              ? 'bg-[#2C6E9B] border-[#1F2933] dark:border-[#2C3847] text-[#FFFFFF] shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C]'
-              : 'border-[#1F2933] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:border-[#2C6E9B] hover:text-[#2C6E9B] active:translate-x-[1px] active:translate-y-[1px]'
-          }`}
-        >
-          <Settings size={20} className="transition-transform duration-500 ease-out group-hover:rotate-90" />
-          <span 
-            className={`absolute top-1 right-1 w-2 h-2 rounded-full border border-white dark:border-gray-900 ${isLive ? 'bg-[#2E7D5B] animate-pulse' : 'bg-[#B07B1C]'}`} 
-            title={isLive ? 'ESP32 Hardware Connected' : 'Demonstration Mode'} 
-          />
-        </button>
-
-        {/* Floating Tooltip */}
-        <div className="absolute left-[64px] top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[100] pointer-events-none">
-          <div className="bg-[#1F2933] text-white text-[11px] font-mono px-2.5 py-1 rounded shadow-lg whitespace-nowrap border border-[#3E4650]">
-            Facility Settings & Calibration
-          </div>
+      {/* Floating Tooltip */}
+      <div className="absolute left-[64px] top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[100] pointer-events-none">
+        <div className="bg-[#1F2933] text-white text-[11px] font-mono px-2.5 py-1 rounded shadow-lg whitespace-nowrap border border-[#3E4650]">
+          Facility Settings & Calibration
         </div>
       </div>
     </div>
@@ -334,32 +327,29 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
         isLive={isLive} 
         collapsed={railCollapsed} 
         onToggleCollapse={() => setRailCollapsed(true)} 
-        darkMode={darkMode} 
-        toggleTheme={toggleTheme} 
       />
-
-      {/* Floating Expand Sidebar Tab when sidebar is collapsed */}
-      {railCollapsed && (
-        <button
-          type="button"
-          onClick={() => setRailCollapsed(false)}
-          title="Show sidebar navigation"
-          aria-label="Show sidebar navigation"
-          className="hidden xl:flex fixed left-0 top-[72px] z-[55] w-7 h-10 items-center justify-center bg-[#FFFFFF] dark:bg-[#141B22] border-y-2 border-r-2 border-[#1F2933] dark:border-[#2C3847] rounded-r shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] text-[#6E6558] dark:text-[#FAF8F4] hover:text-[#2C6E9B] hover:bg-[#FAF8F4] dark:hover:bg-[#1A222B] transition-all"
-        >
-          <PanelLeftOpen size={16} />
-        </button>
-      )}
 
       <div className={`min-w-0 transition-[margin] duration-300 ${railCollapsed ? 'xl:ml-0' : 'xl:ml-[76px]'}`}>
       {/* Top Integrity Bar */}
       <div className="sticky top-0 z-50 bg-[#FFFFFF] dark:bg-[#141B22] border-b-2 border-[#1F2933] dark:border-[#2C3847] shadow-[0_2px_0_rgba(31,41,51,0.06)]">
         <div className="min-h-[46px] px-3 lg:px-5 flex items-center justify-between gap-3 border-b border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B]">
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2">
-              <button type="button" onClick={toggleTheme} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} className="w-5 h-5 bg-[#2C6E9B] flex items-center justify-center xl:hidden hover:bg-[#2E7D5B] transition-colors">
-                <Shield size={12} className="text-[#FFFFFF]" />
+            {/* 3-line hamburger menu icon to expand sidebar when collapsed */}
+            {railCollapsed && (
+              <button
+                type="button"
+                onClick={() => setRailCollapsed(false)}
+                title="Expand navigation sidebar"
+                aria-label="Expand navigation sidebar"
+                className="hidden xl:flex w-8 h-8 items-center justify-center rounded border-2 border-[#1F2933] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:bg-[#2C6E9B] hover:text-[#FFFFFF] hover:border-[#1F2933] active:translate-x-[1px] active:translate-y-[1px] transition-all"
+              >
+                <Menu size={16} />
               </button>
+            )}
+            <div className="flex items-center gap-2">
+              <div className="w-6 h-6 rounded bg-[#2C6E9B] flex items-center justify-center shadow-sm">
+                <Shield size={14} className="text-[#FFFFFF]" />
+              </div>
               <span className="font-display text-[20px] sm:text-[24px] leading-none font-bold text-[#1F2933] dark:text-[#FAF8F4] uppercase">AEGIS</span>
             </div>
             <div className="hidden md:flex items-center gap-2 ml-4 pl-4 border-l border-[#E6E0D6] dark:border-[#2C3847]">
@@ -372,6 +362,21 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
               <div className="w-1 h-1 rounded-full bg-[#2E7D5B] animate-pulse" />
                <span className="font-mono text-[9px] text-[#6E6558] dark:text-[#A99F90]">Vibration {liveValues.vib} mm/s</span>
             </div>
+
+            {/* Dark Mode Theme Toggle with Sun / Moon symbol "above at the dashboard" */}
+            <button
+              type="button"
+              onClick={toggleTheme}
+              title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+              className="w-8 h-8 flex items-center justify-center rounded-lg border-2 border-[#1F2933] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:border-[#2C6E9B] hover:text-[#2C6E9B] active:translate-x-[1px] active:translate-y-[1px] transition-all"
+            >
+              {darkMode ? (
+                <Sun size={15} className="text-[#E0A83B]" />
+              ) : (
+                <Moon size={15} className="text-[#2C6E9B]" />
+              )}
+            </button>
           </div>
         </div>
 

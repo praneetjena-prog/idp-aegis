@@ -1,24 +1,51 @@
-# UI Upgrade Partner
+# AEGIS — Open Industrial Facility Intelligence Platform
 
-I want my existing project's UI to be bettered with the help of you
+Democratizing predictive maintenance and building health through open, explainable telemetry intelligence.
 
-This project was built with [Lovable](https://lovable.dev).
+AEGIS is an open-access facility operations platform engineered for public infrastructure, universities, community hubs, and resource-constrained facilities. Built for on-the-ground facility managers, technicians, and maintenance staff.
 
-## Build with Lovable
+---
 
-Continue developing this project in the [Lovable editor](https://lovable.dev/projects/28d3c8e6-2bf7-47aa-977a-fb2840e57cd6).
+## ✨ Features
 
-- **Ship faster**: describe what you want to build and Lovable handles the code.
-- **Stay in sync**: every change made in Lovable is committed straight to this repository.
-- **Full ownership**: this code is yours. Push to `main` on GitHub and your changes sync back into Lovable, ready for your next prompt.
+- **Multi-Parameter Monitoring:** Real-time stream ingestion for vibration, current draw, surface temperature, and acoustic metrics.
+- **Explainable Anomaly Detection:** Correlate physical subsystems and detect early baseline drift before failures occur.
+- **Triage & Predictive Maintenance:** Automated probable-cause diagnostics and field maintenance dispatch plans.
+- **Scenario Simulator:** Simulate mechanical degradation, cooling loop faults, and power quality anomalies.
+- **Hardware Integration:** Compatible with open-source ESP32 telemetry nodes and edge sensors.
 
-## Development
+---
 
-Prefer working locally? You need Node.js and npm — [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating).
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js (v20+ or v22+)
+- npm
+
+### Installation & Local Run
 
 ```sh
-git clone <this-repository-url>
-cd <repository-name>
-npm i
+# 1. Clone the repository
+git clone https://github.com/praneetjena-prog/idp-aegis.git
+cd idp-aegis
+
+# 2. Install dependencies
+npm install
+
+# 3. Start local development server
 npm run dev
 ```
+
+The application will be accessible at `http://localhost:8080/`.
+
+---
+
+## 📦 Build & Deployment
+
+To generate an optimized static build for GitHub Pages:
+
+```sh
+npm run build
+```
+
+The compiled output will be generated in `dist/`.

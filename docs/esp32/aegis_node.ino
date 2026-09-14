@@ -31,7 +31,7 @@
 
 #define WIFI_SSID   "YOUR_WIFI"
 #define WIFI_PASS   "YOUR_PASSWORD"
-#define ENDPOINT    "https://YOUR-APP.lovable.app/api/public/ingest"
+#define ENDPOINT    "https://YOUR-DOMAIN.com/api/public/ingest"
 #define DEVICE_ID   "aegis-node-01"
 #define INGEST_KEY  "PASTE_INGEST_KEY_HERE"
 #define ASSET_TAG   "AHU-03"

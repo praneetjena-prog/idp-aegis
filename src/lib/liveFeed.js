@@ -16,7 +16,7 @@ export const METRIC_MAP = {
 const STALE_MS = 90_000;
 
 /**
- * Streams the newest reading per metric from Lovable Cloud.
+ * Streams the newest reading per metric from Aegis Telemetry Cloud.
  * Falls back to the built-in demonstration feed until real hardware reports in.
  */
 export function useLiveFeed(feedMode, params) {

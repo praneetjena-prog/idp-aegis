@@ -1,5 +1,3 @@
-import { createServerFn } from '@tanstack/react-start';
-
 export type DeviceCredentials = {
   deviceId: string;
   label: string;
@@ -8,10 +6,10 @@ export type DeviceCredentials = {
 };
 
 /** Returns the ESP32 node's identity and ingest key for the settings panel. */
-export const getDeviceCredentials = createServerFn({ method: 'GET' }).handler(
-  async (): Promise<DeviceCredentials | null> => {
-    const { supabaseAdmin } = await import('@/integrations/supabase/client.server');
-    const { data } = await supabaseAdmin
+export async function getDeviceCredentials(): Promise<DeviceCredentials | null> {
+  try {
+    const { supabase } = await import('@/integrations/supabase/client');
+    const { data } = await supabase
       .from('devices')
       .select('id, label, ingest_key, last_seen_at')
       .order('created_at', { ascending: true })
@@ -25,5 +23,7 @@ export const getDeviceCredentials = createServerFn({ method: 'GET' }).handler(
       ingestKey: data.ingest_key,
       lastSeenAt: data.last_seen_at,
     };
-  },
-);
+  } catch {
+    return null;
+  }
+}

@@ -58,7 +58,7 @@ export function normaliseParams(raw) {
   return merged;
 }
 
-/** Loads the facility parameters from Lovable Cloud, with local defaults as fallback. */
+/** Loads the facility parameters from Aegis Cloud, with local defaults as fallback. */
 export function useFacilityParams() {
   const [params, setParams] = useState(DEFAULT_PARAMS);
   const [loading, setLoading] = useState(true);

@@ -1,10 +1,9 @@
-<!-- LOVABLE:BEGIN -->
-> [!IMPORTANT]
-> This project is connected to [Lovable](https://lovable.dev). Avoid rewriting
-> published git history — force pushing, or rebasing/amending/squashing commits
-> that are already pushed — as it rewrites history on Lovable's side and the
-> user will likely lose their project history.
->
-> Commits you push to the connected branch sync back to Lovable and show up in
-> the editor, so keep the branch in a working state.
-<!-- LOVABLE:END -->
+# AEGIS — Open Industrial Facility Intelligence
+
+AEGIS is an open-access facility intelligence and predictive maintenance engine designed for industrial equipment, university facilities, and public infrastructure.
+
+## Project Structure
+- **Frontend:** React 19, Vite, Tailwind CSS v4, Lucide Icons, Recharts
+- **Components:** `src/components/dashboard`, `src/components/workflow`, `src/components/ui`
+- **Telemetry & Engine:** `src/lib/facility.js`, `src/lib/liveFeed.js`
+- **Deployment:** GitHub Pages (Static SPA)

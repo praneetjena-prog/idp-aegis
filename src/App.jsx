@@ -43,25 +43,39 @@ const TABS = [
   { id: 'platform', label: 'Platform & Hardware', shortLabel: 'Platform', icon: Cable },
 ];
 
-const TabBar = ({ tab, setTab }) => (
-  <div className="flex xl:hidden overflow-x-auto items-center bg-[#FFFFFF] border border-[#E6E0D6]">
-    {TABS.map(t => (
+const TabBar = ({ tab, setTab, onSettings }) => (
+  <div className="flex xl:hidden overflow-x-auto items-center bg-[#FFFFFF] dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] justify-between">
+    <div className="flex items-center overflow-x-auto">
+      {TABS.map(t => (
+        <button
+          key={t.id}
+          onClick={() => setTab(t.id)}
+          className={`whitespace-nowrap font-display text-[10px] font-bold uppercase px-3.5 py-2.5 border-b-2 transition-colors ${tab === t.id ? 'border-[#2C6E9B] text-[#2C6E9B] bg-[#2C6E9B]/5' : 'border-transparent text-[#6E6558] dark:text-[#C5BCAD] hover:bg-[#F1EDE6] dark:hover:bg-[#141B22] hover:text-[#1F2933]'}`}
+        >
+          {t.shortLabel}
+        </button>
+      ))}
+    </div>
+    {onSettings && (
       <button
-        key={t.id}
-        onClick={() => setTab(t.id)}
-        className={`whitespace-nowrap font-display text-[10px] font-bold uppercase px-3.5 py-2.5 border-b-2 transition-colors ${tab === t.id ? 'border-[#2C6E9B] text-[#2C6E9B] bg-[#2C6E9B]/5' : 'border-transparent text-[#6E6558] hover:bg-[#F1EDE6] hover:text-[#1F2933]'}`}
+        type="button"
+        onClick={onSettings}
+        title="Facility Settings & Sensor Calibration"
+        aria-label="Settings"
+        className="group shrink-0 flex items-center gap-1 font-display text-[10px] font-bold uppercase px-3 py-2 text-[#6E6558] dark:text-[#C5BCAD] hover:text-[#2C6E9B] transition-colors border-l border-[#E6E0D6] dark:border-[#2C3847]"
       >
-        {t.shortLabel}
+        <Settings size={13} className="transition-transform duration-500 ease-out group-hover:rotate-90 text-[#2C6E9B]" />
+        <span>Settings</span>
       </button>
-    ))}
+    )}
   </div>
 );
 
-const SideRail = ({ tab, setTab, onSettings, collapsed, darkMode, toggleTheme }) => (
+const SideRail = ({ tab, setTab, onSettings, settingsOpen, isLive, collapsed, darkMode, toggleTheme }) => (
   <div className={`hidden xl:block transition-[width] duration-300 ${collapsed ? 'w-0' : 'w-[76px]'}`}>
-  <aside className={`hidden xl:flex fixed inset-y-0 left-0 z-[60] w-[76px] flex-col items-center bg-[#FFFFFF] border-r-2 border-[#1F2933] transition-transform duration-300 ${collapsed ? '-translate-x-full' : 'translate-x-0'}`}>
-    <div className="h-[76px] w-full flex items-center justify-center border-b-2 border-[#1F2933]">
-      <button type="button" onClick={toggleTheme} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} className="w-9 h-9 bg-[#2C6E9B] flex items-center justify-center shadow-[3px_3px_0_#1F2933] hover:bg-[#2E7D5B] transition-colors">
+  <aside className={`hidden xl:flex fixed inset-y-0 left-0 z-[60] w-[76px] flex-col items-center bg-[#FFFFFF] dark:bg-[#141B22] border-r-2 border-[#1F2933] dark:border-[#2C3847] transition-transform duration-300 ${collapsed ? '-translate-x-full' : 'translate-x-0'}`}>
+    <div className="h-[76px] w-full flex items-center justify-center border-b-2 border-[#1F2933] dark:border-[#2C3847]">
+      <button type="button" onClick={toggleTheme} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} className="w-9 h-9 bg-[#2C6E9B] flex items-center justify-center shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C] hover:bg-[#2E7D5B] transition-colors">
         <Shield size={19} className="text-[#FFFFFF]" />
       </button>
     </div>
@@ -76,7 +90,7 @@ const SideRail = ({ tab, setTab, onSettings, collapsed, darkMode, toggleTheme })
             title={item.label}
             aria-label={item.label}
             aria-current={tab === item.id ? 'page' : undefined}
-            className={`relative w-12 h-12 flex items-center justify-center border transition-colors ${tab === item.id ? 'bg-[#2C6E9B] border-[#1F2933] text-[#FFFFFF] shadow-[3px_3px_0_#D2C9BA]' : 'bg-[#FAF8F4] border-[#E6E0D6] text-[#6E6558] hover:border-[#2C6E9B] hover:text-[#2C6E9B]'}`}
+            className={`relative w-12 h-12 flex items-center justify-center border transition-colors ${tab === item.id ? 'bg-[#2C6E9B] border-[#1F2933] text-[#FFFFFF] shadow-[3px_3px_0_#D2C9BA] dark:shadow-[3px_3px_0_#0F151C]' : 'bg-[#FAF8F4] dark:bg-[#1A222B] border-[#E6E0D6] dark:border-[#2C3847] text-[#6E6558] dark:text-[#C5BCAD] hover:border-[#2C6E9B] hover:text-[#2C6E9B]'}`}
           >
             <Icon size={18} />
             {tab === item.id && <span className="absolute -left-[15px] h-6 w-1 bg-[#2C6E9B]" />}
@@ -84,9 +98,35 @@ const SideRail = ({ tab, setTab, onSettings, collapsed, darkMode, toggleTheme })
         );
       })}
     </nav>
-    <button type="button" onClick={onSettings} title="Settings" aria-label="Settings" className="mt-auto mb-5 w-12 h-12 flex items-center justify-center border border-[#E6E0D6] bg-[#FAF8F4] text-[#6E6558] hover:border-[#2C6E9B] hover:text-[#2C6E9B] transition-colors">
-      <Settings size={18} />
-    </button>
+
+    {/* Upgraded Settings Button with rotating gear animation, active state, status pip, and tooltip */}
+    <div className="mt-auto mb-5 relative group">
+      <button 
+        type="button" 
+        onClick={onSettings} 
+        title="Facility Settings & Sensor Calibration" 
+        aria-label="Facility Settings & Sensor Calibration"
+        aria-expanded={settingsOpen}
+        className={`relative w-12 h-12 flex items-center justify-center border-2 transition-all ${
+          settingsOpen
+            ? 'bg-[#2C6E9B] border-[#1F2933] dark:border-[#2C3847] text-[#FFFFFF] shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C]'
+            : 'border-[#1F2933] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:border-[#2C6E9B] hover:text-[#2C6E9B] active:translate-x-[1px] active:translate-y-[1px]'
+        }`}
+      >
+        <Settings size={20} className="transition-transform duration-500 ease-out group-hover:rotate-90" />
+        <span 
+          className={`absolute top-1 right-1 w-2 h-2 rounded-full border border-white dark:border-gray-900 ${isLive ? 'bg-[#2E7D5B] animate-pulse' : 'bg-[#B07B1C]'}`} 
+          title={isLive ? 'ESP32 Hardware Connected' : 'Demonstration Mode'} 
+        />
+      </button>
+
+      {/* Floating Tooltip */}
+      <div className="absolute left-[64px] top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[100] pointer-events-none">
+        <div className="bg-[#1F2933] text-white text-[11px] font-mono px-2.5 py-1 rounded shadow-lg whitespace-nowrap border border-[#3E4650]">
+          Facility Settings & Calibration
+        </div>
+      </div>
+    </div>
   </aside>
   </div>
 );
@@ -272,16 +312,16 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
 
   return (
     <div className="min-h-screen bg-[#F1EDE6] text-[#2A3138] selection:bg-[#2C6E9B]/30 transition-colors duration-300">
-      <SideRail tab={tab} setTab={setTab} onSettings={() => setSettingsOpen(true)} collapsed={railCollapsed} darkMode={darkMode} toggleTheme={toggleTheme} />
+      <SideRail tab={tab} setTab={setTab} onSettings={() => setSettingsOpen(true)} settingsOpen={settingsOpen} isLive={isLive} collapsed={railCollapsed} darkMode={darkMode} toggleTheme={toggleTheme} />
       <div className={`min-w-0 transition-[margin] duration-300 ${railCollapsed ? 'xl:ml-0' : 'xl:ml-[76px]'}`}>
       {/* Top Integrity Bar */}
-      <div className="sticky top-0 z-50 bg-[#FFFFFF] border-b-2 border-[#1F2933] shadow-[0_2px_0_rgba(31,41,51,0.06)]">
-        <div className="min-h-[46px] px-3 lg:px-5 flex items-center justify-between gap-3 border-b border-[#E6E0D6] bg-[#FAF8F4]">
+      <div className="sticky top-0 z-50 bg-[#FFFFFF] dark:bg-[#141B22] border-b-2 border-[#1F2933] dark:border-[#2C3847] shadow-[0_2px_0_rgba(31,41,51,0.06)]">
+        <div className="min-h-[46px] px-3 lg:px-5 flex items-center justify-between gap-3 border-b border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B]">
           <div className="flex items-center gap-3">
             <button
               type="button"
               onClick={() => setRailCollapsed((value) => !value)}
-              className="hidden xl:flex w-8 h-8 items-center justify-center border border-[#D2C9BA] bg-[#FFFFFF] text-[#6E6558] hover:text-[#2C6E9B] hover:border-[#2C6E9B] transition-colors"
+              className="hidden xl:flex w-8 h-8 items-center justify-center border border-[#D2C9BA] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#141B22] text-[#6E6558] dark:text-[#FAF8F4] hover:text-[#2C6E9B] hover:border-[#2C6E9B] transition-colors"
               aria-label={railCollapsed ? 'Show navigation panel' : 'Hide navigation panel'}
               title={railCollapsed ? 'Show navigation panel' : 'Hide navigation panel'}
             >
@@ -291,42 +331,51 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
               <button type="button" onClick={toggleTheme} title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} aria-label={darkMode ? 'Switch to light mode' : 'Switch to dark mode'} className="w-5 h-5 bg-[#2C6E9B] flex items-center justify-center xl:hidden hover:bg-[#2E7D5B] transition-colors">
                 <Shield size={12} className="text-[#FFFFFF]" />
               </button>
-              <span className="font-display text-[20px] sm:text-[24px] leading-none font-bold text-[#1F2933] uppercase">AEGIS</span>
+              <span className="font-display text-[20px] sm:text-[24px] leading-none font-bold text-[#1F2933] dark:text-[#FAF8F4] uppercase">AEGIS</span>
             </div>
-            <div className="hidden md:flex items-center gap-2 ml-4 pl-4 border-l border-[#E6E0D6]">
+            <div className="hidden md:flex items-center gap-2 ml-4 pl-4 border-l border-[#E6E0D6] dark:border-[#2C3847]">
               <div className="w-1.5 h-1.5 rounded-full bg-[#2E7D5B] animate-pulse" />
                 <span className="font-mono text-[10px] tracking-wide text-[#2E7D5B]">Sensor status: {isLive ? 'Connected and receiving readings' : 'Using demonstration readings'}</span>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="font-mono text-[10px] text-[#8A8175] hidden lg:inline">{"\n"}</span>
-            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#E6E0D6] border border-[#D2C9BA]">
+          <div className="flex items-center gap-2 sm:gap-3">
+            <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-[#E6E0D6] dark:bg-[#141B22] border border-[#D2C9BA] dark:border-[#2C3847]">
               <div className="w-1 h-1 rounded-full bg-[#2E7D5B] animate-pulse" />
-               <span className="font-mono text-[9px] text-[#6E6558]">Vibration {liveValues.vib} mm/s</span>
+               <span className="font-mono text-[9px] text-[#6E6558] dark:text-[#A99F90]">Vibration {liveValues.vib} mm/s</span>
             </div>
+
+            {/* Prominent Quick-Access Settings Button (All screens / Mobile priority) */}
+            <button
+              type="button"
+              onClick={() => setSettingsOpen(true)}
+              title="Facility Settings & Calibration"
+              aria-label="Settings"
+              className="group flex items-center gap-1.5 px-2.5 py-1 border-2 border-[#1F2933] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#141B22] text-[#1F2933] dark:text-[#FAF8F4] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:text-[#2C6E9B] hover:border-[#2C6E9B] active:translate-x-[1px] active:translate-y-[1px] transition-all"
+            >
+              <Settings size={13} className="transition-transform duration-500 ease-out group-hover:rotate-90 text-[#2C6E9B]" />
+              <span className="font-mono text-[10px] font-bold uppercase hidden sm:inline">Settings</span>
+            </button>
           </div>
         </div>
 
         {/* Global Control Bar */}
-        <div className="min-h-[58px] px-4 lg:px-6 py-2 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-h-[58px] px-4 lg:px-6 py-2 flex flex-wrap items-center justify-between gap-3 bg-[#FFFFFF] dark:bg-[#141B22]">
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <MapPin size={14} className="text-[#8A8175]" />
               <div>
                  <div className="text-[9px] font-bold uppercase text-[#8A8175]">Facility</div>
-                <span className="font-display text-[14px] font-bold text-[#1F2933]">Central Campus / Facility Unit 01</span>
+                <span className="font-display text-[14px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">Central Campus / Facility Unit 01</span>
               </div>
               <Badge variant="neutral">UNIT-01</Badge>
             </div>
-            <div className="hidden md:flex items-center gap-2 pl-4 border-l border-[#E6E0D6]">
+            <div className="hidden md:flex items-center gap-2 pl-4 border-l border-[#E6E0D6] dark:border-[#2C3847]">
               <Clock size={12} className="text-[#8A8175]" />
-               <span className="font-mono text-[10px] text-[#6E6558]">Active shift · J. Rivera · 06:00–14:00 · {clock}</span>
+               <span className="font-mono text-[10px] text-[#6E6558] dark:text-[#A99F90]">Active shift · J. Rivera · 06:00–14:00 · {clock}</span>
             </div>
           </div>
 
           <div className="w-full lg:w-auto flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
-
-
 
             <div className="relative hidden md:flex items-center">
               <Search size={12} className="absolute left-2 text-[#A99F90]" />
@@ -334,23 +383,23 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Filter subsystems..."
-                className="pl-7 pr-2 py-1 w-[160px] bg-[#F1EDE6] border border-[#E6E0D6] rounded-md font-mono text-[10px] text-[#1F2933] placeholder:text-[#A99F90] focus:outline-none focus:border-[#D2C9BA]"
+                className="pl-7 pr-2 py-1 w-[160px] bg-[#F1EDE6] dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] rounded-md font-mono text-[10px] text-[#1F2933] dark:text-white placeholder:text-[#A99F90] focus:outline-none focus:border-[#D2C9BA]"
               />
             </div>
 
-            <div className="flex items-center gap-1 p-0.5 bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg">
+            <div className="flex items-center gap-1 p-0.5 bg-[#F1EDE6] dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
               {['1H', '24H', '7D'].map(r => (
                 <button
                   key={r}
                   onClick={() => setRange(r)}
-                  className={`font-mono text-[11px] px-2.5 py-1 rounded-md transition-all ${range === r ? 'bg-[#E6E0D6] text-[#1F2933] border border-[#D2C9BA]' : 'text-[#8A8175] hover:text-[#3E4650]'}`}
+                  className={`font-mono text-[11px] px-2.5 py-1 rounded-md transition-all ${range === r ? 'bg-[#E6E0D6] dark:bg-[#2C3847] text-[#1F2933] dark:text-white border border-[#D2C9BA] dark:border-[#3E4D61]' : 'text-[#8A8175] hover:text-[#3E4650] dark:hover:text-white'}`}
                 >
                   {r}
                 </button>
               ))}
             </div>
 
-            <div className="flex items-center gap-1 p-0.5 bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg">
+            <div className="flex items-center gap-1 p-0.5 bg-[#F1EDE6] dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
               <button onClick={() => setFeedMode('normal')} className={`font-mono text-[10px] px-2.5 py-1 rounded-md flex items-center gap-1 transition-all ${feedMode === 'normal' ? 'bg-[#2E7D5B]/20 text-[#2E7D5B] border border-[#2E7D5B]/30' : 'text-[#8A8175] hover:text-[#6E6558]'}`}>
                 <div className={`w-1 h-1 rounded-full ${feedMode === 'normal' ? 'bg-[#2E7D5B]' : 'bg-[#C9C0B2]'}`} /> Normal Run
               </button>
@@ -362,7 +411,15 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
             <div className="flex items-center gap-1">
               <Button variant="secondary" size="xs" onClick={() => handleExport('json')}><FileJson size={12} className="mr-1" /> JSON</Button>
               <Button variant="secondary" size="xs" onClick={() => handleExport('csv')}><FileSpreadsheet size={12} className="mr-1" /> CSV</Button>
-              <Button variant="primary" size="xs" onClick={() => setSettingsOpen(true)}><Settings size={12} className="mr-1" /> Settings</Button>
+              <button
+                type="button"
+                onClick={() => setSettingsOpen(true)}
+                title="Facility Settings & Sensor Calibration"
+                className="group flex items-center gap-1.5 px-2.5 py-1.5 bg-[#2C6E9B] text-white font-mono text-[10px] font-bold uppercase rounded border border-[#1F2933] dark:border-[#2C3847] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:bg-[#255C83] active:translate-x-[1px] active:translate-y-[1px] transition-all"
+              >
+                <Settings size={12} className="transition-transform duration-500 ease-out group-hover:rotate-90" />
+                <span>Settings</span>
+              </button>
             </div>
           </div>
         </div>
@@ -371,7 +428,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
       {/* Main Content */}
       <div className="max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-5 py-4 space-y-5">
 
-        <TabBar tab={tab} setTab={setTab} />
+        <TabBar tab={tab} setTab={setTab} onSettings={() => setSettingsOpen(true)} />
 
         {/* Platform Header & Mission Overview */}
         <section ref={overviewRef} className="space-y-6 scroll-mt-[120px]">

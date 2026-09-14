@@ -26,24 +26,24 @@ export const SubsystemGrid = ({ mode, onSelect }) => {
         return (
           <Card key={sys.id} hover padding={false} className="p-3.5 group" onClick={() => onSelect(sys.id)}>
             <div className="flex items-start justify-between mb-2.5">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${sys.variant==='nominal' ? 'bg-[#10B981]/10 border-[#10B981]/20 text-[#10B981]' : sys.variant==='attention' ? 'bg-[#F59E0B]/10 border-[#F59E0B]/20 text-[#F59E0B]' : 'bg-[#EF4444]/10 border-[#EF4444]/20 text-[#EF4444]'}`}>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${sys.variant==='nominal' ? 'bg-[#2E7D5B]/10 border-[#2E7D5B]/20 text-[#2E7D5B]' : sys.variant==='attention' ? 'bg-[#B07B1C]/10 border-[#B07B1C]/20 text-[#B07B1C]' : 'bg-[#C05043]/10 border-[#C05043]/20 text-[#C05043]'}`}>
                 <Icon size={16} />
               </div>
               <Badge variant={sys.variant}>{sys.status}</Badge>
             </div>
-            <div className="font-mono text-[11px] font-semibold text-white tracking-wide uppercase">{sys.name}</div>
+            <div className="font-mono text-[11px] font-semibold text-[#1F2933] tracking-wide uppercase">{sys.name}</div>
             <div className="mt-2 flex items-end justify-between">
               <div>
-                <div className="font-mono text-[20px] font-bold leading-none" style={{color: sys.health>85 ? '#10B981' : sys.health>75 ? '#F59E0B' : '#EF4444'}}>{sys.health}%</div>
-                <div className="font-mono text-[9px] text-slate-500 uppercase tracking-wider mt-1">Health</div>
+                <div className="font-mono text-[20px] font-bold leading-none" style={{color: sys.health>85 ? '#2E7D5B' : sys.health>75 ? '#B07B1C' : '#C05043'}}>{sys.health}%</div>
+                <div className="font-mono text-[9px] text-[#8A8175] uppercase tracking-wider mt-1">Health</div>
               </div>
               <div className="text-right">
-                <div className="font-mono text-[10px] text-slate-300">{sys.metric}</div>
-                <div className="font-mono text-[9px] text-slate-500 mt-0.5 max-w-[110px] truncate">{sys.detail}</div>
+                <div className="font-mono text-[10px] text-[#3E4650]">{sys.metric}</div>
+                <div className="font-mono text-[9px] text-[#8A8175] mt-0.5 max-w-[110px] truncate">{sys.detail}</div>
               </div>
             </div>
-            <div className="mt-3 h-1 bg-[#0B0E14] rounded-full overflow-hidden">
-              <div className="h-full transition-all" style={{ width: `${sys.health}%`, background: sys.health>85 ? '#10B981' : sys.health>75 ? '#F59E0B' : '#EF4444' }} />
+            <div className="mt-3 h-1 bg-[#F1EDE6] rounded-full overflow-hidden">
+              <div className="h-full transition-all" style={{ width: `${sys.health}%`, background: sys.health>85 ? '#2E7D5B' : sys.health>75 ? '#B07B1C' : '#C05043' }} />
             </div>
           </Card>
         );

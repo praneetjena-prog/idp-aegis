@@ -15,26 +15,26 @@ export const WorkOrderHistory = ({ workOrders, onExport }) => {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Work Order Ledger • Field Operations</CardTitle>
+        <CardTitle>Maintenance work orders</CardTitle>
         <div className="flex gap-1.5">
           <Badge variant="neutral">{history.length} Total</Badge>
-          <Button variant="secondary" size="xs" onClick={() => onExport('json')}><FileText size={10} className="mr-1" /> Export Ledger</Button>
+          <Button variant="secondary" size="xs" onClick={() => onExport('json')}><FileText size={10} className="mr-1" /> Export list</Button>
         </div>
       </CardHeader>
       <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
         {history.map((wo) => (
-          <div key={wo.id} className="flex items-center gap-3 p-2.5 bg-[#0B0E14] border border-[#1E2638] rounded-lg hover:border-[#26324D] transition-colors">
-            <div className={`w-7 h-7 rounded-md flex items-center justify-center border ${wo.status === 'completed' ? 'bg-[#10B981]/10 border-[#10B981]/20 text-[#10B981]' : wo.status === 'in_progress' ? 'bg-[#F59E0B]/10 border-[#F59E0B]/20 text-[#F59E0B]' : 'bg-[#0EA5E9]/10 border-[#0EA5E9]/20 text-[#0EA5E9]'}`}>
+          <div key={wo.id} className="flex items-center gap-3 p-2.5 bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg hover:border-[#D2C9BA] transition-colors">
+            <div className={`w-7 h-7 rounded-md flex items-center justify-center border ${wo.status === 'completed' ? 'bg-[#2E7D5B]/10 border-[#2E7D5B]/20 text-[#2E7D5B]' : wo.status === 'in_progress' ? 'bg-[#B07B1C]/10 border-[#B07B1C]/20 text-[#B07B1C]' : 'bg-[#2C6E9B]/10 border-[#2C6E9B]/20 text-[#2C6E9B]'}`}>
               {wo.status === 'completed' ? <Check size={12} /> : wo.status === 'in_progress' ? <Clock size={12} /> : <Wrench size={12} />}
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <span className="font-mono text-[11px] font-bold text-white">#{wo.id}</span>
-                <span className="font-mono text-[10px] text-slate-400">{wo.asset}</span>
+                <span className="font-mono text-[11px] font-bold text-[#1F2933]">#{wo.id}</span>
+                <span className="font-mono text-[10px] text-[#6E6558]">{wo.asset}</span>
                 <Badge variant={wo.status === 'completed' ? 'nominal' : wo.status === 'in_progress' ? 'attention' : 'info'}>{wo.status}</Badge>
               </div>
-              <div className="font-mono text-[11px] text-slate-300 truncate mt-0.5">{wo.title}</div>
-              <div className="font-mono text-[9px] text-slate-500 mt-0.5">{wo.date} • {wo.tech}</div>
+              <div className="font-mono text-[11px] text-[#3E4650] truncate mt-0.5">{wo.title}</div>
+              <div className="font-mono text-[9px] text-[#8A8175] mt-0.5">{wo.date} • {wo.tech}</div>
             </div>
           </div>
         ))}

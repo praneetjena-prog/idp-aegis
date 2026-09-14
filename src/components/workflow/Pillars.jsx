@@ -23,52 +23,52 @@ export const Pillars = () => {
             <button
               key={p.id}
               onClick={() => setActive(p.id)}
-              className={`w-full text-left flex items-start gap-3 p-3 rounded-[10px] border transition-all ${isActive ? 'bg-[#0EA5E9]/10 border-[#0EA5E9]/30' : 'bg-[#121721] border-[#1E2638] hover:border-[#26324D] hover:bg-[#151C29]'}`}
+              className={`w-full text-left flex items-start gap-3 p-3 rounded-[10px] border transition-all ${isActive ? 'bg-[#2C6E9B]/10 border-[#2C6E9B]/30' : 'bg-[#FFFFFF] border-[#E6E0D6] hover:border-[#D2C9BA] hover:bg-[#FAF8F4]'}`}
             >
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 ${isActive ? 'bg-[#0EA5E9] text-white border-[#0EA5E9]' : 'bg-[#1E2638] text-slate-400 border-[#26324D]'}`}>
+              <div className={`w-8 h-8 rounded-lg flex items-center justify-center border shrink-0 ${isActive ? 'bg-[#2C6E9B] text-[#FFFFFF] border-[#2C6E9B]' : 'bg-[#E6E0D6] text-[#6E6558] border-[#D2C9BA]'}`}>
                 <Icon size={16} />
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <span className="font-mono text-[10px] text-slate-500">0{p.id}</span>
-                  <span className={`font-mono text-[12px] font-semibold uppercase tracking-wide ${isActive ? 'text-white' : 'text-slate-300'}`}>{p.title}</span>
+                  <span className="font-mono text-[10px] text-[#8A8175]">0{p.id}</span>
+                  <span className={`font-mono text-[12px] font-semibold uppercase tracking-wide ${isActive ? 'text-[#1F2933]' : 'text-[#3E4650]'}`}>{p.title}</span>
                 </div>
-                <div className="mt-1 font-mono text-[11px] leading-[1.5] text-slate-400 line-clamp-2">{p.desc}</div>
+                <div className="mt-1 font-mono text-[11px] leading-[1.5] text-[#6E6558] line-clamp-2">{p.desc}</div>
               </div>
-              {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[#0EA5E9] mt-2 animate-pulse" />}
+              {isActive && <div className="w-1.5 h-1.5 rounded-full bg-[#2C6E9B] mt-2 animate-pulse" />}
             </button>
           );
         })}
       </div>
       <div className="lg:col-span-7">
-        <Card className="h-full border-[#0EA5E9]/20 bg-[#121721]">
+        <Card className="h-full border-[#2C6E9B]/20 bg-[#FFFFFF]">
           <div className="flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 rounded-lg bg-[#0EA5E9] flex items-center justify-center text-white">
+            <div className="w-10 h-10 rounded-lg bg-[#2C6E9B] flex items-center justify-center text-[#FFFFFF]">
               {activePillar && <activePillar.icon size={20} />}
             </div>
             <div>
-              <div className="font-mono text-[10px] text-[#0EA5E9] tracking-widest uppercase">PILLAR 0{activePillar.id} • ACTIVE</div>
-              <div className="font-mono text-[14px] font-bold text-white uppercase">{activePillar.title}</div>
+              <div className="font-mono text-[10px] text-[#2C6E9B] tracking-widest uppercase">PILLAR 0{activePillar.id} • ACTIVE</div>
+              <div className="font-mono text-[14px] font-bold text-[#1F2933] uppercase">{activePillar.title}</div>
             </div>
           </div>
           <div className="space-y-4">
-            <div className="bg-[#0B0E14] border border-[#1E2638] rounded-lg p-3">
-              <div className="font-mono text-[10px] text-slate-500 uppercase tracking-wider mb-1">How it works</div>
-              <div className="font-mono text-[12px] text-slate-200 leading-relaxed">{activePillar.desc}</div>
-              <div className="mt-2 font-mono text-[10px] text-[#14B8A6]">{activePillar.detail}</div>
+            <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-3">
+              <div className="font-mono text-[10px] text-[#8A8175] uppercase tracking-wider mb-1">How it works</div>
+              <div className="font-mono text-[12px] text-[#2A3138] leading-relaxed">{activePillar.desc}</div>
+              <div className="mt-2 font-mono text-[10px] text-[#2F8A7E]">{activePillar.detail}</div>
             </div>
-            <div className="bg-[#0EA5E9]/5 border border-[#0EA5E9]/20 rounded-lg p-3">
-              <div className="font-mono text-[10px] text-[#0EA5E9] uppercase tracking-wider mb-1">Technician Example</div>
-              <div className="font-mono text-[11px] text-slate-300 leading-relaxed italic">"{activePillar.example}"</div>
+            <div className="bg-[#2C6E9B]/5 border border-[#2C6E9B]/20 rounded-lg p-3">
+              <div className="font-mono text-[10px] text-[#2C6E9B] uppercase tracking-wider mb-1">Technician Example</div>
+              <div className="font-mono text-[11px] text-[#3E4650] leading-relaxed italic">"{activePillar.example}"</div>
             </div>
-            <div className="flex items-center gap-2 font-mono text-[10px] text-slate-500">
-              <div className="flex-1 h-px bg-[#1E2638]" />
+            <div className="flex items-center gap-2 font-mono text-[10px] text-[#8A8175]">
+              <div className="flex-1 h-px bg-[#E6E0D6]" />
               <span>Observe → Understand → Flag → Correlate → Explain → Act</span>
-              <div className="flex-1 h-px bg-[#1E2638]" />
+              <div className="flex-1 h-px bg-[#E6E0D6]" />
             </div>
             <div className="grid grid-cols-5 gap-1">
               {pillars.map(p => (
-                <div key={p.id} className={`h-1 rounded-full ${p.id <= active ? 'bg-[#0EA5E9]' : 'bg-[#1E2638]'}`} />
+                <div key={p.id} className={`h-1 rounded-full ${p.id <= active ? 'bg-[#2C6E9B]' : 'bg-[#E6E0D6]'}`} />
               ))}
             </div>
           </div>

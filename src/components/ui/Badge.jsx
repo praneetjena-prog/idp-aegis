@@ -2,11 +2,11 @@ import React from 'react';
 
 export const Badge = ({ variant = 'nominal', children, className = '' }) => {
   const variants = {
-    nominal: "bg-[#10B981]/10 text-[#10B981] border-[#10B981]/30",
-    attention: "bg-[#F59E0B]/10 text-[#F59E0B] border-[#F59E0B]/30",
-    critical: "bg-[#EF4444]/10 text-[#EF4444] border-[#EF4444]/30",
-    info: "bg-[#0EA5E9]/10 text-[#0EA5E9] border-[#0EA5E9]/30",
-    neutral: "bg-[#1E2638] text-slate-400 border-[#26324D]"
+    nominal: "bg-[#2E7D5B]/10 text-[#2E7D5B] border-[#2E7D5B]/30",
+    attention: "bg-[#B07B1C]/10 text-[#B07B1C] border-[#B07B1C]/30",
+    critical: "bg-[#C05043]/10 text-[#C05043] border-[#C05043]/30",
+    info: "bg-[#2C6E9B]/10 text-[#2C6E9B] border-[#2C6E9B]/30",
+    neutral: "bg-[#E6E0D6] text-[#6E6558] border-[#D2C9BA]"
   };
   return (
     <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold tracking-wider uppercase border ${variants[variant]} ${className}`}>

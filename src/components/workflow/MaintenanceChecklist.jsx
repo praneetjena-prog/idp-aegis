@@ -28,19 +28,19 @@ export const MaintenanceChecklist = ({ onExport }) => {
         <CardTitle>Exportable Maintenance Checklist • AHU-03 • WO #8821</CardTitle>
         <div className="flex items-center gap-2">
           <Badge variant="neutral">{tasks.filter(t => t.checked).length}/{tasks.length} Done</Badge>
-          <div className="w-20 h-1.5 bg-[#0B0E14] border border-[#1E2638] rounded-full overflow-hidden">
-            <div className="h-full bg-[#10B981] transition-all" style={{ width: `${progress}%` }} />
+          <div className="w-20 h-1.5 bg-[#F1EDE6] border border-[#E6E0D6] rounded-full overflow-hidden">
+            <div className="h-full bg-[#2E7D5B] transition-all" style={{ width: `${progress}%` }} />
           </div>
         </div>
       </CardHeader>
       <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
         {tasks.map(task => (
-          <button key={task.id} onClick={() => toggle(task.id)} className="w-full text-left flex items-start gap-2.5 p-2 rounded-lg bg-[#0B0E14] border border-[#1E2638] hover:border-[#26324D] transition-colors">
-            {task.checked ? <CheckSquare size={14} className="text-[#10B981] mt-0.5 shrink-0" /> : <Square size={14} className="text-slate-600 mt-0.5 shrink-0" />}
+          <button key={task.id} onClick={() => toggle(task.id)} className="w-full text-left flex items-start gap-2.5 p-2 rounded-lg bg-[#F1EDE6] border border-[#E6E0D6] hover:border-[#D2C9BA] transition-colors">
+            {task.checked ? <CheckSquare size={14} className="text-[#2E7D5B] mt-0.5 shrink-0" /> : <Square size={14} className="text-[#A99F90] mt-0.5 shrink-0" />}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="font-mono text-[9px] px-1 py-0.5 bg-[#1E2638] border border-[#26324D] rounded text-slate-400 uppercase">{task.category}</span>
-                <span className={`font-mono text-[11px] leading-[1.4] ${task.checked ? 'text-slate-500 line-through' : 'text-slate-300'}`}>{task.text}</span>
+                <span className="font-mono text-[9px] px-1 py-0.5 bg-[#E6E0D6] border border-[#D2C9BA] rounded text-[#6E6558] uppercase">{task.category}</span>
+                <span className={`font-mono text-[11px] leading-[1.4] ${task.checked ? 'text-[#8A8175] line-through' : 'text-[#3E4650]'}`}>{task.text}</span>
               </div>
             </div>
           </button>
@@ -50,7 +50,7 @@ export const MaintenanceChecklist = ({ onExport }) => {
         <Button variant="teal" size="sm" className="flex-1" onClick={() => onExport('checklist')}><Printer size={12} className="mr-1.5" /> Print Field Sheet (PDF)</Button>
         <Button variant="secondary" size="sm" onClick={() => onExport('json')}><Download size={12} className="mr-1" /> Export JSON</Button>
       </div>
-      <div className="mt-2 font-mono text-[9px] text-slate-600">Designed for mobile field tablets • High contrast • Offline capable • No vendor lock-in</div>
+      <div className="mt-2 font-mono text-[9px] text-[#A99F90]">Designed for mobile field tablets • High contrast • Offline capable • No vendor lock-in</div>
     </Card>
   );
 };

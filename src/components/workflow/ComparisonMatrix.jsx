@@ -11,23 +11,23 @@ const rows = [
 
 export const ComparisonMatrix = () => {
   return (
-    <div className="overflow-x-auto rounded-[10px] border border-[#1E2638] bg-[#121721]">
+    <div className="overflow-x-auto rounded-[10px] border border-[#E6E0D6] bg-[#FFFFFF]">
       <table className="w-full text-left">
         <thead>
-          <tr className="bg-[#0B0E14] border-b border-[#1E2638]">
-            <th className="px-4 py-3 font-mono text-[10px] font-semibold tracking-wider uppercase text-slate-500">Existing System</th>
-            <th className="px-4 py-3 font-mono text-[10px] font-semibold tracking-wider uppercase text-slate-500">Primary Function</th>
-            <th className="px-4 py-3 font-mono text-[10px] font-semibold tracking-wider uppercase text-slate-500">Workflow Limitation / Gap</th>
-            <th className="px-4 py-3 font-mono text-[10px] font-semibold tracking-wider uppercase text-[#14B8A6]">Aegis Open Approach</th>
+          <tr className="bg-[#F1EDE6] border-b border-[#E6E0D6]">
+            <th className="px-4 py-3 font-mono text-[10px] font-semibold tracking-wider uppercase text-[#8A8175]">Existing System</th>
+            <th className="px-4 py-3 font-mono text-[10px] font-semibold tracking-wider uppercase text-[#8A8175]">Primary Function</th>
+            <th className="px-4 py-3 font-mono text-[10px] font-semibold tracking-wider uppercase text-[#8A8175]">Workflow Limitation / Gap</th>
+            <th className="px-4 py-3 font-mono text-[10px] font-semibold tracking-wider uppercase text-[#2F8A7E]">Aegis Open Approach</th>
           </tr>
         </thead>
         <tbody>
           {rows.map((r, i) => (
-            <tr key={i} className="border-b border-[#1E2638]/60 last:border-0 hover:bg-[#151C29] transition-colors">
-              <td className="px-4 py-3 font-mono text-[11px] font-semibold text-white whitespace-nowrap">{r.system}</td>
-              <td className="px-4 py-3 font-mono text-[11px] text-slate-400 max-w-[200px]">{r.func}</td>
-              <td className="px-4 py-3 font-mono text-[11px] text-[#F59E0B]/80 max-w-[260px]">{r.gap}</td>
-              <td className="px-4 py-3 font-mono text-[11px] text-[#14B8A6] max-w-[280px] bg-[#14B8A6]/[0.03]">{r.aegis}</td>
+            <tr key={i} className="border-b border-[#E6E0D6]/60 last:border-0 hover:bg-[#FAF8F4] transition-colors">
+              <td className="px-4 py-3 font-mono text-[11px] font-semibold text-[#1F2933] whitespace-nowrap">{r.system}</td>
+              <td className="px-4 py-3 font-mono text-[11px] text-[#6E6558] max-w-[200px]">{r.func}</td>
+              <td className="px-4 py-3 font-mono text-[11px] text-[#B07B1C]/80 max-w-[260px]">{r.gap}</td>
+              <td className="px-4 py-3 font-mono text-[11px] text-[#2F8A7E] max-w-[280px] bg-[#2F8A7E]/[0.03]">{r.aegis}</td>
             </tr>
           ))}
         </tbody>

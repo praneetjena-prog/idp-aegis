@@ -13,36 +13,36 @@ const rows = [
 
 export const HardwareTable = () => {
   return (
-    <div className="rounded-[10px] border border-[#1E2638] bg-[#121721] overflow-hidden">
-      <div className="px-4 py-3 bg-[#0B0E14] border-b border-[#1E2638] flex items-center justify-between">
-        <span className="font-mono text-[11px] font-semibold tracking-wider uppercase text-white">Democratized Sensor Kit • Cost-Effective Deployment</span>
-        <span className="font-mono text-[10px] text-[#10B981] px-2 py-0.5 bg-[#10B981]/10 border border-[#10B981]/20 rounded">Total Kit &lt; $180 / Asset</span>
+    <div className="rounded-[10px] border border-[#E6E0D6] bg-[#FFFFFF] overflow-hidden">
+      <div className="px-4 py-3 bg-[#F1EDE6] border-b border-[#E6E0D6] flex items-center justify-between">
+        <span className="font-mono text-[11px] font-semibold tracking-wider uppercase text-[#1F2933]">Democratized Sensor Kit • Cost-Effective Deployment</span>
+        <span className="font-mono text-[10px] text-[#2E7D5B] px-2 py-0.5 bg-[#2E7D5B]/10 border border-[#2E7D5B]/20 rounded">Total Kit &lt; $180 / Asset</span>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="border-b border-[#1E2638]/60">
-              <th className="px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-slate-500">Parameter</th>
-              <th className="px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-slate-500">Recommended Sensor</th>
-              <th className="px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-slate-500">Target Component / Application</th>
-              <th className="px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-slate-500">Interface</th>
+            <tr className="border-b border-[#E6E0D6]/60">
+              <th className="px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#8A8175]">Parameter</th>
+              <th className="px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#8A8175]">Recommended Sensor</th>
+              <th className="px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#8A8175]">Target Component / Application</th>
+              <th className="px-4 py-2 font-mono text-[10px] font-semibold uppercase tracking-wider text-[#8A8175]">Interface</th>
             </tr>
           </thead>
           <tbody>
             {rows.map((r,i)=>(
-              <tr key={i} className="border-b border-[#1E2638]/40 last:border-0 hover:bg-[#151C29]">
-                <td className="px-4 py-2.5 font-mono text-[11px] font-semibold text-white">{r.param}</td>
-                <td className="px-4 py-2.5 font-mono text-[11px] text-[#0EA5E9]">{r.sensor}</td>
-                <td className="px-4 py-2.5 font-mono text-[11px] text-slate-400">{r.target}</td>
-                <td className="px-4 py-2.5 font-mono text-[10px]"><span className="px-1.5 py-0.5 bg-[#1E2638] border border-[#26324D] rounded text-slate-300">{r.iface}</span></td>
+              <tr key={i} className="border-b border-[#E6E0D6]/40 last:border-0 hover:bg-[#FAF8F4]">
+                <td className="px-4 py-2.5 font-mono text-[11px] font-semibold text-[#1F2933]">{r.param}</td>
+                <td className="px-4 py-2.5 font-mono text-[11px] text-[#2C6E9B]">{r.sensor}</td>
+                <td className="px-4 py-2.5 font-mono text-[11px] text-[#6E6558]">{r.target}</td>
+                <td className="px-4 py-2.5 font-mono text-[10px]"><span className="px-1.5 py-0.5 bg-[#E6E0D6] border border-[#D2C9BA] rounded text-[#3E4650]">{r.iface}</span></td>
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      <div className="px-4 py-2 bg-[#0B0E14] border-t border-[#1E2638] font-mono text-[10px] text-slate-500 flex gap-4">
+      <div className="px-4 py-2 bg-[#F1EDE6] border-t border-[#E6E0D6] font-mono text-[10px] text-[#8A8175] flex gap-4">
         <span>Open hardware • ESP32 edge • No proprietary gateway required</span>
-        <span className="text-slate-600">•</span>
+        <span className="text-[#A99F90]">•</span>
         <span>Docs: github.com/aegis-open/sensor-kit</span>
       </div>
     </div>

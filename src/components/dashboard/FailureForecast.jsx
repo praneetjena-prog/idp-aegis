@@ -32,45 +32,45 @@ export const FailureForecast = ({ mode = 'fault' }) => {
   return (
     <Card className="h-full">
       <CardHeader>
-        <CardTitle>Failure Trajectory Forecast • Remaining Useful Life</CardTitle>
-        <Badge variant={mode === 'fault' ? 'critical' : 'nominal'}>{mode === 'fault' ? 'RUL 168h ±24h' : 'RUL 720h+'}</Badge>
+        <CardTitle>Failure risk · next 14 days</CardTitle>
+        <Badge variant={mode === 'fault' ? 'critical' : 'nominal'}>{mode === 'fault' ? 'About 7 days to act' : 'No near-term risk'}</Badge>
       </CardHeader>
       <div className="space-y-3">
-        <div className="bg-[#0B0E14] border border-[#1E2638] rounded-lg p-2">
+        <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-2">
           <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-[150px]">
             {[0, 0.25, 0.5, 0.75, 1].map(v => (
-              <line key={v} x1={pad.left} x2={width - pad.right} y1={toY(v)} y2={toY(v)} stroke="#1E2638" strokeDasharray="2 3" opacity={0.5} />
+              <line key={v} x1={pad.left} x2={width - pad.right} y1={toY(v)} y2={toY(v)} stroke="#E6E0D6" strokeDasharray="2 3" opacity={0.5} />
             ))}
-            <path d={areaPath} fill={mode === 'fault' ? '#EF4444' : '#10B981'} opacity={0.08} />
-            <path d={upperPath} fill="none" stroke={mode === 'fault' ? '#EF4444' : '#10B981'} strokeWidth={1} strokeDasharray="3 3" opacity={0.4} />
-            <path d={lowerPath} fill="none" stroke={mode === 'fault' ? '#EF4444' : '#10B981'} strokeWidth={1} strokeDasharray="3 3" opacity={0.4} />
-            <path d={linePath} fill="none" stroke={mode === 'fault' ? '#EF4444' : '#10B981'} strokeWidth={2} />
+            <path d={areaPath} fill={mode === 'fault' ? '#C05043' : '#2E7D5B'} opacity={0.08} />
+            <path d={upperPath} fill="none" stroke={mode === 'fault' ? '#C05043' : '#2E7D5B'} strokeWidth={1} strokeDasharray="3 3" opacity={0.4} />
+            <path d={lowerPath} fill="none" stroke={mode === 'fault' ? '#C05043' : '#2E7D5B'} strokeWidth={1} strokeDasharray="3 3" opacity={0.4} />
+            <path d={linePath} fill="none" stroke={mode === 'fault' ? '#C05043' : '#2E7D5B'} strokeWidth={2} />
             {points.filter((_, i) => i % 2 === 0).map((p, i) => (
-              <circle key={i} cx={toX(p.day)} cy={toY(p.base)} r={2.5} fill={mode === 'fault' ? '#EF4444' : '#10B981'} stroke="#0B0E14" strokeWidth={1} />
+              <circle key={i} cx={toX(p.day)} cy={toY(p.base)} r={2.5} fill={mode === 'fault' ? '#C05043' : '#2E7D5B'} stroke="#F1EDE6" strokeWidth={1} />
             ))}
             {/* threshold */}
-            <line x1={pad.left} x2={width - pad.right} y1={toY(0.85)} y2={toY(0.85)} stroke="#F59E0B" strokeDasharray="5 3" />
-            <text x={width - pad.right - 2} y={toY(0.85) - 4} fontSize="8" fontFamily="JetBrains Mono" fill="#F59E0B" textAnchor="end">FAILURE THRESHOLD 85%</text>
+            <line x1={pad.left} x2={width - pad.right} y1={toY(0.85)} y2={toY(0.85)} stroke="#B07B1C" strokeDasharray="5 3" />
+              <text x={width - pad.right - 2} y={toY(0.85) - 4} fontSize="8" fontFamily="JetBrains Mono" fill="#B07B1C" textAnchor="end">ACTION LIMIT 85%</text>
           </svg>
-          <div className="flex justify-between font-mono text-[8px] text-slate-600 px-1">
+          <div className="flex justify-between font-mono text-[8px] text-[#A99F90] px-1">
             <span>Today</span><span>Day 7</span><span>Day 14</span>
           </div>
         </div>
         <div className="grid grid-cols-3 gap-2 font-mono text-[10px]">
-          <div className="bg-[#0B0E14] border border-[#1E2638] rounded p-2">
-            <div className="text-slate-500 uppercase text-[9px]">Degradation Slope</div>
-            <div className="text-white font-bold mt-1">{mode === 'fault' ? '0.12 A/day' : '0.01 A/day'}</div>
-            <div className="text-slate-600 text-[9px] mt-1">Current draw trend</div>
+          <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded p-2">
+            <div className="text-[#8A8175] text-[9px]">Rate of change</div>
+            <div className="text-[#1F2933] font-bold mt-1">{mode === 'fault' ? '0.12 A/day' : '0.01 A/day'}</div>
+            <div className="text-[#A99F90] text-[9px] mt-1">Current increase each day</div>
           </div>
-          <div className="bg-[#0B0E14] border border-[#1E2638] rounded p-2">
-            <div className="text-slate-500 uppercase text-[9px]">Confidence Interval</div>
-            <div className="text-[#0EA5E9] font-bold mt-1">±24h @ 91%</div>
-            <div className="text-slate-600 text-[9px] mt-1">Spectral + current</div>
+          <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded p-2">
+            <div className="text-[#8A8175] text-[9px]">Forecast confidence</div>
+            <div className="text-[#2C6E9B] font-bold mt-1">±24h @ 91%</div>
+            <div className="text-[#A99F90] text-[9px] mt-1">Based on vibration and current</div>
           </div>
-          <div className="bg-[#0B0E14] border border-[#1E2638] rounded p-2">
-            <div className="text-slate-500 uppercase text-[9px]">Recommended Action</div>
-            <div className={`font-bold mt-1 ${mode === 'fault' ? 'text-[#EF4444]' : 'text-[#10B981]'}`}>{mode === 'fault' ? 'Inspect <7D' : 'Monitor'}</div>
-            <div className="text-slate-600 text-[9px] mt-1">Per maintenance SOP</div>
+          <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded p-2">
+            <div className="text-[#8A8175] text-[9px]">Next step</div>
+            <div className={`font-bold mt-1 ${mode === 'fault' ? 'text-[#C05043]' : 'text-[#2E7D5B]'}`}>{mode === 'fault' ? 'Inspect within 7 days' : 'Continue monitoring'}</div>
+            <div className="text-[#A99F90] text-[9px] mt-1">Based on maintenance procedure</div>
           </div>
         </div>
       </div>

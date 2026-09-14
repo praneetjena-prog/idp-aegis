@@ -14,7 +14,7 @@ export const Gauge = ({ value = 87, max = 100, label = "HEALTH", delta = "+2.1%"
           <circle
             cx="80" cy="80" r={radius}
             fill="none"
-            stroke="#1E2638"
+            stroke="#E6E0D6"
             strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
@@ -23,7 +23,7 @@ export const Gauge = ({ value = 87, max = 100, label = "HEALTH", delta = "+2.1%"
           <circle
             cx="80" cy="80" r={radius}
             fill="none"
-            stroke={value > 80 ? "#10B981" : value > 60 ? "#F59E0B" : "#EF4444"}
+            stroke={value > 80 ? "#2E7D5B" : value > 60 ? "#B07B1C" : "#C05043"}
             strokeWidth="10"
             strokeLinecap="round"
             strokeDasharray={`${circumference * 0.75} ${circumference * 0.25}`}
@@ -33,12 +33,12 @@ export const Gauge = ({ value = 87, max = 100, label = "HEALTH", delta = "+2.1%"
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono text-[36px] font-bold tracking-tight text-white">{value}</span>
-          <span className="font-mono text-[11px] text-slate-500 -mt-1">/ {max}</span>
-          <div className="mt-1 px-1.5 py-0.5 rounded bg-[#10B981]/10 border border-[#10B981]/20 text-[10px] font-mono text-[#10B981]">{delta} 7D</div>
+          <span className="font-mono text-[36px] font-bold tracking-tight text-[#1F2933]">{value}</span>
+          <span className="font-mono text-[11px] text-[#8A8175] -mt-1">/ {max}</span>
+          <div className="mt-1 px-1.5 py-0.5 rounded bg-[#2E7D5B]/10 border border-[#2E7D5B]/20 text-[10px] font-mono text-[#2E7D5B]">{delta} 7D</div>
         </div>
       </div>
-      <span className="mt-1 font-mono text-[10px] tracking-[0.2em] text-slate-500 uppercase">{label}</span>
+      <span className="mt-1 font-mono text-[10px] tracking-[0.2em] text-[#8A8175] uppercase">{label}</span>
     </div>
   );
 };

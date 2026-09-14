@@ -7,6 +7,9 @@ import path from 'path';
 export default defineConfig({
   base: process.env.VITE_BASE_URL || './',
   plugins: [react(), tailwindcss()],
+  define: {
+    'process.env': {},
+  },
   resolve: {
     alias: {
       '@': path.resolve(import.meta.dirname, './src'),

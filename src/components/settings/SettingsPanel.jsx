@@ -114,6 +114,25 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
     }
   }, [open, params]);
 
+  // Lock background scroll while modal is open to prevent page behind it from scrolling
+  useEffect(() => {
+    if (!open) return;
+    const originalOverflow = document.body.style.overflow;
+    const originalPaddingRight = document.body.style.paddingRight;
+    
+    // Check if scrollbar exists to prevent layout shift
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+    if (scrollbarWidth > 0) {
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.paddingRight = originalPaddingRight;
+    };
+  }, [open]);
+
   // Keyboard close on Esc
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -153,63 +172,75 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
   };
 
   return (
-    <div className="fixed inset-0 z-[200] flex justify-end bg-[#1F2933]/40 backdrop-blur-[2px] animate-in fade-in duration-200">
-      {/* Backdrop click to close */}
-      <button 
-        type="button" 
-        aria-label="Close settings" 
-        className="flex-1 cursor-default focus:outline-none" 
+    <div 
+      className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-5 md:p-6 bg-[#1F2933]/60 dark:bg-[#000000]/80 backdrop-blur-sm animate-in fade-in duration-200 overscroll-contain"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="facility-settings-title"
+    >
+      {/* Clickable Backdrop to close immediately */}
+      <div 
+        className="absolute inset-0 cursor-pointer" 
         onClick={onClose} 
+        aria-hidden="true" 
       />
 
-      {/* Slide-over panel */}
-      <div className="w-full max-w-[560px] h-full bg-[#FAF8F4] dark:bg-[#141B22] border-l-2 border-[#1F2933] dark:border-[#2C3847] shadow-[0_0_50px_rgba(0,0,0,0.25)] flex flex-col animate-in slide-in-from-right duration-250">
+      {/* Pop-up Dialog Card */}
+      <div 
+        className="relative z-10 w-full max-w-[700px] max-h-[90vh] bg-[#FAF8F4] dark:bg-[#141B22] border-2 border-[#1F2933] dark:border-[#2C3847] rounded-xl shadow-[6px_6px_0_#1F2933] dark:shadow-[6px_6px_0_#0F151C] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200 overscroll-contain"
+        onClick={(e) => e.stopPropagation()}
+      >
         
-        {/* Panel Header */}
+        {/* Pop-up Header */}
         <div className="px-5 py-4 bg-[#FFFFFF] dark:bg-[#1A222B] border-b-2 border-[#1F2933] dark:border-[#2C3847] flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#2C6E9B] text-white flex items-center justify-center font-bold shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C]">
               <Sliders size={16} />
             </div>
             <div>
-              <h2 className="font-display text-[15px] font-bold tracking-[0.05em] uppercase text-[#1F2933] dark:text-[#FAF8F4]">
-                Facility Configuration
+              <h2 id="facility-settings-title" className="font-display text-[15px] sm:text-[16px] font-bold tracking-[0.04em] uppercase text-[#1F2933] dark:text-[#FAF8F4]">
+                Facility Configuration & Calibration
               </h2>
               <p className="font-mono text-[10px] text-[#8A8175] mt-0.5">
-                Adjust safety limits, nameplate specs, & sensor offsets
+                Set machine limits, nameplate ratings, and sensor baselines
               </p>
             </div>
           </div>
 
-          <button 
-            onClick={onClose} 
-            className="w-8 h-8 rounded border border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] text-[#6E6558] dark:text-[#C5BCAD] hover:text-[#1F2933] dark:hover:text-white hover:border-[#1F2933] flex items-center justify-center transition-colors"
-            aria-label="Close Settings"
-            title="Close (Esc)"
-          >
-            <X size={16} />
-          </button>
+          <div className="flex items-center gap-2">
+            <span className="hidden sm:inline font-mono text-[10px] text-[#8A8175] border border-[#D2C9BA] dark:border-[#2C3847] px-1.5 py-0.5 rounded bg-[#FAF8F4] dark:bg-[#141B22]">
+              ESC
+            </span>
+            <button 
+              onClick={onClose} 
+              className="w-8 h-8 rounded border border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] text-[#6E6558] dark:text-[#C5BCAD] hover:text-[#1F2933] dark:hover:text-white hover:border-[#1F2933] flex items-center justify-center transition-colors"
+              aria-label="Close Settings (Esc)"
+              title="Close Settings (Esc)"
+            >
+              <X size={16} />
+            </button>
+          </div>
         </div>
 
-        {/* Live Status Bar */}
+        {/* Live Status Strip */}
         <div className="px-5 py-2 bg-[#F1EDE6] dark:bg-[#10161D] border-b border-[#E6E0D6] dark:border-[#2C3847] flex items-center justify-between text-[11px] font-mono">
           <div className="flex items-center gap-2">
             <span className={`w-2 h-2 rounded-full ${isLive ? 'bg-[#2E7D5B] animate-pulse' : 'bg-[#B07B1C]'}`} />
             <span className="text-[#3E4650] dark:text-[#C5BCAD]">
-              {isLive ? 'ESP32 Node Connected & Transmitting' : 'Demonstration Mode (Simulated Physics)'}
+              {isLive ? 'ESP32 Hardware Stream: Connected' : 'Demonstration Mode (Realistic Physics Engine)'}
             </span>
           </div>
-          <span className="text-[#8A8175]">
-            {draft.assetTag} • {draft.assetType || 'Air Handler'}
+          <span className="text-[#8A8175] hidden sm:inline">
+            Active Asset: <strong className="text-[#1F2933] dark:text-[#FAF8F4]">{draft.assetTag}</strong>
           </span>
         </div>
 
         {/* Navigation Tabs */}
-        <div className="px-5 pt-3 bg-[#FFFFFF] dark:bg-[#1A222B] border-b border-[#E6E0D6] dark:border-[#2C3847] flex items-center gap-2">
+        <div className="px-5 pt-3 bg-[#FFFFFF] dark:bg-[#1A222B] border-b border-[#E6E0D6] dark:border-[#2C3847] flex items-center gap-2 overflow-x-auto">
           {[
             { id: 'thresholds', label: '1. Safety Thresholds', icon: ShieldAlert },
             { id: 'identity', label: '2. Equipment Identity', icon: Layers },
-            { id: 'hardware', label: '3. Sensor & Calibrate', icon: Cpu },
+            { id: 'hardware', label: '3. Sensor Calibration', icon: Cpu },
           ].map(t => {
             const Icon = t.icon;
             const active = tab === t.id;
@@ -217,7 +248,7 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className={`font-mono text-[11px] font-bold tracking-[0.04em] px-3 py-2 border-b-2 flex items-center gap-1.5 transition-all ${
+                className={`whitespace-nowrap font-mono text-[11px] font-bold tracking-[0.04em] px-3 py-2 border-b-2 flex items-center gap-1.5 transition-all ${
                   active 
                     ? 'border-[#2C6E9B] text-[#2C6E9B] bg-[#2C6E9B]/5' 
                     : 'border-transparent text-[#6E6558] dark:text-[#A99F90] hover:text-[#1F2933] dark:hover:text-[#FAF8F4]'
@@ -230,8 +261,8 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
           })}
         </div>
 
-        {/* Scrollable Content Body */}
-        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6">
+        {/* Scrollable Content Body - with overscroll containment */}
+        <div className="flex-1 overflow-y-auto px-5 py-5 space-y-6 overscroll-contain">
 
           {/* TAB 1: SAFETY THRESHOLDS */}
           {tab === 'thresholds' && (
@@ -243,29 +274,31 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
                   <div className="font-mono text-[10px] uppercase tracking-wider font-bold text-[#8A8175] flex items-center gap-1.5">
                     <Sparkles size={13} className="text-[#2C6E9B]" /> Technician Standards Presets
                   </div>
-                  <span className="text-[10px] font-mono text-[#8A8175]">Click to apply standard</span>
+                  <span className="text-[10px] font-mono text-[#8A8175]">Click to apply recommended limits</span>
                 </div>
 
-                <div className="grid grid-cols-1 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                   {PRESETS.map(p => (
                     <button
                       key={p.id}
                       type="button"
                       onClick={() => applyPreset(p)}
-                      className={`text-left p-2.5 rounded-md border text-[11px] transition-all flex items-start justify-between gap-2 ${
+                      className={`text-left p-2.5 rounded-md border text-[11px] transition-all flex flex-col justify-between ${
                         activePreset === p.id 
-                          ? 'border-[#2C6E9B] bg-[#2C6E9B]/10 dark:bg-[#2C6E9B]/20 text-[#1F2933] dark:text-[#FAF8F4]' 
+                          ? 'border-[#2C6E9B] bg-[#2C6E9B]/10 dark:bg-[#2C6E9B]/20 text-[#1F2933] dark:text-[#FAF8F4] shadow-sm' 
                           : 'border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] text-[#554D42] dark:text-[#C5BCAD] hover:border-[#2C6E9B]'
                       }`}
                     >
                       <div>
-                        <div className="font-bold flex items-center gap-1.5">
-                          {p.name}
-                          {activePreset === p.id && <span className="text-[9px] px-1.5 py-0.2 bg-[#2C6E9B] text-white rounded">Active</span>}
+                        <div className="font-bold flex items-center justify-between gap-1">
+                          <span>{p.badge}</span>
+                          {activePreset === p.id && <span className="text-[9px] px-1.5 py-0.2 bg-[#2C6E9B] text-white rounded font-normal">Active</span>}
                         </div>
-                        <div className="text-[10px] text-[#8A8175] mt-0.5">{p.description}</div>
+                        <div className="text-[10px] text-[#8A8175] mt-1 line-clamp-2">{p.description}</div>
                       </div>
-                      <span className="font-mono text-[10px] shrink-0 text-[#2C6E9B] font-semibold">{p.badge}</span>
+                      <div className="mt-2 pt-1 border-t border-[#E6E0D6]/50 dark:border-[#2C3847]/50 font-mono text-[9px] text-[#2C6E9B] font-semibold">
+                        Vib: {p.values.vibrationWarn} / {p.values.vibrationCritical} mm/s
+                      </div>
                     </button>
                   ))}
                 </div>
@@ -275,7 +308,7 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
               <div className="space-y-4">
                 <div className="font-mono text-[11px] uppercase tracking-wider font-bold text-[#1F2933] dark:text-[#FAF8F4] pb-1 border-b border-[#E6E0D6] dark:border-[#2C3847] flex items-center justify-between">
                   <span>Custom Threshold Limits</span>
-                  <span className="text-[10px] text-[#8A8175] normal-case">Drives warning alerts & work orders</span>
+                  <span className="text-[10px] text-[#8A8175] normal-case">Controls warning alarms & work orders</span>
                 </div>
 
                 {/* Vibration Limits */}
@@ -298,11 +331,11 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
                           step="0.1"
                           value={draft.vibrationWarn ?? 1.8}
                           onChange={(e) => set('vibrationWarn', parseFloat(e.target.value))}
-                          className="w-full bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded px-2 py-1 font-mono text-[12px] text-[#1F2933] dark:text-white"
+                          className="w-full bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded px-2.5 py-1.5 font-mono text-[12px] text-[#1F2933] dark:text-white focus:outline-none focus:border-[#2C6E9B]"
                         />
                         <span className="text-[10px] font-mono text-[#8A8175]">mm/s</span>
                       </div>
-                      <p className="text-[9px] text-[#8A8175] mt-1">Triggers early inspection warning.</p>
+                      <p className="text-[9px] text-[#8A8175] mt-1">Triggers early inspection notification.</p>
                     </div>
 
                     <div>
@@ -315,11 +348,11 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
                           step="0.1"
                           value={draft.vibrationCritical ?? 2.5}
                           onChange={(e) => set('vibrationCritical', parseFloat(e.target.value))}
-                          className="w-full bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded px-2 py-1 font-mono text-[12px] text-[#1F2933] dark:text-white"
+                          className="w-full bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded px-2.5 py-1.5 font-mono text-[12px] text-[#1F2933] dark:text-white focus:outline-none focus:border-[#C05043]"
                         />
                         <span className="text-[10px] font-mono text-[#8A8175]">mm/s</span>
                       </div>
-                      <p className="text-[9px] text-[#8A8175] mt-1">Requires immediate work order.</p>
+                      <p className="text-[9px] text-[#8A8175] mt-1">Dispatches work order & alert lead.</p>
                     </div>
                   </div>
                 </div>
@@ -344,7 +377,7 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
                           step="0.5"
                           value={draft.tempWarn ?? 45}
                           onChange={(e) => set('tempWarn', parseFloat(e.target.value))}
-                          className="w-full bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded px-2 py-1 font-mono text-[12px] text-[#1F2933] dark:text-white"
+                          className="w-full bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded px-2.5 py-1.5 font-mono text-[12px] text-[#1F2933] dark:text-white focus:outline-none focus:border-[#2C6E9B]"
                         />
                         <span className="text-[10px] font-mono text-[#8A8175]">°C</span>
                       </div>
@@ -360,7 +393,7 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
                           step="0.5"
                           value={draft.tempCritical ?? 52}
                           onChange={(e) => set('tempCritical', parseFloat(e.target.value))}
-                          className="w-full bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded px-2 py-1 font-mono text-[12px] text-[#1F2933] dark:text-white"
+                          className="w-full bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded px-2.5 py-1.5 font-mono text-[12px] text-[#1F2933] dark:text-white focus:outline-none focus:border-[#C05043]"
                         />
                         <span className="text-[10px] font-mono text-[#8A8175]">°C</span>
                       </div>
@@ -388,7 +421,7 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
                           step="0.1"
                           value={draft.currentWarn ?? 12.5}
                           onChange={(e) => set('currentWarn', parseFloat(e.target.value))}
-                          className="w-full bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded px-2 py-1 font-mono text-[12px] text-[#1F2933] dark:text-white"
+                          className="w-full bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded px-2.5 py-1.5 font-mono text-[12px] text-[#1F2933] dark:text-white focus:outline-none focus:border-[#2C6E9B]"
                         />
                         <span className="text-[10px] font-mono text-[#8A8175]">A</span>
                       </div>
@@ -404,7 +437,7 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
                           step="0.1"
                           value={draft.currentCritical ?? 14.2}
                           onChange={(e) => set('currentCritical', parseFloat(e.target.value))}
-                          className="w-full bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded px-2 py-1 font-mono text-[12px] text-[#1F2933] dark:text-white"
+                          className="w-full bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded px-2.5 py-1.5 font-mono text-[12px] text-[#1F2933] dark:text-white focus:outline-none focus:border-[#C05043]"
                         />
                         <span className="text-[10px] font-mono text-[#8A8175]">A</span>
                       </div>
@@ -584,7 +617,7 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
 
         </div>
 
-        {/* Panel Footer */}
+        {/* Pop-up Footer */}
         <div className="px-5 py-3.5 bg-[#FFFFFF] dark:bg-[#1A222B] border-t-2 border-[#1F2933] dark:border-[#2C3847] flex items-center justify-between gap-3">
           <Button 
             variant="ghost" 

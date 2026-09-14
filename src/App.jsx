@@ -153,26 +153,15 @@ const SideRail = ({
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-1">
-                <button
-                  type="button"
-                  onClick={onToggleExpand}
-                  title="Collapse to compact icon rail"
-                  aria-label="Collapse to compact icon rail"
-                  className="w-8 h-8 rounded border border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#6E6558] dark:text-[#FAF8F4] hover:text-[#2C6E9B] hover:border-[#2C6E9B] flex items-center justify-center transition-colors"
-                >
-                  <Menu size={16} />
-                </button>
-                <button
-                  type="button"
-                  onClick={onToggleCollapse}
-                  title="Hide sidebar navigation"
-                  aria-label="Hide sidebar navigation"
-                  className="w-8 h-8 rounded border border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#6E6558] dark:text-[#FAF8F4] hover:text-[#C05043] hover:border-[#C05043] flex items-center justify-center transition-colors"
-                >
-                  <PanelLeftClose size={15} />
-                </button>
-              </div>
+              <button
+                type="button"
+                onClick={onToggleExpand}
+                title="Collapse to compact icon rail"
+                aria-label="Collapse to compact icon rail"
+                className="w-8 h-8 rounded border border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#6E6558] dark:text-[#FAF8F4] hover:text-[#2C6E9B] hover:border-[#2C6E9B] flex items-center justify-center transition-colors"
+              >
+                <Menu size={16} />
+              </button>
             </>
           ) : (
             <button 

@@ -11,7 +11,7 @@ const subsystems = [
   { id: 'energy', name: 'Overall Energy Efficiency', icon: BarChart3, health: 88, status: 'Nominal', variant: 'nominal', metric: 'Power Factor: 0.96', detail: 'Baseline +6.4% deviation' },
 ];
 
-export const SubsystemGrid = ({ mode, onSelect }) => {
+export const SubsystemGrid = React.memo(({ mode, onSelect }) => {
   const adjusted = subsystems.map(s => {
     if (mode === 'fault' && s.id === 'mechanical') return { ...s, health: 61, status: 'Critical', variant: 'critical' };
     if (mode === 'fault' && s.id === 'electrical') return { ...s, health: 74, status: 'Attention', variant: 'attention' };
@@ -50,4 +50,4 @@ export const SubsystemGrid = ({ mode, onSelect }) => {
       })}
     </div>
   );
-};
+});

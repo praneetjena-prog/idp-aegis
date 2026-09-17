@@ -4,7 +4,7 @@ import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Clock, Check, Wrench, FileText } from 'lucide-react';
 
-export const WorkOrderHistory = ({ workOrders, onExport, onClear }) => {
+export const WorkOrderHistory = React.memo(({ workOrders, onExport, onClear }) => {
   const history = [
     { id: '8818', asset: 'AHU-02', title: 'Belt tension adjustment', status: 'completed', date: '2026-09-08', tech: 'M. Singh' },
     { id: '8819', asset: 'ELEC-E3', title: 'Phase imbalance correction L2', status: 'completed', date: '2026-09-09', tech: 'J. Rivera' },
@@ -51,4 +51,4 @@ export const WorkOrderHistory = ({ workOrders, onExport, onClear }) => {
       </div>
     </Card>
   );
-};
+});

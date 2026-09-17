@@ -1,104 +1,131 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle } from '../ui/Card';
 import { Badge } from '../ui/Badge';
-import { GitBranch, Eye, Cpu, AlertTriangle } from 'lucide-react';
+import { Activity, Zap, Thermometer, GitCommit, CheckCircle2, ArrowRight } from 'lucide-react';
 
 export const RootCauseInspector = ({ mode = 'fault' }) => {
+  const isFault = mode === 'fault';
+
   return (
-    <Card className="border-[#2C6E9B]/20">
+    <Card className="border-[#2C6E9B]/30 bg-[#FFFFFF]">
       <CardHeader>
-        <CardTitle>Root Cause Inspector • Explainable AI • No Black Box</CardTitle>
-        <Badge variant="info">Transparent Model</Badge>
+        <div className="flex items-center gap-2">
+          <div className="w-2.5 h-2.5 rounded-full bg-[#2C6E9B] animate-pulse" />
+          <CardTitle>Multivariate Root Cause Inspector</CardTitle>
+          <Badge variant={isFault ? 'critical' : 'nominal'}>
+            {isFault ? 'Active Anomaly Signature' : 'Nominal Baseline'}
+          </Badge>
+        </div>
+        <div className="font-mono text-[11px] text-[#8A8175]">
+          Target: <span className="text-[#1F2933] font-semibold">AHU-03 Supply Fan</span> • Model: <span className="text-[#2C6E9B]">Isolation Forest + FFT</span>
+        </div>
       </CardHeader>
-      <div className="grid md:grid-cols-12 gap-4">
-        <div className="md:col-span-5 space-y-3">
-          <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-2">
-              <Eye size={12} className="text-[#2C6E9B]" />
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#6E6558]">Multivariate Correlation Chain</span>
+
+      <div className="space-y-4">
+        {/* 1. Telemetry Drift Signature */}
+        <div className="grid sm:grid-cols-3 gap-3">
+          <div className={`p-3 rounded-lg border transition-all ${
+            isFault ? 'bg-[#C05043]/5 border-[#C05043]/30' : 'bg-[#F1EDE6] border-[#E6E0D6]'
+          }`}>
+            <div className="flex items-center justify-between font-mono text-[10px] text-[#8A8175] uppercase">
+              <span className="flex items-center gap-1.5"><Activity size={12} className={isFault ? 'text-[#C05043]' : 'text-[#6E6558]'} /> Vibration</span>
+              <span className="text-[#8A8175]">ISO 10816</span>
             </div>
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 font-mono text-[11px]">
-                <div className="w-6 h-6 rounded bg-[#C05043]/10 border border-[#C05043]/20 flex items-center justify-center text-[#C05043]">1</div>
-                <span className="text-[#3E4650]">Vibration Velocity</span>
-                <span className="text-[#C05043] font-bold">6.8 mm/s (+172%)</span>
-                <span className="text-[#8A8175] text-[10px]">MPU6050</span>
-              </div>
-              <div className="ml-3 w-px h-4 bg-[#E6E0D6]" />
-              <div className="flex items-center gap-2 font-mono text-[11px]">
-                <div className="w-6 h-6 rounded bg-[#B07B1C]/10 border border-[#B07B1C]/20 flex items-center justify-center text-[#B07B1C]">2</div>
-                <span className="text-[#3E4650]">Current Draw</span>
-                <span className="text-[#B07B1C] font-bold">17.6A (+24%)</span>
-                <span className="text-[#8A8175] text-[10px]">ACS712</span>
-              </div>
-              <div className="ml-3 w-px h-4 bg-[#E6E0D6]" />
-              <div className="flex items-center gap-2 font-mono text-[11px]">
-                <div className="w-6 h-6 rounded bg-[#2C6E9B]/10 border border-[#2C6E9B]/20 flex items-center justify-center text-[#2C6E9B]">3</div>
-                <span className="text-[#3E4650]">Delta-T Drop</span>
-                <span className="text-[#2C6E9B] font-bold">-3.1°C</span>
-                <span className="text-[#8A8175] text-[10px]">DHT22</span>
-              </div>
+            <div className="flex items-baseline justify-between mt-1">
+              <span className={`font-mono text-[18px] font-bold ${isFault ? 'text-[#C05043]' : 'text-[#2E7D5B]'}`}>
+                {isFault ? '6.8 mm/s' : '2.1 mm/s'}
+              </span>
+              <span className={`font-mono text-[10px] font-semibold ${isFault ? 'text-[#C05043]' : 'text-[#2E7D5B]'}`}>
+                {isFault ? '+172% over limit' : 'Normal'}
+              </span>
             </div>
-            <div className="mt-3 p-2 rounded bg-[#C05043]/5 border border-[#C05043]/20 font-mono text-[11px] text-[#C05043]">
-              → Mechanical Drag & Bearing Wear • Outer Race Defect Frequency 3.2x RPM • Confidence 91%
+            <div className="font-mono text-[9px] text-[#8A8175] mt-1">Limit: 2.5 mm/s RMS • MPU6050</div>
+          </div>
+
+          <div className={`p-3 rounded-lg border transition-all ${
+            isFault ? 'bg-[#B07B1C]/5 border-[#B07B1C]/30' : 'bg-[#F1EDE6] border-[#E6E0D6]'
+          }`}>
+            <div className="flex items-center justify-between font-mono text-[10px] text-[#8A8175] uppercase">
+              <span className="flex items-center gap-1.5"><Zap size={12} className={isFault ? 'text-[#B07B1C]' : 'text-[#6E6558]'} /> Drive Current</span>
+              <span className="text-[#8A8175]">Motor FLA</span>
+            </div>
+            <div className="flex items-baseline justify-between mt-1">
+              <span className={`font-mono text-[18px] font-bold ${isFault ? 'text-[#B07B1C]' : 'text-[#1F2933]'}`}>
+                {isFault ? '17.6 A' : '14.2 A'}
+              </span>
+              <span className={`font-mono text-[10px] font-semibold ${isFault ? 'text-[#B07B1C]' : 'text-[#2E7D5B]'}`}>
+                {isFault ? '+24% surge' : 'Rated Load'}
+              </span>
+            </div>
+            <div className="font-mono text-[9px] text-[#8A8175] mt-1">Rated: 14.2 A • ACS712 CT</div>
+          </div>
+
+          <div className={`p-3 rounded-lg border transition-all ${
+            isFault ? 'bg-[#2C6E9B]/5 border-[#2C6E9B]/30' : 'bg-[#F1EDE6] border-[#E6E0D6]'
+          }`}>
+            <div className="flex items-center justify-between font-mono text-[10px] text-[#8A8175] uppercase">
+              <span className="flex items-center gap-1.5"><Thermometer size={12} className="text-[#2C6E9B]" /> Delta-T / Airflow</span>
+              <span className="text-[#8A8175]">Duct Gradient</span>
+            </div>
+            <div className="flex items-baseline justify-between mt-1">
+              <span className={`font-mono text-[18px] font-bold ${isFault ? 'text-[#2C6E9B]' : 'text-[#1F2933]'}`}>
+                {isFault ? '-3.1°C' : '+0.2°C'}
+              </span>
+              <span className="font-mono text-[10px] text-[#8A8175]">
+                {isFault ? 'Airflow Drop' : 'Optimal'}
+              </span>
+            </div>
+            <div className="font-mono text-[9px] text-[#8A8175] mt-1">Expected: 0.0°C • DHT22 Probes</div>
+          </div>
+        </div>
+
+        {/* 2. Physics-Informed Correlation Chain */}
+        <div className="bg-[#FAF8F4] border border-[#E6E0D6] rounded-lg p-3.5">
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+            <span className="font-mono text-[10px] uppercase tracking-wider font-bold text-[#6E6558] flex items-center gap-1.5">
+              <GitCommit size={13} className="text-[#2C6E9B]" /> Physical Mechanism & Fault Propagation
+            </span>
+            <div className="flex items-center gap-2 font-mono text-[10px]">
+              <span className="text-[#8A8175]">Confidence: <strong className="text-[#1F2933]">91%</strong></span>
+              <span>•</span>
+              <span className="text-[#8A8175]">RUL: <strong className="text-[#C05043]">168 Hours (7 Days)</strong></span>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-2">
-            <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-2.5">
-              <div className="font-mono text-[9px] uppercase text-[#8A8175]">Model</div>
-              <div className="font-mono text-[11px] text-[#1F2933] mt-1">Isolation Forest + FFT</div>
-              <div className="font-mono text-[9px] text-[#A99F90] mt-1">Trained on 14D seasonal</div>
+          <div className="grid md:grid-cols-3 gap-2 font-mono text-[11px]">
+            <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded p-2.5 flex items-start gap-2">
+              <span className="w-5 h-5 rounded bg-[#C05043]/10 text-[#C05043] flex items-center justify-center font-bold text-[10px] shrink-0">1</span>
+              <div>
+                <div className="font-semibold text-[#1F2933]">Bearing Micro-Flaking</div>
+                <div className="text-[10px] text-[#6E6558] mt-0.5">Outer race contact stress produces 3.2x RPM spectral vibration spike.</div>
+              </div>
             </div>
-            <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-2.5">
-              <div className="font-mono text-[9px] uppercase text-[#8A8175]">Baseline</div>
-              <div className="font-mono text-[11px] text-[#2E7D5B] mt-1">8–10 kWh nominal</div>
-              <div className="font-mono text-[9px] text-[#A99F90] mt-1">Learned per cycle</div>
+
+            <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded p-2.5 flex items-start gap-2">
+              <span className="w-5 h-5 rounded bg-[#B07B1C]/10 text-[#B07B1C] flex items-center justify-center font-bold text-[10px] shrink-0">2</span>
+              <div>
+                <div className="font-semibold text-[#1F2933]">Mechanical Binding</div>
+                <div className="text-[10px] text-[#6E6558] mt-0.5">Elevated friction forces motor to draw +24% current (17.6 A) to hold speed.</div>
+              </div>
+            </div>
+
+            <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded p-2.5 flex items-start gap-2">
+              <span className="w-5 h-5 rounded bg-[#2C6E9B]/10 text-[#2C6E9B] flex items-center justify-center font-bold text-[10px] shrink-0">3</span>
+              <div>
+                <div className="font-semibold text-[#1F2933]">Thermal & Airflow Loss</div>
+                <div className="text-[10px] text-[#6E6558] mt-0.5">Fan slip decreases volumetric flow; coil delta-T collapses by 3.1°C.</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="md:col-span-7 space-y-3">
-          <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-3">
-            <div className="flex items-center gap-2 mb-3">
-              <GitBranch size={12} className="text-[#2F8A7E]" />
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#6E6558]">Physical System Correlation</span>
-              <Badge variant="neutral">AHU-03</Badge>
-            </div>
-            <div className="relative">
-              <svg viewBox="0 0 360 120" className="w-full h-[120px]">
-                {/* nodes */}
-                <rect x="10" y="10" width="80" height="30" rx="6" fill="#E6E0D6" stroke="#D2C9BA" />
-                <text x="50" y="28" textAnchor="middle" fontSize="9" fontFamily="JetBrains Mono" fill="#A99F90">Motor 15kW</text>
-                <rect x="130" y="10" width="80" height="30" rx="6" fill="#C05043" fillOpacity="0.1" stroke="#C05043" strokeOpacity="0.3" />
-                <text x="170" y="22" textAnchor="middle" fontSize="9" fontFamily="JetBrains Mono" fill="#C05043">Bearing 6205</text>
-                <text x="170" y="32" textAnchor="middle" fontSize="7" fontFamily="JetBrains Mono" fill="#B07B1C">Outer Race Wear</text>
-                <rect x="250" y="10" width="80" height="30" rx="6" fill="#E6E0D6" stroke="#D2C9BA" />
-                <text x="290" y="28" textAnchor="middle" fontSize="9" fontFamily="JetBrains Mono" fill="#A99F90">Supply Fan</text>
-                {/* arrows */}
-                <line x1="90" y1="25" x2="130" y2="25" stroke="#6E6558" strokeWidth="1" markerEnd="url(#arrow)" />
-                <line x1="210" y1="25" x2="250" y2="25" stroke="#6E6558" strokeWidth="1" />
-                {/* sensors */}
-                <rect x="10" y="70" width="70" height="24" rx="5" fill="#2C6E9B" fillOpacity="0.1" stroke="#2C6E9B" strokeOpacity="0.3" />
-                <text x="45" y="84" textAnchor="middle" fontSize="8" fontFamily="JetBrains Mono" fill="#2C6E9B">Vib 6.8mm/s</text>
-                <rect x="100" y="70" width="70" height="24" rx="5" fill="#B07B1C" fillOpacity="0.1" stroke="#B07B1C" strokeOpacity="0.3" />
-                <text x="135" y="84" textAnchor="middle" fontSize="8" fontFamily="JetBrains Mono" fill="#B07B1C">Current 17.6A</text>
-                <rect x="190" y="70" width="70" height="24" rx="5" fill="#2F8A7E" fillOpacity="0.1" stroke="#2F8A7E" strokeOpacity="0.3" />
-                <text x="225" y="84" textAnchor="middle" fontSize="8" fontFamily="JetBrains Mono" fill="#2F8A7E">ΔT -3.1°C</text>
-                <line x1="45" y1="70" x2="45" y2="40" stroke="#E6E0D6" strokeDasharray="3 2" />
-                <line x1="135" y1="70" x2="135" y2="40" stroke="#E6E0D6" strokeDasharray="3 2" />
-                <line x1="225" y1="70" x2="225" y2="40" stroke="#E6E0D6" strokeDasharray="3 2" />
-              </svg>
-            </div>
-            <div className="mt-2 font-mono text-[10px] text-[#8A8175]">Mechanical binding increases friction → motor draws more current → reduced airflow → delta-T drops. All three must correlate to avoid false positives.</div>
+        {/* 3. Concise Field Action Directive */}
+        <div className="flex flex-wrap items-center justify-between gap-3 p-2.5 bg-[#2E7D5B]/5 border border-[#2E7D5B]/20 rounded-lg font-mono text-[11px]">
+          <div className="flex items-center gap-2 text-[#2A3138]">
+            <CheckCircle2 size={15} className="text-[#2E7D5B] shrink-0" />
+            <span><strong>Targeted Field Action:</strong> Relubricate bearing housing (NLGI #2), inspect belt tension (45–55 Hz), verify phase balance.</span>
           </div>
-
-          <div className="bg-[#B07B1C]/5 border border-[#B07B1C]/20 rounded-lg p-2.5 flex gap-2">
-            <AlertTriangle size={14} className="text-[#B07B1C] shrink-0 mt-0.5" />
-            <div className="font-mono text-[10px] leading-relaxed text-[#3E4650]">
-              <span className="text-[#B07B1C] font-bold">Why not static threshold?</span> Temperature &gt;24°C would fire 247 false alarms. Aegis learns normal seasonal boundaries (8–10 kWh) and flags subtle multi-parameter drift before thermal safety switch trips. Prevents alert fatigue.
-            </div>
-          </div>
+          <span className="text-[#2E7D5B] font-bold whitespace-nowrap">Service Window: 7 Days</span>
         </div>
       </div>
     </Card>

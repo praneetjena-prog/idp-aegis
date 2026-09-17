@@ -2,125 +2,171 @@ import React from 'react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
-import { AlertTriangle, Wrench, ClipboardList, Eye, FileText, Check } from 'lucide-react';
+import { AlertTriangle, Wrench, Eye, Check, Printer, Clock, ArrowRight } from 'lucide-react';
 
-export const TriageQueue = ({ onCreateWorkOrder, onViewTelemetry, acknowledged, onAcknowledge, workOrders }) => {
+export const TriageQueue = ({ 
+  onCreateWorkOrder, 
+  onViewTelemetry, 
+  acknowledged, 
+  onAcknowledge, 
+  workOrders,
+  onOpenFieldSheet 
+}) => {
+  const isAhuDispatched = workOrders.some(w => w.asset === 'AHU-03' || w.id === '8821');
+  const isPumpDispatched = workOrders.some(w => w.asset === 'CW-Pump-02' || w.id === '8822');
+
   return (
     <div className="space-y-3">
-      {/* Urgent */}
-      <Card className="border-[#C05043]/30 bg-[#FFFFFF] relative overflow-hidden">
-        <div className="absolute left-0 top-0 bottom-0 w-1 bg-[#C05043]" />
-        <div className="pl-2">
-          <div className="flex flex-wrap items-start justify-between gap-2 mb-3">
-            <div className="flex items-center gap-2">
-              <Badge variant="critical">Urgent Triage • Red</Badge>
-              <span className="font-mono text-[11px] text-[#6E6558]">Asset: <span className="text-[#1F2933] font-semibold">AHU-03 Primary Supply Fan (East Wing)</span></span>
+      {/* 1. Critical Priority Ticket */}
+      <Card className="border-l-4 border-l-[#C05043] border-[#E6E0D6] bg-[#FFFFFF] shadow-sm p-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-[#E6E0D6]">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="px-2 py-0.5 rounded bg-[#C05043] text-white font-mono text-[10px] font-bold uppercase tracking-wider">
+              Critical Alert • WO-8821
+            </span>
+            <h3 className="font-display text-[14px] font-bold text-[#1F2933]">
+              AHU-03 Primary Supply Fan (East Wing, Roof Level 3)
+            </h3>
+            <span className="font-mono text-[10px] text-[#8A8175]">
+              Fault: <strong className="text-[#C05043]">Bearing Outer Race Wear (91% Conf)</strong>
+            </span>
+          </div>
+
+          <div className="flex items-center gap-3 font-mono text-[11px]">
+            <span className="flex items-center gap-1 text-[#C05043] font-bold">
+              <Clock size={12} /> Action Window: 7 Days (RUL ~168h)
+            </span>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-12 gap-4 pt-3 items-center">
+          {/* Key Telemetry Chips */}
+          <div className="lg:col-span-4 flex flex-wrap gap-2">
+            <div className="px-2.5 py-1.5 rounded bg-[#C05043]/10 border border-[#C05043]/20 font-mono text-[10px]">
+              <span className="text-[#8A8175] block text-[9px]">VIBRATION</span>
+              <strong className="text-[#C05043] text-[12px]">6.8 mm/s</strong> (+172%)
             </div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-mono text-[10px] text-[#8A8175]">CONF 91% • Bearing Degradation</span>
-              <div className="w-2 h-2 rounded-full bg-[#C05043] animate-pulse" />
+            <div className="px-2.5 py-1.5 rounded bg-[#B07B1C]/10 border border-[#B07B1C]/20 font-mono text-[10px]">
+              <span className="text-[#8A8175] block text-[9px]">DRIVE AMPS</span>
+              <strong className="text-[#B07B1C] text-[12px]">17.6 A</strong> (+24%)
+            </div>
+            <div className="px-2.5 py-1.5 rounded bg-[#2C6E9B]/10 border border-[#2C6E9B]/20 font-mono text-[10px]">
+              <span className="text-[#8A8175] block text-[9px]">BEARING TEMP</span>
+              <strong className="text-[#2C6E9B] text-[12px]">71.8°C</strong> (+38%)
             </div>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="md:col-span-2 space-y-3">
-              <div>
-                <div className="font-mono text-[10px] text-[#8A8175] uppercase tracking-wider mb-1">Observed Pattern</div>
-                <div className="font-mono text-[12px] text-[#2A3138] leading-relaxed">Elevated rotational vibration (6.8 mm/s) + 24% current surge + reduced delta-T. <span className="text-[#B07B1C]">Outer race defect frequency detected at 3.2x RPM.</span></div>
-              </div>
-              <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <AlertTriangle size={14} className="text-[#C05043]" />
-                  <span className="font-mono text-[11px] font-semibold text-[#1F2933] uppercase">Explainable Diagnosis</span>
-                  <Badge variant="critical">91% Confidence: Mechanical Bearing Degradation (Outer Race)</Badge>
-                </div>
-                <div className="font-mono text-[10px] text-[#6E6558] leading-relaxed">
-                  Correlation chain: <span className="text-[#2A3138]">Vibration ↑ 223%</span> + <span className="text-[#2A3138]">Current Draw ↑ 24%</span> + <span className="text-[#2A3138]">Delta-T ↓ 3.1°C</span> → Mechanical Drag & Bearing Wear. Model: Multivariate Isolation Forest + Spectral Analysis.
-                </div>
-                <div className="mt-2 flex gap-2">
-                  <span className="font-mono text-[9px] px-1.5 py-0.5 bg-[#E6E0D6] rounded text-[#6E6558]">RUL: ~168 hrs</span>
-                  <span className="font-mono text-[9px] px-1.5 py-0.5 bg-[#C05043]/10 rounded text-[#C05043] border border-[#C05043]/20">Action Window: 7 Days</span>
-                </div>
-              </div>
-              <div>
-                <div className="font-mono text-[10px] text-[#8A8175] uppercase tracking-wider mb-1.5">Prescriptive Action Plan</div>
-                <ol className="space-y-1 font-mono text-[11px] text-[#3E4650] list-decimal list-inside">
-                  <li>Lubricate bearing housing and inspect grease condition (NLGI #2, check for metal particulate).</li>
-                  <li>Check pulley alignment and belt tension • Tools: straight edge, tension gauge.</li>
-                  <li>Verify phase current under manual bypass • Expected: 14.2A ±0.5A.</li>
-                </ol>
-              </div>
-            </div>
-            <div className="space-y-3">
-              <div className="bg-[#F1EDE6] rounded-lg border border-[#E6E0D6] p-3">
-                <div className="font-mono text-[10px] text-[#8A8175] uppercase mb-2">Field Kit</div>
-                <div className="space-y-1.5 font-mono text-[10px] text-[#6E6558]">
-                  <div className="flex justify-between"><span>• Bearing 6205-2RS</span><span className="text-[#A99F90]">Stock: 4</span></div>
-                  <div className="flex justify-between"><span>• Grease Gun + NLGI2</span><span className="text-[#2E7D5B]">OK</span></div>
-                  <div className="flex justify-between"><span>• Vibration Meter</span><span className="text-[#2E7D5B]">OK</span></div>
-                  <div className="flex justify-between"><span>• Clamp Meter Fluke 376</span><span className="text-[#2E7D5B]">OK</span></div>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <Button variant="critical" onClick={() => onCreateWorkOrder('AHU-03', '8821')} className="col-span-2">
-                  <Wrench size={12} className="mr-1.5" /> Create Work Order #8821
-                </Button>
-                <Button variant="secondary" onClick={onViewTelemetry}>
-                  <Eye size={12} className="mr-1" /> View Trend Telemetry
-                </Button>
-                <Button variant="secondary" onClick={() => onAcknowledge('ahu03')}>
-                  {acknowledged.has('ahu03') ? <><Check size={12} className="mr-1" /> Acked</> : 'Acknowledge'}
-                </Button>
-                <Button variant="ghost" className="col-span-2 border border-dashed border-[#D2C9BA]">
-                  <FileText size={12} className="mr-1" /> Print Field Sheet (PDF)
-                </Button>
-              </div>
-              {workOrders.find(w=>w.asset==='AHU-03') && (
-                <div className="font-mono text-[10px] text-[#2E7D5B] bg-[#2E7D5B]/10 border border-[#2E7D5B]/20 rounded p-2">
-                  ✓ Work Order #8821 dispatched to shift lead • ETA: Today 14:30
-                </div>
-              )}
-            </div>
+          {/* Action Directive */}
+          <div className="lg:col-span-5 font-mono text-[11px] text-[#554D42] leading-relaxed">
+            <div><strong className="text-[#1F2933]">Direct Service Task:</strong> Relubricate bearing housing with NLGI #2 grease, verify belt tension (45–55 Hz) & check motor amp balance under manual bypass.</div>
+            <div className="text-[10px] text-[#8A8175] mt-1">Required: SKF 6205-2RS bearing • Grease gun • Clamp meter • Fluke 376</div>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="lg:col-span-3 flex flex-wrap gap-2 justify-start lg:justify-end">
+            <Button 
+              variant={isAhuDispatched ? "secondary" : "critical"} 
+              size="xs" 
+              onClick={() => onCreateWorkOrder('AHU-03', '8821')}
+              disabled={isAhuDispatched}
+            >
+              <Wrench size={11} className="mr-1" />
+              {isAhuDispatched ? 'WO #8821 Active' : 'Dispatch WO'}
+            </Button>
+            <Button 
+              variant="secondary" 
+              size="xs" 
+              onClick={() => onAcknowledge('ahu03')}
+            >
+              {acknowledged.has('ahu03') ? <><Check size={11} className="mr-1 text-[#2E7D5B]" /> Acked</> : 'Acknowledge'}
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="xs" 
+              onClick={onViewTelemetry}
+            >
+              <Eye size={11} className="mr-1" /> Spectrum
+            </Button>
           </div>
         </div>
       </Card>
 
-      {/* Advisory */}
-      <Card className="border-[#B07B1C]/20">
-        <div className="flex flex-wrap items-start justify-between gap-2 mb-2.5">
-          <div className="flex items-center gap-2">
-            <Badge variant="attention">Advisory • Amber</Badge>
-            <span className="font-mono text-[11px] text-[#3E4650]">Chilled Water Secondary Pump #2</span>
+      {/* 2. Advisory Priority Ticket */}
+      <Card className="border-l-4 border-l-[#B07B1C] border-[#E6E0D6] bg-[#FFFFFF] shadow-sm p-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pb-3 border-b border-[#E6E0D6]">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="px-2 py-0.5 rounded bg-[#B07B1C] text-white font-mono text-[10px] font-bold uppercase tracking-wider">
+              Advisory Alert • WO-8822
+            </span>
+            <h3 className="font-display text-[14px] font-bold text-[#1F2933]">
+              Chilled Water Secondary Pump #2 (Basement Plant Room)
+            </h3>
+            <span className="font-mono text-[10px] text-[#8A8175]">
+              Fault: <strong className="text-[#B07B1C]">Strainer Basket Restriction (84% Prob)</strong>
+            </span>
           </div>
-          <span className="font-mono text-[10px] text-[#8A8175]">84% prob • Strainer clogging</span>
+
+          <div className="flex items-center gap-3 font-mono text-[11px]">
+            <span className="text-[#B07B1C] font-semibold">
+              Action Window: Bi-Weekly PM Window
+            </span>
+          </div>
         </div>
-        <div className="grid md:grid-cols-3 gap-3">
-          <div className="md:col-span-2">
-            <div className="font-mono text-[11px] text-[#6E6558]">Observed Pattern: Flow rate dropping below pump curve expectations (4.1 L/s vs 5.8 L/s nominal). Suction pressure stable, discharge pressure +0.3 bar deviation.</div>
-            <div className="mt-2 font-mono text-[10px] text-[#8A8175]">Diagnosis: Strainer basket partial clogging (84% probability). Action Window: Inspect during scheduled bi-weekly rounds • Tools: isolation valves, drain pan.</div>
+
+        <div className="grid lg:grid-cols-12 gap-4 pt-3 items-center">
+          <div className="lg:col-span-4 flex flex-wrap gap-2">
+            <div className="px-2.5 py-1.5 rounded bg-[#B07B1C]/10 border border-[#B07B1C]/20 font-mono text-[10px]">
+              <span className="text-[#8A8175] block text-[9px]">FLOW RATE</span>
+              <strong className="text-[#B07B1C] text-[12px]">4.1 L/s</strong> (Nom 5.8 L/s)
+            </div>
+            <div className="px-2.5 py-1.5 rounded bg-[#FAF8F4] border border-[#E6E0D6] font-mono text-[10px]">
+              <span className="text-[#8A8175] block text-[9px]">PRESSURE DROP</span>
+              <strong className="text-[#1F2933] text-[12px]">+0.3 bar</strong> (Across basket)
+            </div>
           </div>
-          <div className="flex gap-2 md:justify-end">
-            <Button variant="secondary" size="xs" onClick={() => onCreateWorkOrder('CW-Pump-02', '8822')}><ClipboardList size={10} className="mr-1" /> Work Order #8822</Button>
-            <Button variant="ghost" size="xs" onClick={() => onAcknowledge('cwp2')}>{acknowledged.has('cwp2') ? 'Acked' : 'Acknowledge'}</Button>
+
+          <div className="lg:col-span-5 font-mono text-[11px] text-[#554D42] leading-relaxed">
+            <div><strong className="text-[#1F2933]">Direct Service Task:</strong> Isolate pump suction/discharge valves, drain strainer housing, clear debris from mesh basket, inspect O-ring seal.</div>
+          </div>
+
+          <div className="lg:col-span-3 flex flex-wrap gap-2 justify-start lg:justify-end">
+            <Button 
+              variant={isPumpDispatched ? "secondary" : "primary"} 
+              size="xs" 
+              onClick={() => onCreateWorkOrder('CW-Pump-02', '8822')}
+              disabled={isPumpDispatched}
+            >
+              <Wrench size={11} className="mr-1" />
+              {isPumpDispatched ? 'WO #8822 Active' : 'Dispatch WO'}
+            </Button>
+            <Button 
+              variant="secondary" 
+              size="xs" 
+              onClick={() => onAcknowledge('cwp2')}
+            >
+              {acknowledged.has('cwp2') ? <><Check size={11} className="mr-1 text-[#2E7D5B]" /> Acked</> : 'Acknowledge'}
+            </Button>
           </div>
         </div>
       </Card>
 
-      {/* Optimization */}
-      <Card className="border-[#2C6E9B]/20">
-        <div className="flex flex-wrap items-start justify-between gap-2 mb-2.5">
-          <div className="flex items-center gap-2">
-            <Badge variant="info">Optimization • Blue</Badge>
-            <span className="font-mono text-[11px] text-[#3E4650]">VAV Box Zone 4B</span>
+      {/* 3. Energy Optimization Notice */}
+      <Card className="border-l-4 border-l-[#2C6E9B] border-[#E6E0D6] bg-[#FFFFFF] shadow-sm p-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="px-2 py-0.5 rounded bg-[#2C6E9B] text-white font-mono text-[10px] font-bold uppercase tracking-wider">
+              Optimization
+            </span>
+            <h3 className="font-display text-[14px] font-bold text-[#1F2933]">
+              VAV Box Zone 4B (2nd Floor North)
+            </h3>
+            <span className="font-mono text-[10px] text-[#6E6558]">
+              Actuator hunting (20%–80% cycling every 4 min) • Estimated energy loss: ~2.1 kWh/day
+            </span>
           </div>
-          <span className="font-mono text-[10px] text-[#8A8175]">Actuator hunting • Calibration drift</span>
-        </div>
-        <div className="grid md:grid-cols-3 gap-3">
-          <div className="md:col-span-2">
-            <div className="font-mono text-[11px] text-[#6E6558]">Observed Pattern: Actuator hunting between 20% and 80% open every 4 minutes. Supply temp oscillating ±1.2°C, energy waste est. 2.1 kWh/day.</div>
-          </div>
-          <div className="flex gap-2 md:justify-end">
-            <Button variant="secondary" size="xs"><Wrench size={10} className="mr-1" /> Calibrate</Button>
+
+          <div className="flex gap-2">
+            <Button variant="secondary" size="xs">Auto-Calibrate Actuator</Button>
             <Button variant="ghost" size="xs">Dismiss</Button>
           </div>
         </div>

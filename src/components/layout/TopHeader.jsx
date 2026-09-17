@@ -10,10 +10,13 @@ import {
   Settings, 
   Menu, 
   Sun, 
-  Moon 
+  Moon,
+  Volume2,
+  VolumeX
 } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
+import { isSoundEnabled, setSoundEnabled, playDispatchChime } from '../../lib/sound';
 
 export const TopHeader = React.memo(({
   railCollapsed,
@@ -32,6 +35,17 @@ export const TopHeader = React.memo(({
   handleExport,
   setSettingsOpen
 }) => {
+  const [soundOn, setSoundOn] = React.useState(isSoundEnabled);
+
+  const handleToggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    setSoundEnabled(next);
+    if (next) {
+      playDispatchChime();
+    }
+  };
+
   return (
     <div className="sticky top-0 z-50 bg-[#FFFFFF] dark:bg-[#141B22] border-b-2 border-[#1F2933] dark:border-[#2C3847] shadow-[0_2px_0_rgba(31,41,51,0.06)]">
       {/* 1. Top Integrity Bar */}
@@ -100,6 +114,21 @@ export const TopHeader = React.memo(({
             ) : (
               <Moon size={15} className="text-[#2C6E9B]" />
             )}
+          </button>
+
+          {/* SCADA Sound Chime Toggle */}
+          <button
+            type="button"
+            onClick={handleToggleSound}
+            title={soundOn ? 'SCADA Sound Alarm: ENABLED (Click to mute)' : 'SCADA Sound Alarm: MUTED (Click to enable chime)'}
+            aria-label={soundOn ? 'Mute SCADA sound' : 'Enable SCADA sound'}
+            className={`w-8 h-8 flex items-center justify-center rounded-lg border-2 transition-all ${
+              soundOn 
+                ? 'border-[#2C6E9B] bg-[#2C6E9B]/15 text-[#2C6E9B] shadow-[2px_2px_0_#2C6E9B]' 
+                : 'border-[#1F2933] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#1A222B] text-[#8A8175] dark:text-[#A99F90] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:text-[#1F2933]'
+            }`}
+          >
+            {soundOn ? <Volume2 size={15} /> : <VolumeX size={15} />}
           </button>
         </div>
       </div>

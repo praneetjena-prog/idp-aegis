@@ -202,3 +202,31 @@
 @utility animate-reveal {
   animation: reveal 0.8s var(--ease-out-expo) both;
 }
+
+/* Print Styles for Maintenance Work Orders */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  #printable-field-sheet,
+  #printable-field-sheet * {
+    visibility: visible;
+  }
+  #printable-field-sheet {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 10px !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #1f2933 !important;
+  }
+  @page {
+    margin: 1.2cm;
+    size: A4 portrait;
+  }
+}

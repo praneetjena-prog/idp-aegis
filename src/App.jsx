@@ -15,9 +15,11 @@ import { WorkOrderHistory } from './components/dashboard/WorkOrderHistory';
 import { CorrelationChart } from './components/dashboard/CorrelationChart';
 import { PredictiveSimulator } from './components/dashboard/PredictiveSimulator';
 import { FacilityOverview } from './components/dashboard/FacilityOverview';
+import { FieldSheetModal } from './components/dashboard/FieldSheetModal';
 import { SettingsPanel } from './components/settings/SettingsPanel';
 import { useFacilityParams } from './lib/facility';
 import { useLiveFeed } from './lib/liveFeed';
+import { playDispatchChime, playAlertChime } from './lib/sound';
 
 import { SideRail, TabBar, TABS } from './components/layout/SideRail';
 import { TopHeader } from './components/layout/TopHeader';
@@ -183,11 +185,13 @@ export default function App() {
       diagnosis: asset === 'AHU-03' ? 'Bearing Degradation (Outer Race) 91%' : 'Strainer clogging 84%'
     };
     setWorkOrders(prev => [wo, ...prev]);
+    playDispatchChime();
     showToast(`Work Order #${id} created for ${asset} • Shift lead notified`);
   };
 
   const handleClearWorkOrders = () => {
     setWorkOrders([]);
+    playDispatchChime();
     showToast('Dispatched work orders cleared');
   };
 
@@ -197,8 +201,15 @@ export default function App() {
       if (n.has(key)) n.delete(key); else n.add(key);
       return n;
     });
+    playDispatchChime();
     showToast(acknowledged.has(key) ? 'Unacknowledged' : 'Acknowledged • Logged to shift • Audit trail updated');
   };
+
+  useEffect(() => {
+    if (feedMode === 'fault') {
+      playAlertChime();
+    }
+  }, [feedMode]);
 
   const handleExport = (type) => {
     const timestamp = new Date().toISOString();
@@ -744,53 +755,13 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
       </div>
 
       {/* Field Sheet Modal */}
-      {showFieldSheet && (
-        <div className="fixed inset-0 z-[100] bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="w-full max-w-[720px] max-h-[90vh] overflow-auto bg-[#FFFFFF] border border-[#D2C9BA] rounded-[12px] shadow-2xl">
-            <div className="sticky top-0 bg-[#FFFFFF] border-b border-[#E6E0D6] p-4 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Printer size={16} className="text-[#2C6E9B]" />
-                <span className="font-mono text-[12px] font-bold uppercase text-[#1F2933]">Field Sheet • WO #8821 • AHU-03 • Printable</span>
-                <Badge variant="critical">Critical</Badge>
-              </div>
-              <button onClick={() => setShowFieldSheet(false)} className="w-7 h-7 rounded bg-[#E6E0D6] border border-[#D2C9BA] flex items-center justify-center text-[#6E6558] hover:text-[#1F2933]"><X size={14} /></button>
-            </div>
-            <div className="p-6 space-y-4 font-mono text-[11px]">
-              <div className="grid grid-cols-2 gap-4 p-3 bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg">
-                <div><span className="text-[#8A8175] uppercase">Asset:</span><span className="text-[#1F2933] ml-2">AHU-03 Primary Supply Fan (East Wing)</span></div>
-                <div><span className="text-[#8A8175] uppercase">Location:</span><span className="text-[#1F2933] ml-2">Roof Level 3 • East Wing</span></div>
-                <div><span className="text-[#8A8175] uppercase">Diagnosis:</span><span className="text-[#C05043] ml-2">Bearing Outer Race • 91% Confidence</span></div>
-                <div><span className="text-[#8A8175] uppercase">RUL:</span><span className="text-[#1F2933] ml-2">168h ±24h • Action &lt;7D</span></div>
-                <div><span className="text-[#8A8175] uppercase">Live Reading:</span><span className="text-[#B07B1C] ml-2">{liveValues.vib} mm/s • {liveValues.cur}A • {liveValues.temp}°C</span></div>
-                <div><span className="text-[#8A8175] uppercase">Model:</span><span className="text-[#1F2933] ml-2">Trane M-Series • 15kW • 1750 RPM</span></div>
-              </div>
-              <div className="space-y-2">
-                <div className="font-mono text-[10px] uppercase tracking-wider text-[#6E6558]">Checklist • 9 Tasks • {Math.round((2/9)*100)}% Complete Example</div>
-                {[
-                  "LOTO • Isolate AHU-03 • Verify zero energy • PPE",
-                  "Inspect grease • Metal particulate check • Photo",
-                  "Lubricate NLGI #2 • 2 pumps",
-                  "Pulley alignment <0.5mm • Straight edge",
-                  "Belt tension 45-55 Hz",
-                  "Torque 8 Nm • Loctite 243",
-                  "Phase current 14.2A ±0.5A • Imbalance <2%",
-                  "10min run • Vib <2.5 mm/s • Current <14.8A",
-                  "Log to Aegis • Close WO"
-                ].map((t, i) => (
-                  <div key={i} className="flex gap-2 p-2 bg-[#F1EDE6] border border-[#E6E0D6] rounded">
-                    <div className="w-5 h-5 rounded border border-[#D2C9BA] flex items-center justify-center text-[10px]">{i < 2 ? '✓' : '☐'}</div>
-                    <span className="text-[#3E4650]">{i+1}. {t}</span>
-                  </div>
-                ))}
-              </div>
-              <div className="flex gap-2 pt-2">
-                <Button variant="teal" size="sm" className="flex-1" onClick={() => { handleExport('checklist'); showToast('Field sheet printed • PDF ready for tablet'); }}><Printer size={12} className="mr-1.5" /> Print PDF • High Contrast</Button>
-                <Button variant="secondary" size="sm" onClick={() => setShowFieldSheet(false)}>Close</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
+      <FieldSheetModal
+        open={showFieldSheet}
+        onClose={() => setShowFieldSheet(false)}
+        liveValues={liveValues}
+        params={params}
+        onExport={handleExport}
+      />
 
       {/* Toast */}
       {toast && (

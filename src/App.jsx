@@ -24,8 +24,11 @@ import { playDispatchChime, playAlertChime } from './lib/sound';
 import { SideRail, TabBar, TABS } from './components/layout/SideRail';
 import { TopHeader } from './components/layout/TopHeader';
 
-import { PlatformReference } from './components/workflow/PlatformReference';
-import { AssetDetailView } from './components/dashboard/AssetDetailView';
+import { OperationalReality } from './components/workflow/OperationalReality';
+import { ComparisonMatrix } from './components/workflow/ComparisonMatrix';
+import { Pillars } from './components/workflow/Pillars';
+import { ArchitectureDiagram } from './components/workflow/ArchitectureDiagram';
+import { HardwareTable } from './components/workflow/HardwareTable';
 import { RootCauseInspector } from './components/workflow/RootCauseInspector';
 import { MaintenanceChecklist } from './components/workflow/MaintenanceChecklist';
 
@@ -72,6 +75,7 @@ function getInitialAcknowledged() {
 export default function App() {
   const [range, setRange] = useState('24H');
   const [feedMode, setFeedMode] = useState('fault');
+  const [scenarioMode, setScenarioMode] = useState('degradation');
   const [activeSubsystem, setActiveSubsystem] = useState(null);
   const [workOrders, setWorkOrders] = useState(getInitialWorkOrders);
   const [acknowledged, setAcknowledged] = useState(getInitialAcknowledged);
@@ -276,6 +280,19 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
     showToast('Focused on trend telemetry • Correlation view');
   };
 
+  const detailData = useMemo(() => {
+    const isFault = feedMode === 'fault' || scenarioMode === 'degradation';
+    return {
+      vibration: isFault ? `${liveValues.vib} mm/s` : `${liveValues.vib} mm/s RMS`,
+      current: isFault ? `${liveValues.cur} A` : `${liveValues.cur} A`,
+      temp: isFault ? `${liveValues.temp}°C` : `${liveValues.temp}°C`,
+      acoustic: isFault ? `+${liveValues.acoustic} dB` : `+${liveValues.acoustic} dB`,
+      thresholdVib: `${params.vibrationCritical} mm/s`,
+      nominalCurrent: `${params.ratedCurrentA} A`,
+      nominalTemp: `${params.tempCritical}°C`
+    };
+  }, [feedMode, scenarioMode, liveValues]);
+
   const filteredSubsystems = useMemo(() => {
     const all = [
       { id: 'hvac', name: 'HVAC Network' },
@@ -343,10 +360,22 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
 
 
           {tab === 'platform' && (
-            <div className="space-y-4">
-              <SectionLabel k="01" title="System Architecture & Hardware Reference" id="platform-ref" />
-              <PlatformReference />
-            </div>
+          <div className="space-y-6">
+          <SectionLabel k="01" title="The Operational Reality — Workflow Bottlenecks" id="bottlenecks" />
+          <OperationalReality />
+
+          <SectionLabel k="02" title="Existing Approaches vs. Aegis Workflow Matrix" id="matrix" />
+          <ComparisonMatrix />
+
+          <SectionLabel k="03" title="The 5 Operational Pillars — Data → Maintenance Action" id="pillars" />
+          <Pillars />
+
+          <SectionLabel k="04" title="System Architecture — Transparent & Open Flow" id="architecture" />
+          <ArchitectureDiagram />
+
+          <SectionLabel k="05" title="Hardware Layer — Democratized Sensor Kit" id="hardware" />
+          <HardwareTable />
+          </div>
           )}
         </section>
 
@@ -420,7 +449,6 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
               acknowledged={acknowledged}
               onAcknowledge={handleAcknowledge}
               workOrders={workOrders}
-              onOpenFieldSheet={() => setShowFieldSheet(true)}
             />
           </div>
 
@@ -440,28 +468,17 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
             </div>
             <div className="lg:col-span-4 space-y-4">
               <MaintenanceChecklist onExport={handleExport} />
-              <Card className="bg-[#FFFFFF] border-[#E6E0D6] p-4">
-                <CardHeader className="p-0 pb-2 mb-2 border-b border-[#E6E0D6]">
-                  <CardTitle>Engineering Standards & Compliance</CardTitle>
-                  <Badge variant="nominal">MIT Open Source</Badge>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Public Good Guardrail • Open Access</CardTitle>
+                  <Badge variant="nominal">MIT Licensed</Badge>
                 </CardHeader>
-                <div className="space-y-2 font-mono text-[10px] text-[#6E6558]">
-                  <div className="flex justify-between py-0.5 border-b border-[#E6E0D6]/60">
-                    <span className="text-[#8A8175]">Vibration Severity</span>
-                    <strong className="text-[#1F2933]">ISO 10816-3 (Class II)</strong>
-                  </div>
-                  <div className="flex justify-between py-0.5 border-b border-[#E6E0D6]/60">
-                    <span className="text-[#8A8175]">Safety Standard</span>
-                    <strong className="text-[#C05043]">OSHA 1910.147 (LOTO)</strong>
-                  </div>
-                  <div className="flex justify-between py-0.5 border-b border-[#E6E0D6]/60">
-                    <span className="text-[#8A8175]">Telemetry Bus</span>
-                    <strong className="text-[#2C6E9B]">MQTT v3.1.1 / TLS 1.3</strong>
-                  </div>
-                  <div className="flex justify-between py-0.5">
-                    <span className="text-[#8A8175]">Audit Trail</span>
-                    <strong className="text-[#2E7D5B]">SHA-256 Verified</strong>
-                  </div>
+                <div className="space-y-2 font-mono text-[10px] leading-relaxed text-[#6E6558]">
+                  <div>• Democratizes predictive maintenance using low-cost COTS sensors • No vendor lock-in</div>
+                  <div>• Transparent algorithms: Seasonal ARIMA, Isolation Forest, FFT — no black box</div>
+                  <div>• Eliminates alert fatigue: learns normal, flags subtle multi-param drift</div>
+                  <div>• Built for resource-constrained public infrastructure: schools, municipal, community hubs</div>
+                  <div className="mt-2 p-2 bg-[#2C6E9B]/5 border border-[#2C6E9B]/20 rounded text-[#2C6E9B]">Open Architecture: github.com/aegis-open • Docs • Sensor Kit • Edge Gateway • MIT</div>
                 </div>
               </Card>
             </div>
@@ -472,32 +489,248 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
 
         {/* Subsystem Detail View */}
         {tab === 'console' && activeSubsystem && (
-          <AssetDetailView
-            subsystemId={activeSubsystem}
-            onBack={() => setActiveSubsystem(null)}
-            liveValues={liveValues}
-            feedMode={feedMode}
-            range={range}
-            onPrintFieldSheet={() => setShowFieldSheet(true)}
-            onCreateWorkOrder={handleCreateWorkOrder}
-            isDispatched={workOrders.some(w => w.id === '8821')}
-          />
+          <section className="space-y-4 animate-in fade-in">
+            <div className="flex items-center gap-2 font-mono text-[11px] text-[#8A8175]">
+              <button onClick={() => setActiveSubsystem(null)} className="flex items-center gap-1 hover:text-[#1F2933] transition-colors"><ArrowLeft size={12} /> Return to Facility Console</button>
+              <ChevronRight size={12} />
+              <span>Console</span>
+              <ChevronRight size={12} />
+              <span>Equipment</span>
+              <ChevronRight size={12} />
+              <span className="text-[#1F2933]">{activeSubsystem.toUpperCase()} Detailed Analysis</span>
+              {activeSubsystem === 'mechanical' || activeSubsystem === 'hvac' ? <Badge variant="critical">AHU-03 Focus • Live {liveValues.vib}mm/s</Badge> : null}
+            </div>
+
+            <div className="grid lg:grid-cols-12 gap-4 items-start">
+              <div className="lg:col-span-8">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Live Sensor Tiles • {activeSubsystem.toUpperCase()} • AHU-03 Primary Supply Fan • Real-Time</CardTitle>
+                    <div className="flex gap-1">
+                      <Button variant="ghost" size="xs" onClick={() => setActiveSubsystem(null)}>← Return</Button>
+                      <Button variant="secondary" size="xs" onClick={() => setShowFieldSheet(true)}><Printer size={10} className="mr-1" /> Field Sheet</Button>
+                    </div>
+                  </CardHeader>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <div className={`bg-[#F1EDE6] border rounded-lg p-3 transition-all ${parseFloat(liveValues.vib) > 4 ? 'border-[#C05043]/50 bg-[#C05043]/5' : 'border-[#E6E0D6]'}`}>
+                      <div className="flex items-center gap-1.5 mb-1"><Waves size={12} className={parseFloat(liveValues.vib) > 4 ? 'text-[#C05043]' : 'text-[#6E6558]'} /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Vibration Velocity</span></div>
+                      <div className={`font-mono text-[18px] font-bold ${parseFloat(liveValues.vib) > 4 ? 'text-[#C05043]' : 'text-[#1F2933]'}`}>{detailData.vibration}</div>
+                      <div className="font-mono text-[10px] text-[#8A8175]">Threshold: {detailData.thresholdVib} • <span className={parseFloat(liveValues.vib) > 4 ? 'text-[#C05043]' : 'text-[#2E7D5B]'}>{parseFloat(liveValues.vib) > 4 ? `+${Math.round((liveValues.vib/2.5-1)*100)}% over` : 'Nominal'}</span></div>
+                      <div className="mt-2 h-1 bg-[#E6E0D6] rounded-full overflow-hidden"><div className="h-full bg-[#C05043] transition-all duration-700" style={{ width: `${Math.min(100, (liveValues.vib/8)*100)}%` }} /></div>
+                    </div>
+                    <div className={`bg-[#F1EDE6] border rounded-lg p-3 transition-all ${liveValues.cur > 16 ? 'border-[#B07B1C]/50 bg-[#B07B1C]/5' : 'border-[#E6E0D6]'}`}>
+                      <div className="flex items-center gap-1.5 mb-1"><Zap size={12} className={liveValues.cur > 16 ? 'text-[#B07B1C]' : 'text-[#6E6558]'} /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Drive Current</span></div>
+                      <div className={`font-mono text-[18px] font-bold ${liveValues.cur > 16 ? 'text-[#B07B1C]' : 'text-[#1F2933]'}`}>{detailData.current}</div>
+                      <div className="font-mono text-[10px] text-[#8A8175]">Nominal: {detailData.nominalCurrent} • <span className={liveValues.cur > 16 ? 'text-[#B07B1C]' : 'text-[#2E7D5B]'}>{liveValues.cur > 16 ? `+${Math.round((liveValues.cur/14.2-1)*100)}% surge` : 'Nominal'}</span></div>
+                      <div className="mt-2 h-1 bg-[#E6E0D6] rounded-full overflow-hidden"><div className="h-full bg-[#B07B1C] transition-all duration-700" style={{ width: `${Math.min(100, (liveValues.cur/20)*100)}%` }} /></div>
+                    </div>
+                    <div className={`bg-[#F1EDE6] border rounded-lg p-3 transition-all ${liveValues.temp > 65 ? 'border-[#C05043]/30 bg-[#C05043]/5' : 'border-[#E6E0D6]'}`}>
+                      <div className="flex items-center gap-1.5 mb-1"><Thermometer size={12} className={liveValues.temp > 65 ? 'text-[#C05043]' : 'text-[#6E6558]'} /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Bearing Temp</span></div>
+                      <div className="font-mono text-[18px] font-bold text-[#1F2933]">{detailData.temp}</div>
+                      <div className="font-mono text-[10px] text-[#8A8175]">Nominal: {detailData.nominalTemp} • <span className={liveValues.temp > 65 ? 'text-[#C05043]' : 'text-[#2E7D5B]'}>{liveValues.temp > 65 ? 'Overheat' : 'Nominal'}</span></div>
+                      <div className="mt-2 h-1 bg-[#E6E0D6] rounded-full overflow-hidden"><div className="h-full bg-[#C05043] transition-all duration-700" style={{ width: `${Math.min(100, (liveValues.temp/90)*100)}%` }} /></div>
+                    </div>
+                    <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-3">
+                      <div className="flex items-center gap-1.5 mb-1"><Volume2 size={12} className="text-[#6E6558]" /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Acoustic HF Noise</span></div>
+                      <div className="font-mono text-[18px] font-bold text-[#1F2933]">{detailData.acoustic}</div>
+                      <div className="font-mono text-[10px] text-[#8A8175]">Baseline 0 dB • Spectral peak 3.2kHz</div>
+                      <div className="mt-2 h-1 bg-[#E6E0D6] rounded-full overflow-hidden"><div className="h-full bg-[#2C6E9B] transition-all duration-700" style={{ width: `${feedMode === 'fault' ? 80 : 20}%` }} /></div>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 grid md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] mb-2">Multi-line Trend • Last 24H • Correlation: Current ↑ + Vibration ↑</div>
+                      <TelemetryChart mode={feedMode} range="24H" />
+                    </div>
+                    <div className="space-y-4">
+                      <FailureForecast mode={feedMode} />
+                      <CorrelationChart mode={feedMode} />
+                    </div>
+                  </div>
+                </Card>
+              </div>
+              <div className="lg:col-span-4 space-y-3">
+                <Card className="border-[#C05043]/20">
+                  <CardTitle>Root Cause Chain • Explainable</CardTitle>
+                  <div className="mt-3 space-y-3 font-mono text-[11px]">
+                    <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded p-2.5">
+                      <div className="text-[#8A8175] text-[10px] uppercase mb-1">Observed Pattern • Live</div>
+                      <div className="text-[#2A3138] leading-relaxed">Vibration ↑ ({liveValues.vib} mm/s) + Current Draw ↑ ({liveValues.cur}A) + Delta-T ↓ (3.1°C) → <span className="text-[#C05043] font-bold">Mechanical Drag & Bearing Wear</span></div>
+                    </div>
+                    <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded p-2.5">
+                      <div className="text-[#8A8175] text-[10px] uppercase mb-1">Explainability • Transparent</div>
+                      <div className="text-[#6E6558]">Model: Multivariate Isolation Forest + FFT • Spectral defect at 3.2x RPM (outer race) • Confidence 91% • RUL 168h ±24h • No black box • Seasonal ARIMA baseline 8–10 kWh</div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button variant="critical" size="sm" onClick={() => handleCreateWorkOrder('AHU-03', '8821')}>Create WO #8821</Button>
+                      <Button variant="secondary" size="sm" onClick={() => setShowFieldSheet(true)}>Print Field Sheet</Button>
+                    </div>
+                  </div>
+                </Card>
+                <Card>
+                  <CardTitle>Asset Context • Open Data</CardTitle>
+                  <div className="mt-2 space-y-2 font-mono text-[10px] text-[#6E6558]">
+                    <div className="flex justify-between"><span>Location</span><span className="text-[#1F2933]">East Wing • Roof Level 3</span></div>
+                    <div className="flex justify-between"><span>Model</span><span className="text-[#1F2933]">Trane M-Series • 2018</span></div>
+                    <div className="flex justify-between"><span>Last PM</span><span className="text-[#1F2933]">2026-08-14 • 29 days ago</span></div>
+                    <div className="flex justify-between"><span>Motor</span><span className="text-[#1F2933]">15 kW • 3-Phase • 1750 RPM</span></div>
+                    <div className="flex justify-between"><span>Bearing</span><span className="text-[#1F2933]">6205-2RS • SKF • 2x • Stock: 4</span></div>
+                    <div className="flex justify-between"><span>MQTT Topic</span><span className="text-[#2C6E9B]">facility/unit01/ahu03/telemetry</span></div>
+                    <div className="flex justify-between"><span>Sampling</span><span className="text-[#1F2933]">{range} @ {range === '1H' ? '1m' : range === '24H' ? '15m' : '1h'}</span></div>
+                  </div>
+                </Card>
+                <MaintenanceChecklist onExport={handleExport} />
+              </div>
+            </div>
+          </section>
         )}
 
         {/* Interactive Scenario Simulator */}
         {tab === 'simulator' && (
-          <section className="space-y-4 pb-6">
-            <SectionLabel k="07" title="Predictive Digital Twin & What-If Simulation" id="simulator" />
-            <PredictiveSimulator 
-              params={params} 
-              liveValues={liveValues} 
-              isLive={isLive}
-              onCreateWorkOrder={handleCreateWorkOrder}
-              onOpenFieldSheet={() => setShowFieldSheet(true)}
-              onExport={handleExport}
-              isDispatched={workOrders.some(w => w.id === '8821')}
-            />
-          </section>
+        <section className="space-y-4 pb-10">
+          <SectionLabel k="07" title='Interactive Scenario Simulator: "Normal Run" vs. "Mechanical Degradation"' id="simulator" />
+          <PredictiveSimulator params={params} liveValues={liveValues} isLive={isLive} />
+          <Card className="border-[#2C6E9B]/20 overflow-hidden">
+            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-8 h-8 rounded-lg bg-[#2C6E9B]/20 border border-[#2C6E9B]/30 flex items-center justify-center text-[#2C6E9B]">
+                  <Layers size={16} />
+                </div>
+                <div>
+                  <div className="font-mono text-[12px] font-bold uppercase text-[#1F2933]">Technician Decision Aid • Live Simulator • Explainable AI</div>
+                  <div className="font-mono text-[10px] text-[#8A8175]">Toggle to see how Aegis converts raw math into actionable field work • No vendor lock-in</div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1 p-1 bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg">
+                <button onClick={() => setScenarioMode('normal')} className={`px-3 py-1.5 rounded-md font-mono text-[11px] uppercase tracking-wider flex items-center gap-1.5 transition-all ${scenarioMode === 'normal' ? 'bg-[#2E7D5B] text-[#FFFFFF] shadow' : 'text-[#8A8175] hover:text-[#3E4650]'}`}>
+                  <div className={`w-1.5 h-1.5 rounded-full ${scenarioMode === 'normal' ? 'bg-white' : 'bg-[#C9C0B2]'}`} /> Normal Baseline
+                </button>
+                <button onClick={() => setScenarioMode('degradation')} className={`px-3 py-1.5 rounded-md font-mono text-[11px] uppercase tracking-wider flex items-center gap-1.5 transition-all ${scenarioMode === 'degradation' ? 'bg-[#C05043] text-[#FFFFFF] shadow' : 'text-[#8A8175] hover:text-[#3E4650]'}`}>
+                  <div className={`w-1.5 h-1.5 rounded-full ${scenarioMode === 'degradation' ? 'bg-white animate-pulse' : 'bg-[#C9C0B2]'}`} /> Mechanical Degradation
+                </button>
+              </div>
+            </div>
+
+            <div className="grid lg:grid-cols-12 gap-4 items-start">
+              <div className="lg:col-span-5 space-y-3">
+                <div className={`rounded-lg border p-4 transition-all ${scenarioMode === 'normal' ? 'bg-[#2E7D5B]/5 border-[#2E7D5B]/20' : 'bg-[#C05043]/5 border-[#C05043]/20'}`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175]">Mode {scenarioMode === 'normal' ? 'A: Normal Baseline Operating State' : 'B: Mechanical Degradation (Induced Fault)'}</span>
+                    <Badge variant={scenarioMode === 'normal' ? 'nominal' : 'critical'}>{scenarioMode === 'normal' ? 'Nominal' : 'Action Required'}</Badge>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3">
+                    <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-2.5 text-center">
+                      <div className="font-mono text-[9px] uppercase text-[#8A8175]">Vibration</div>
+                      <div className={`font-mono text-[14px] font-bold mt-1 transition-all ${scenarioMode === 'normal' ? 'text-[#2E7D5B]' : 'text-[#C05043]'}`}>{scenarioMode === 'normal' ? '2.1 mm/s RMS' : `${liveValues.vib} mm/s RMS`}</div>
+                      <div className="font-mono text-[8px] text-[#A99F90] mt-1">Threshold 2.5</div>
+                    </div>
+                    <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-2.5 text-center">
+                      <div className="font-mono text-[9px] uppercase text-[#8A8175]">Current</div>
+                      <div className={`font-mono text-[14px] font-bold mt-1 transition-all ${scenarioMode === 'normal' ? 'text-[#1F2933]' : 'text-[#B07B1C]'}`}>{scenarioMode === 'normal' ? '14.2 A' : `${liveValues.cur} A (+24%)`}</div>
+                      <div className="font-mono text-[8px] text-[#A99F90] mt-1">Nominal 14.2A</div>
+                    </div>
+                    <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-2.5 text-center">
+                      <div className="font-mono text-[9px] uppercase text-[#8A8175]">Temp</div>
+                      <div className={`font-mono text-[14px] font-bold mt-1 transition-all ${scenarioMode === 'normal' ? 'text-[#1F2933]' : 'text-[#C05043]'}`}>{scenarioMode === 'normal' ? '54.2°C' : `${liveValues.temp}°C`}</div>
+                      <div className="font-mono text-[8px] text-[#A99F90] mt-1">Nominal 52°C</div>
+                    </div>
+                  </div>
+                  <div className="mt-3 p-2.5 rounded bg-[#F1EDE6] border border-[#E6E0D6] font-mono text-[11px] leading-relaxed">
+                    {scenarioMode === 'normal' ? (
+                      <span className="text-[#2E7D5B] flex gap-1.5"><CheckCircle2 size={12} className="shrink-0 mt-0.5" /> System Readout: "All variables tracking within learned seasonal boundaries. Zero technician intervention required. Envelope deviation +0.8%. Next PM in 12 days."</span>
+                    ) : (
+                      <span className="text-[#B07B1C] flex gap-1.5"><AlertTriangle size={12} className="shrink-0 mt-0.5" /> System Readout: "Cross-parameter correlation confirms mechanical binding. Outer race defect 91% confidence. RUL 168h ±24h. Generating technician triage steps. Action window 7 days."</span>
+                    )}
+                  </div>
+                </div>
+
+                <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-3">
+                  <div className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] mb-2">Telemetry Mini-Trend • Live Simulation • {range}</div>
+                  <div className="h-[80px] w-full relative">
+                    <svg viewBox="0 0 200 80" className="w-full h-full">
+                      <path d={scenarioMode === 'normal' ? "M0 40 Q 50 38, 100 40 T 200 40" : `M0 40 Q 30 38, 60 35 T 110 ${20 + Math.random()*5} T 160 ${15 + Math.random()*3} T 200 ${12 + Math.random()*4}`} fill="none" stroke={scenarioMode === 'normal' ? "#2E7D5B" : "#C05043"} strokeWidth="2" className="transition-all duration-700" />
+                      <path d={scenarioMode === 'normal' ? "M0 50 Q 50 48, 100 50 T 200 50" : `M0 50 Q 30 48, 60 45 T 110 ${35 + Math.random()*3} T 160 ${30 + Math.random()*3} T 200 ${28 + Math.random()*2}`} fill="none" stroke="#2C6E9B" strokeWidth="1.5" opacity="0.7" className="transition-all duration-700" />
+                    </svg>
+                  </div>
+                  <div className="flex gap-3 font-mono text-[9px] text-[#8A8175]">
+                    <span className="flex items-center gap-1"><span className="w-2 h-0.5 bg-[#C05043]" />Vibration • Live {liveValues.vib}</span>
+                    <span className="flex items-center gap-1"><span className="w-2 h-0.5 bg-[#2C6E9B]" />Current • Live {liveValues.cur}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="lg:col-span-7">
+                <div className="h-full bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-4 relative overflow-hidden">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#2C6E9B]/5 rounded-full blur-2xl" />
+                  <div className="flex items-center gap-2 mb-3">
+                    <Printer size={14} className="text-[#8A8175]" />
+                    <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#1F2933]">Instant Maintenance Ticket • Printable Field Sheet • Exportable Checklist</span>
+                    <Badge variant="neutral">WO-#8821</Badge>
+                    <Badge variant="info">Live Bus</Badge>
+                  </div>
+
+                  {scenarioMode === 'normal' ? (
+                    <div className="space-y-3 font-mono text-[11px] text-[#6E6558]">
+                      <div className="p-8 text-center border border-dashed border-[#E6E0D6] rounded-lg">
+                        <div className="w-10 h-10 mx-auto rounded-full bg-[#2E7D5B]/10 border border-[#2E7D5B]/20 flex items-center justify-center text-[#2E7D5B] mb-2">✓</div>
+                        <div className="text-[#2E7D5B] font-semibold">No action required • System nominal</div>
+                        <div className="text-[10px] text-[#8A8175] mt-1">Next scheduled PM in 12 days • All 1,428 points within envelope • 99.8% uptime</div>
+                        <div className="mt-4 grid grid-cols-3 gap-2 text-[9px]">
+                          <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded p-2"><span className="text-[#8A8175]">Envelope Dev</span><br /><span className="text-[#2E7D5B] font-bold">+0.8%</span></div>
+                          <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded p-2"><span className="text-[#8A8175]">Model Conf</span><br /><span className="text-[#1F2933] font-bold">94%</span></div>
+                          <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded p-2"><span className="text-[#8A8175]">RUL</span><br /><span className="text-[#1F2933] font-bold">720h+</span></div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-2 gap-3 font-mono text-[10px]">
+                        <div><span className="text-[#8A8175] uppercase">Asset:</span><span className="text-[#1F2933] ml-2">AHU-03 Supply Fan • East Wing</span></div>
+                        <div><span className="text-[#8A8175] uppercase">Priority:</span><span className="text-[#C05043] ml-2">Critical • 7 Day Window • Live {liveValues.vib}mm/s</span></div>
+                        <div><span className="text-[#8A8175] uppercase">Diagnosis:</span><span className="text-[#B07B1C] ml-2">Bearing Outer Race • 91% • 3.2x RPM</span></div>
+                        <div><span className="text-[#8A8175] uppercase">RUL:</span><span className="text-[#1F2933] ml-2">168h ±24h • Slope 0.12A/day</span></div>
+                      </div>
+
+                      <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded-lg p-3">
+                        <div className="font-mono text-[10px] uppercase tracking-wider text-[#6E6558] mb-2">Step-by-Step Resolution Tasks • Field Ready • High Contrast</div>
+                        <ol className="space-y-2 font-mono text-[11px] text-[#3E4650] list-decimal list-inside">
+                          <li className="leading-relaxed"><span className="text-[#1F2933] font-semibold">Lockout/Tagout</span> • Isolate AHU-03 at disconnect • Verify zero energy • PPE: gloves, goggles • SOP-EL-03</li>
+                          <li className="leading-relaxed"><span className="text-[#1F2933] font-semibold">Lubricate & Inspect</span> • Bearing housing grease condition • Check for metal particulate • NLGI #2 • 2 pumps • Photo log</li>
+                          <li className="leading-relaxed"><span className="text-[#1F2933] font-semibold">Mechanical Check</span> • Pulley alignment (straight edge) • Belt tension (45-55 Hz) • Set screw torque 8 Nm • Loctite 243</li>
+                          <li className="leading-relaxed"><span className="text-[#1F2933] font-semibold">Electrical Verification</span> • Phase current under manual bypass • Expected 14.2A ±0.5A • Check imbalance &lt;2% • Fluke 376</li>
+                          <li className="leading-relaxed"><span className="text-[#1F2933] font-semibold">Post-Repair Validation</span> • Run 10min • Vibration target &lt;2.5 mm/s • Current &lt;14.8A • Log to Aegis • Close WO</li>
+                        </ol>
+                      </div>
+
+                      <div className="grid grid-cols-2 gap-2">
+                        <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded p-2">
+                          <div className="font-mono text-[9px] uppercase text-[#8A8175]">Tools Required • Field Kit</div>
+                          <div className="mt-1 font-mono text-[10px] text-[#3E4650] leading-relaxed">• Grease gun + NLGI2 • Stock: 12<br />• Vibration meter • Calibrated<br />• Clamp meter Fluke 376 • OK<br />• Straight edge, tension gauge • OK</div>
+                        </div>
+                        <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded p-2">
+                          <div className="font-mono text-[9px] uppercase text-[#8A8175]">Parts • Stock Check • Open Inventory</div>
+                          <div className="mt-1 font-mono text-[10px] text-[#3E4650] leading-relaxed">• Bearing 6205-2RS (x2) • Stock: 4 • $12/ea<br />• Belt B-62 • Stock: 6 • $18<br />• Grease cartridge • Stock: 12 • $5<br />• Total kit &lt;$180/asset</div>
+                        </div>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button variant="teal" size="sm" className="flex-1" onClick={() => { handleCreateWorkOrder('AHU-03', '8821'); setShowFieldSheet(true); }}><Printer size={12} className="mr-1.5" /> Print Field Sheet (PDF) • Checklist</Button>
+                        <Button variant="secondary" size="sm" onClick={() => handleExport('json')}>Export Ticket JSON</Button>
+                        <Button variant="secondary" size="sm" onClick={() => handleExport('checklist')}>Checklist JSON</Button>
+                      </div>
+                      {workOrders.find(w => w.id === '8821') && (
+                        <div className="font-mono text-[10px] text-[#2E7D5B] bg-[#2E7D5B]/10 border border-[#2E7D5B]/20 rounded p-2 flex items-center gap-2">
+                          <CheckCircle2 size={12} /> Ticket generated and dispatched • Shift lead J. Rivera notified • ETA Today 14:30 • Audit logged
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </Card>
+        </section>
         )}
 
         {/* Footer */}

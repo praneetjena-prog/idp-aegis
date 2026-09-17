@@ -329,22 +329,93 @@ const SideRail = ({
   );
 };
 
+const VALID_TABS = ['overview', 'console', 'analysis', 'simulator', 'platform'];
+const STORAGE_WORK_ORDERS = 'aegis-work-orders';
+const STORAGE_ACKNOWLEDGED = 'aegis-acknowledged-alerts';
+
+function getInitialTab() {
+  if (typeof window !== 'undefined' && window.location.hash) {
+    const hash = window.location.hash.replace(/^#/, '').toLowerCase();
+    if (VALID_TABS.includes(hash)) return hash;
+  }
+  return 'overview';
+}
+
+function getInitialWorkOrders() {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(STORAGE_WORK_ORDERS);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+function getInitialAcknowledged() {
+  if (typeof window === 'undefined') return new Set();
+  try {
+    const raw = window.localStorage.getItem(STORAGE_ACKNOWLEDGED);
+    return raw ? new Set(JSON.parse(raw)) : new Set();
+  } catch {
+    return new Set();
+  }
+}
+
 export default function App() {
   const [range, setRange] = useState('24H');
   const [feedMode, setFeedMode] = useState('fault');
   const [scenarioMode, setScenarioMode] = useState('degradation');
   const [activeSubsystem, setActiveSubsystem] = useState(null);
-  const [workOrders, setWorkOrders] = useState([]);
-  const [acknowledged, setAcknowledged] = useState(new Set());
+  const [workOrders, setWorkOrders] = useState(getInitialWorkOrders);
+  const [acknowledged, setAcknowledged] = useState(getInitialAcknowledged);
   const [toast, setToast] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFieldSheet, setShowFieldSheet] = useState(false);
   const [telemetryFilter, setTelemetryFilter] = useState('all');
-  const [tab, setTab] = useState('console');
+  const [tab, setTabState] = useState(getInitialTab);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [railCollapsed, setRailCollapsed] = useState(false);
   const [railExpanded, setRailExpanded] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+
+  // Sync tab changes to URL hash (deep linking)
+  const setTab = (nextTab) => {
+    if (!VALID_TABS.includes(nextTab)) return;
+    setTabState(nextTab);
+    if (typeof window !== 'undefined' && window.location.hash !== `#${nextTab}`) {
+      window.history.replaceState(null, '', `#${nextTab}`);
+    }
+  };
+
+  // Listen to browser Back / Forward buttons
+  useEffect(() => {
+    const onHashChange = () => {
+      const hash = window.location.hash.replace(/^#/, '').toLowerCase();
+      if (VALID_TABS.includes(hash)) {
+        setTabState(hash);
+      }
+    };
+    window.addEventListener('hashchange', onHashChange);
+    return () => window.removeEventListener('hashchange', onHashChange);
+  }, []);
+
+  // Persist work orders across sessions
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STORAGE_WORK_ORDERS, JSON.stringify(workOrders));
+    } catch (e) {
+      console.error('Failed to persist work orders', e);
+    }
+  }, [workOrders]);
+
+  // Persist acknowledged alerts across sessions
+  useEffect(() => {
+    try {
+      window.localStorage.setItem(STORAGE_ACKNOWLEDGED, JSON.stringify(Array.from(acknowledged)));
+    } catch (e) {
+      console.error('Failed to persist acknowledged alerts', e);
+    }
+  }, [acknowledged]);
 
   const { params, save: saveParams, saving } = useFacilityParams();
   const { values: liveValues, isLive, lastSeen } = useLiveFeed(feedMode, params);
@@ -402,8 +473,13 @@ export default function App() {
       priority: id === '8821' ? 'critical' : 'advisory',
       diagnosis: asset === 'AHU-03' ? 'Bearing Degradation (Outer Race) 91%' : 'Strainer clogging 84%'
     };
-    setWorkOrders(prev => [...prev, wo]);
+    setWorkOrders(prev => [wo, ...prev]);
     showToast(`Work Order #${id} created for ${asset} • Shift lead notified`);
+  };
+
+  const handleClearWorkOrders = () => {
+    setWorkOrders([]);
+    showToast('Dispatched work orders cleared');
   };
 
   const handleAcknowledge = (key) => {
@@ -752,7 +828,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
                 <FailureForecast mode={feedMode} />
               </div>
               <div className="lg:col-span-7">
-                <WorkOrderHistory workOrders={workOrders} onExport={handleExport} />
+                <WorkOrderHistory workOrders={workOrders} onExport={handleExport} onClear={handleClearWorkOrders} />
               </div>
             </div>
           </div>

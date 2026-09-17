@@ -4,21 +4,31 @@ import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { Clock, Check, Wrench, FileText } from 'lucide-react';
 
-export const WorkOrderHistory = ({ workOrders, onExport }) => {
+export const WorkOrderHistory = ({ workOrders, onExport, onClear }) => {
   const history = [
     { id: '8818', asset: 'AHU-02', title: 'Belt tension adjustment', status: 'completed', date: '2026-09-08', tech: 'M. Singh' },
     { id: '8819', asset: 'ELEC-E3', title: 'Phase imbalance correction L2', status: 'completed', date: '2026-09-09', tech: 'J. Rivera' },
     { id: '8820', asset: 'CW-P01', title: 'Seal replacement', status: 'in_progress', date: '2026-09-11', tech: 'A. Kumar' },
-    ...workOrders.map(wo => ({ id: wo.id, asset: wo.asset, title: wo.asset === 'AHU-03' ? 'Bearing degradation — outer race' : 'Strainer clogging', status: wo.status, date: new Date().toISOString().split('T')[0], tech: 'J. Rivera' }))
+    ...workOrders.map(wo => ({ 
+      id: wo.id, 
+      asset: wo.asset, 
+      title: wo.diagnosis || (wo.asset === 'AHU-03' ? 'Bearing degradation — outer race' : 'Strainer clogging'), 
+      status: wo.status, 
+      date: wo.created ? new Date(wo.created).toLocaleDateString() : new Date().toISOString().split('T')[0], 
+      tech: 'J. Rivera' 
+    }))
   ];
 
   return (
     <Card>
       <CardHeader>
         <CardTitle>Maintenance work orders</CardTitle>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1.5 items-center">
           <Badge variant="neutral">{history.length} Total</Badge>
           <Button variant="secondary" size="xs" onClick={() => onExport('json')}><FileText size={10} className="mr-1" /> Export list</Button>
+          {workOrders?.length > 0 && onClear && (
+            <Button variant="ghost" size="xs" onClick={onClear} title="Clear user dispatched work orders">Clear Dispatched</Button>
+          )}
         </div>
       </CardHeader>
       <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">

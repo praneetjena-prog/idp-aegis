@@ -47,6 +47,45 @@ export function useLiveFeed(feedMode, params) {
     return () => { cancelled = true; };
   }, []);
 
+  // Poll local Flask backend if available (http://localhost:5000/api/latest)
+  useEffect(() => {
+    let active = true;
+    const checkFlask = async () => {
+      try {
+        const res = await fetch('http://127.0.0.1:5000/api/latest', { 
+          headers: { 'Accept': 'application/json' },
+          signal: AbortSignal.timeout(1200) 
+        });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active || !data || data.message || data.error) return;
+
+        const next = {};
+        if (data.vibration != null) next.vibration = { metric: 'vibration', value: data.vibration, unit: 'mm/s' };
+        if (data.current != null) next.current = { metric: 'current', value: data.current, unit: 'A' };
+        if (data.temperature != null) next.temperature = { metric: 'temperature', value: data.temperature, unit: '°C' };
+        if (data.humidity != null) next.humidity = { metric: 'humidity', value: data.humidity, unit: '%' };
+        if (data.flow != null) next.flow = { metric: 'flow', value: data.flow, unit: 'L/min' };
+        if (data.light != null) next.light = { metric: 'light', value: data.light, unit: 'lux' };
+        if (data.gas != null) next.gas = { metric: 'gas', value: data.gas, unit: 'ppm' };
+
+        setReadings(prev => ({ ...prev, ...next }));
+        const ts = data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString();
+        setLastSeen(ts);
+        seenRef.current = ts;
+      } catch {
+        // Flask is offline or unreachable; silently rely on fallback demo
+      }
+    };
+
+    checkFlask();
+    const interval = setInterval(checkFlask, 2000);
+    return () => {
+      active = false;
+      clearInterval(interval);
+    };
+  }, []);
+
   // Live stream of new readings.
   useEffect(() => {
     const channel = supabase

@@ -54,6 +54,7 @@ function createSupabaseClient() {
         }),
         subscribe: () => ({ unsubscribe: () => {} }),
       }),
+      removeChannel: () => {},
       auth: {
         getSession: async () => ({ data: { session: null }, error: null }),
         onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } }),

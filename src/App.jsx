@@ -128,8 +128,19 @@ export default function App() {
     }
   }, [acknowledged]);
 
-  const { params, save: saveParams, saving } = useFacilityParams();
-  const { values: liveValues, isLive, lastSeen } = useLiveFeed(feedMode, params);
+  const { 
+    values: liveValues, 
+    isLive, 
+    lastSeen, 
+    backendStatus, 
+    backendAnomalies, 
+    recordCount 
+  } = useLiveFeed(feedMode, params);
+
+  // When live backend is streaming, automatically reflect real hardware status
+  const effectiveFeedMode = isLive && backendStatus
+    ? (backendStatus === 'Alert' || backendStatus === 'Warning' ? 'fault' : 'normal')
+    : feedMode;
 
   const overviewRef = useRef(null);
   const telemetryRef = useRef(null);
@@ -313,7 +324,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
         onSettings={() => setSettingsOpen(true)} 
         settingsOpen={settingsOpen} 
         isLive={isLive} 
-        feedMode={feedMode}
+        feedMode={effectiveFeedMode}
         collapsed={railCollapsed} 
         onToggleCollapse={() => setRailCollapsed(true)} 
         expanded={railExpanded}
@@ -325,7 +336,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
           railCollapsed={railCollapsed}
           setRailCollapsed={setRailCollapsed}
           isLive={isLive}
-          feedMode={feedMode}
+          feedMode={effectiveFeedMode}
           vibration={liveValues.vib}
           darkMode={darkMode}
           toggleTheme={toggleTheme}
@@ -348,7 +359,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
         <section ref={overviewRef} className="space-y-6 scroll-mt-[120px]">
           {tab === 'overview' && (
             <FacilityOverview
-              feedMode={feedMode}
+              feedMode={effectiveFeedMode}
               liveValues={liveValues}
               isLive={isLive}
               setTab={setTab}
@@ -399,10 +410,10 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
             </div>
           </div>
 
-          <LiveTelemetryTicker mode={feedMode} values={isLive ? liveValues : null} params={params} isLive={isLive} />
+           <LiveTelemetryTicker mode={effectiveFeedMode} values={isLive ? liveValues : null} params={params} isLive={isLive} />
 
           <div ref={telemetryRef} className="space-y-4 scroll-mt-[120px]">
-            <FacilityHealth mode={feedMode} />
+            <FacilityHealth mode={effectiveFeedMode} />
 
             <Card>
               <CardHeader>
@@ -418,7 +429,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
                   </div>
                 </div>
               </CardHeader>
-              <SubsystemGrid mode={feedMode} onSelect={(id) => setActiveSubsystem(id)} />
+              <SubsystemGrid mode={effectiveFeedMode} onSelect={(id) => setActiveSubsystem(id)} />
               {searchQuery && (
                 <div className="mt-3 font-mono text-[10px] text-[#8A8175]">Filtered {filteredSubsystems.length} subsystems for "{searchQuery}" • <button onClick={() => setSearchQuery('')} className="text-[#2C6E9B] underline">Clear</button></div>
               )}
@@ -426,7 +437,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
 
             <div className="grid lg:grid-cols-12 gap-4 items-start">
               <div className="lg:col-span-5">
-                <FailureForecast mode={feedMode} />
+                <FailureForecast mode={effectiveFeedMode} />
               </div>
               <div className="lg:col-span-7">
                 <WorkOrderHistory workOrders={workOrders} onExport={handleExport} onClear={handleClearWorkOrders} />
@@ -442,7 +453,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
           <div className="space-y-6">
           <div ref={rootCauseRef} className="space-y-4 scroll-mt-[120px]">
             <SectionLabel k="06" title="Root Cause Inspector & Active Triage Queue" />
-            <RootCauseInspector mode={feedMode} />
+            <RootCauseInspector mode={effectiveFeedMode} />
             <TriageQueue
               onCreateWorkOrder={handleCreateWorkOrder}
               onViewTelemetry={handleViewTelemetry}
@@ -458,13 +469,13 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
                 <CardHeader>
                   <CardTitle>24-Hour Operational Telemetry Chart • Baseline vs Actual • Correlation View</CardTitle>
                   <div className="flex items-center gap-2">
-                    <Badge variant={feedMode === 'fault' ? 'attention' : 'nominal'}>{feedMode === 'fault' ? 'Anomaly Detected' : 'Nominal'}</Badge>
+                    <Badge variant={effectiveFeedMode === 'fault' ? 'attention' : 'nominal'}>{effectiveFeedMode === 'fault' ? 'Anomaly Detected' : 'Nominal'}</Badge>
                     <span className="font-mono text-[10px] text-[#8A8175]">AHU-03 • Power Envelope • Live: {liveValues.cur}A</span>
                   </div>
                 </CardHeader>
-                <TelemetryChart mode={feedMode} range={range} />
+                <TelemetryChart mode={effectiveFeedMode} range={range} />
               </Card>
-              <CorrelationChart mode={feedMode} />
+              <CorrelationChart mode={effectiveFeedMode} />
             </div>
             <div className="lg:col-span-4 space-y-4">
               <MaintenanceChecklist onExport={handleExport} />

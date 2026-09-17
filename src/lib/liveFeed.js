@@ -47,14 +47,19 @@ export function useLiveFeed(feedMode, params) {
     return () => { cancelled = true; };
   }, []);
 
-  // Poll local Flask backend if available (http://localhost:5000/api/latest)
+  const [backendStatus, setBackendStatus] = useState(null);
+  const [backendAnomalies, setBackendAnomalies] = useState([]);
+  const [recordCount, setRecordCount] = useState(null);
+
+  // Poll local Flask backend (http://127.0.0.1:5000/api/latest or /api/latest)
   useEffect(() => {
     let active = true;
     const checkFlask = async () => {
       try {
-        const res = await fetch('http://127.0.0.1:5000/api/latest', { 
+        const url = window.location.port === '8080' ? '/api/latest' : 'http://127.0.0.1:5000/api/latest';
+        const res = await fetch(url, { 
           headers: { 'Accept': 'application/json' },
-          signal: AbortSignal.timeout(1200) 
+          signal: AbortSignal.timeout(1500) 
         });
         if (!res.ok) return;
         const data = await res.json();
@@ -70,6 +75,10 @@ export function useLiveFeed(feedMode, params) {
         if (data.gas != null) next.gas = { metric: 'gas', value: data.gas, unit: 'ppm' };
 
         setReadings(prev => ({ ...prev, ...next }));
+        if (data.status) setBackendStatus(data.status);
+        if (data.anomalies) setBackendAnomalies(data.anomalies);
+        if (data.id) setRecordCount(data.id);
+
         const ts = data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString();
         setLastSeen(ts);
         seenRef.current = ts;
@@ -79,7 +88,7 @@ export function useLiveFeed(feedMode, params) {
     };
 
     checkFlask();
-    const interval = setInterval(checkFlask, 2000);
+    const interval = setInterval(checkFlask, 1800);
     return () => {
       active = false;
       clearInterval(interval);
@@ -141,5 +150,14 @@ export function useLiveFeed(feedMode, params) {
     };
   }, [isLive, readings, demo]);
 
-  return { values, isLive, lastSeen, readings, source: isLive ? 'hardware' : 'demonstration' };
+  return { 
+    values, 
+    isLive, 
+    lastSeen, 
+    readings, 
+    source: isLive ? 'hardware' : 'demonstration',
+    backendStatus,
+    backendAnomalies,
+    recordCount
+  };
 }

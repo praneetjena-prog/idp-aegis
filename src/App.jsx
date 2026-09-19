@@ -75,7 +75,6 @@ function getInitialAcknowledged() {
 export default function App() {
   const [range, setRange] = useState('24H');
   const [feedMode, setFeedMode] = useState('fault');
-  const [scenarioMode, setScenarioMode] = useState('degradation');
   const [activeSubsystem, setActiveSubsystem] = useState(null);
   const [workOrders, setWorkOrders] = useState(getInitialWorkOrders);
   const [acknowledged, setAcknowledged] = useState(getInitialAcknowledged);
@@ -293,7 +292,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
   };
 
   const detailData = useMemo(() => {
-    const isFault = feedMode === 'fault' || scenarioMode === 'degradation';
+    const isFault = feedMode === 'fault';
     return {
       vibration: isFault ? `${liveValues.vib} mm/s` : `${liveValues.vib} mm/s RMS`,
       current: isFault ? `${liveValues.cur} A` : `${liveValues.cur} A`,
@@ -303,7 +302,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
       nominalCurrent: `${params.ratedCurrentA} A`,
       nominalTemp: `${params.tempCritical}°C`
     };
-  }, [feedMode, scenarioMode, liveValues]);
+  }, [feedMode, liveValues, params]);
 
   const filteredSubsystems = useMemo(() => {
     const all = [
@@ -373,20 +372,125 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
 
           {tab === 'platform' && (
           <div className="space-y-6">
-          <SectionLabel k="01" title="The Operational Reality — Workflow Bottlenecks" id="bottlenecks" />
-          <OperationalReality />
+            {/* System Setup & Monitored Capacity Metrics */}
+            <div className="grid sm:grid-cols-3 gap-4">
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] font-bold">Monitored Machines</span>
+                  <Cpu size={16} className="text-[#2C6E9B]" />
+                </div>
+                <div className="font-mono text-[24px] font-bold text-[#1F2933] dark:text-[#FAF8F4] mt-2">
+                  38 <span className="text-[13px] font-normal text-[#8A8175]">Units</span>
+                </div>
+                <p className="font-sans text-[11px] text-[#6E6558] dark:text-[#A0988A] mt-1.5">
+                  Air handling units, water pumps, cooling towers, and switchboards.
+                </p>
+              </Card>
 
-          <SectionLabel k="02" title="Existing Approaches vs. Aegis Workflow Matrix" id="matrix" />
-          <ComparisonMatrix />
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] font-bold">Sensors Online</span>
+                  <Radio size={16} className="text-[#2C6E9B]" />
+                </div>
+                <div className="font-mono text-[24px] font-bold text-[#1F2933] dark:text-[#FAF8F4] mt-2">
+                  1,428 <span className="text-[13px] font-normal text-[#8A8175]">Points</span>
+                </div>
+                <p className="font-sans text-[11px] text-[#6E6558] dark:text-[#A0988A] mt-1.5">
+                  Actively measuring vibration, surface heat, current draw, and noise.
+                </p>
+              </Card>
 
-          <SectionLabel k="03" title="The 5 Operational Pillars — Data → Maintenance Action" id="pillars" />
-          <Pillars />
+              <Card className="p-4">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] font-bold">Early Warning Window</span>
+                  <Clock size={16} className="text-[#2C6E9B]" />
+                </div>
+                <div className="font-mono text-[24px] font-bold text-[#1F2933] dark:text-[#FAF8F4] mt-2">
+                  7–14 <span className="text-[13px] font-normal text-[#8A8175]">Days</span>
+                </div>
+                <p className="font-sans text-[11px] text-[#6E6558] dark:text-[#A0988A] mt-1.5">
+                  Average lead time given to technicians before a motor stops running.
+                </p>
+              </Card>
+            </div>
 
-          <SectionLabel k="04" title="System Architecture — Transparent & Open Flow" id="architecture" />
-          <ArchitectureDiagram />
+            {/* Technician 101: How Aegis Works (Onboarding Help) */}
+            <div className="bg-[#FFFFFF] dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] p-5 rounded-xl">
+              <div className="mb-4">
+                <span className="font-mono text-[10px] uppercase tracking-wider font-bold text-[#8A8175]">Technician 101 • Onboarding Guide</span>
+                <h3 className="font-display text-[16px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">
+                  How Aegis Predictive Monitoring Works
+                </h3>
+                <p className="text-[12px] text-[#6E6558] dark:text-[#A0988A] mt-0.5">
+                  A simple 3-step guide for apprentices and facility maintenance staff.
+                </p>
+              </div>
 
-          <SectionLabel k="05" title="Hardware Layer — Democratized Sensor Kit" id="hardware" />
-          <HardwareTable />
+              <div className="grid md:grid-cols-3 gap-4">
+                <div className="p-4 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
+                  <div className="w-7 h-7 rounded-md bg-[#2C6E9B]/10 text-[#2C6E9B] flex items-center justify-center font-mono text-[12px] font-bold mb-2">
+                    01
+                  </div>
+                  <h4 className="font-display text-[13px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">Sensors Listen 24/7</h4>
+                  <p className="text-[12px] text-[#554D42] dark:text-[#C5BCAD] mt-1 leading-relaxed">
+                    Inexpensive sensor nodes measure mechanical vibration (mm/s), motor temperature (°C), and electrical current (Amps) every second.
+                  </p>
+                </div>
+
+                <div className="p-4 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
+                  <div className="w-7 h-7 rounded-md bg-[#2F8A7E]/10 text-[#2F8A7E] flex items-center justify-center font-mono text-[12px] font-bold mb-2">
+                    02
+                  </div>
+                  <h4 className="font-display text-[13px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">Detects Tiny Drifts</h4>
+                  <p className="text-[12px] text-[#554D42] dark:text-[#C5BCAD] mt-1 leading-relaxed">
+                    When grease dries up or a belt loosens, vibration rises before anyone can hear or smell it. Aegis catches this drift days before failure.
+                  </p>
+                </div>
+
+                <div className="p-4 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
+                  <div className="w-7 h-7 rounded-md bg-[#2E7D5B]/10 text-[#2E7D5B] flex items-center justify-center font-mono text-[12px] font-bold mb-2">
+                    03
+                  </div>
+                  <h4 className="font-display text-[13px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">Step-by-Step Fix</h4>
+                  <p className="text-[12px] text-[#554D42] dark:text-[#C5BCAD] mt-1 leading-relaxed">
+                    Instead of guessing or replacing entire machines, you get a clear checklist: what grease to pump, what bolts to tighten, and what to log.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Platform & License Information */}
+            <Card className="p-4 border-[#2C6E9B]/30 bg-[#FAF8F4] dark:bg-[#141B22]">
+              <div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[11px]">
+                <div className="flex items-center gap-2 text-[#1F2933] dark:text-[#FAF8F4] font-semibold">
+                  <Shield size={16} className="text-[#2C6E9B]" />
+                  <span>Aegis Open Facility Intelligence • MIT License</span>
+                </div>
+                <div className="flex items-center gap-2 text-[#6E6558] dark:text-[#A0988A]">
+                  <span>$180/Asset COTS Hardware</span>
+                  <span>•</span>
+                  <span>github.com/aegis-open</span>
+                </div>
+              </div>
+              <p className="font-mono text-[10px] text-[#8A8175] mt-2 leading-relaxed">
+                Open hardware: DHT22, ACS712, MPU6050, YF-S201, ESP32, MQTT • Explainable models: Seasonal ARIMA, Isolation Forest, FFT spectral analysis • Built for field technicians, not boardrooms.
+              </p>
+            </Card>
+
+            <SectionLabel k="01" title="The Operational Reality — Workflow Bottlenecks" id="bottlenecks" />
+            <OperationalReality />
+
+            <SectionLabel k="02" title="Existing Approaches vs. Aegis Workflow Matrix" id="matrix" />
+            <ComparisonMatrix />
+
+            <SectionLabel k="03" title="The 5 Operational Pillars — Data → Maintenance Action" id="pillars" />
+            <Pillars />
+
+            <SectionLabel k="04" title="System Architecture — Transparent & Open Flow" id="architecture" />
+            <ArchitectureDiagram />
+
+            <SectionLabel k="05" title="Hardware Layer — Democratized Sensor Kit" id="hardware" />
+            <HardwareTable />
           </div>
           )}
         </section>
@@ -461,6 +565,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
               acknowledged={acknowledged}
               onAcknowledge={handleAcknowledge}
               workOrders={workOrders}
+              onPrintFieldSheet={() => setShowFieldSheet(true)}
             />
           </div>
 
@@ -603,166 +708,8 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
         <section className="space-y-4 pb-10">
           <SectionLabel k="07" title='Interactive Scenario Simulator: "Normal Run" vs. "Mechanical Degradation"' id="simulator" />
           <PredictiveSimulator params={params} liveValues={liveValues} isLive={isLive} />
-          <Card className="border-[#2C6E9B]/20 overflow-hidden">
-            <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-lg bg-[#2C6E9B]/20 border border-[#2C6E9B]/30 flex items-center justify-center text-[#2C6E9B]">
-                  <Layers size={16} />
-                </div>
-                <div>
-                  <div className="font-mono text-[12px] font-bold uppercase text-[#1F2933]">Technician Decision Aid • Live Simulator • Explainable AI</div>
-                  <div className="font-mono text-[10px] text-[#8A8175]">Toggle to see how Aegis converts raw math into actionable field work • No vendor lock-in</div>
-                </div>
-              </div>
-              <div className="flex items-center gap-1 p-1 bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg">
-                <button onClick={() => setScenarioMode('normal')} className={`px-3 py-1.5 rounded-md font-mono text-[11px] uppercase tracking-wider flex items-center gap-1.5 transition-all ${scenarioMode === 'normal' ? 'bg-[#2E7D5B] text-[#FFFFFF] shadow' : 'text-[#8A8175] hover:text-[#3E4650]'}`}>
-                  <div className={`w-1.5 h-1.5 rounded-full ${scenarioMode === 'normal' ? 'bg-white' : 'bg-[#C9C0B2]'}`} /> Normal Baseline
-                </button>
-                <button onClick={() => setScenarioMode('degradation')} className={`px-3 py-1.5 rounded-md font-mono text-[11px] uppercase tracking-wider flex items-center gap-1.5 transition-all ${scenarioMode === 'degradation' ? 'bg-[#C05043] text-[#FFFFFF] shadow' : 'text-[#8A8175] hover:text-[#3E4650]'}`}>
-                  <div className={`w-1.5 h-1.5 rounded-full ${scenarioMode === 'degradation' ? 'bg-white animate-pulse' : 'bg-[#C9C0B2]'}`} /> Mechanical Degradation
-                </button>
-              </div>
-            </div>
-
-            <div className="grid lg:grid-cols-12 gap-4 items-start">
-              <div className="lg:col-span-5 space-y-3">
-                <div className={`rounded-lg border p-4 transition-all ${scenarioMode === 'normal' ? 'bg-[#2E7D5B]/5 border-[#2E7D5B]/20' : 'bg-[#C05043]/5 border-[#C05043]/20'}`}>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175]">Mode {scenarioMode === 'normal' ? 'A: Normal Baseline Operating State' : 'B: Mechanical Degradation (Induced Fault)'}</span>
-                    <Badge variant={scenarioMode === 'normal' ? 'nominal' : 'critical'}>{scenarioMode === 'normal' ? 'Nominal' : 'Action Required'}</Badge>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-2.5 text-center">
-                      <div className="font-mono text-[9px] uppercase text-[#8A8175]">Vibration</div>
-                      <div className={`font-mono text-[14px] font-bold mt-1 transition-all ${scenarioMode === 'normal' ? 'text-[#2E7D5B]' : 'text-[#C05043]'}`}>{scenarioMode === 'normal' ? '2.1 mm/s RMS' : `${liveValues.vib} mm/s RMS`}</div>
-                      <div className="font-mono text-[8px] text-[#A99F90] mt-1">Threshold 2.5</div>
-                    </div>
-                    <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-2.5 text-center">
-                      <div className="font-mono text-[9px] uppercase text-[#8A8175]">Current</div>
-                      <div className={`font-mono text-[14px] font-bold mt-1 transition-all ${scenarioMode === 'normal' ? 'text-[#1F2933]' : 'text-[#B07B1C]'}`}>{scenarioMode === 'normal' ? '14.2 A' : `${liveValues.cur} A (+24%)`}</div>
-                      <div className="font-mono text-[8px] text-[#A99F90] mt-1">Nominal 14.2A</div>
-                    </div>
-                    <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-2.5 text-center">
-                      <div className="font-mono text-[9px] uppercase text-[#8A8175]">Temp</div>
-                      <div className={`font-mono text-[14px] font-bold mt-1 transition-all ${scenarioMode === 'normal' ? 'text-[#1F2933]' : 'text-[#C05043]'}`}>{scenarioMode === 'normal' ? '54.2°C' : `${liveValues.temp}°C`}</div>
-                      <div className="font-mono text-[8px] text-[#A99F90] mt-1">Nominal 52°C</div>
-                    </div>
-                  </div>
-                  <div className="mt-3 p-2.5 rounded bg-[#F1EDE6] border border-[#E6E0D6] font-mono text-[11px] leading-relaxed">
-                    {scenarioMode === 'normal' ? (
-                      <span className="text-[#2E7D5B] flex gap-1.5"><CheckCircle2 size={12} className="shrink-0 mt-0.5" /> System Readout: "All variables tracking within learned seasonal boundaries. Zero technician intervention required. Envelope deviation +0.8%. Next PM in 12 days."</span>
-                    ) : (
-                      <span className="text-[#B07B1C] flex gap-1.5"><AlertTriangle size={12} className="shrink-0 mt-0.5" /> System Readout: "Cross-parameter correlation confirms mechanical binding. Outer race defect 91% confidence. RUL 168h ±24h. Generating technician triage steps. Action window 7 days."</span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-3">
-                  <div className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] mb-2">Telemetry Mini-Trend • Live Simulation • {range}</div>
-                  <div className="h-[80px] w-full relative">
-                    <svg viewBox="0 0 200 80" className="w-full h-full">
-                      <path d={scenarioMode === 'normal' ? "M0 40 Q 50 38, 100 40 T 200 40" : `M0 40 Q 30 38, 60 35 T 110 ${20 + Math.random()*5} T 160 ${15 + Math.random()*3} T 200 ${12 + Math.random()*4}`} fill="none" stroke={scenarioMode === 'normal' ? "#2E7D5B" : "#C05043"} strokeWidth="2" className="transition-all duration-700" />
-                      <path d={scenarioMode === 'normal' ? "M0 50 Q 50 48, 100 50 T 200 50" : `M0 50 Q 30 48, 60 45 T 110 ${35 + Math.random()*3} T 160 ${30 + Math.random()*3} T 200 ${28 + Math.random()*2}`} fill="none" stroke="#2C6E9B" strokeWidth="1.5" opacity="0.7" className="transition-all duration-700" />
-                    </svg>
-                  </div>
-                  <div className="flex gap-3 font-mono text-[9px] text-[#8A8175]">
-                    <span className="flex items-center gap-1"><span className="w-2 h-0.5 bg-[#C05043]" />Vibration • Live {liveValues.vib}</span>
-                    <span className="flex items-center gap-1"><span className="w-2 h-0.5 bg-[#2C6E9B]" />Current • Live {liveValues.cur}</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="lg:col-span-7">
-                <div className="h-full bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-4 relative overflow-hidden">
-                  <div className="absolute top-0 right-0 w-32 h-32 bg-[#2C6E9B]/5 rounded-full blur-2xl" />
-                  <div className="flex items-center gap-2 mb-3">
-                    <Printer size={14} className="text-[#8A8175]" />
-                    <span className="font-mono text-[11px] font-semibold uppercase tracking-wider text-[#1F2933]">Instant Maintenance Ticket • Printable Field Sheet • Exportable Checklist</span>
-                    <Badge variant="neutral">WO-#8821</Badge>
-                    <Badge variant="info">Live Bus</Badge>
-                  </div>
-
-                  {scenarioMode === 'normal' ? (
-                    <div className="space-y-3 font-mono text-[11px] text-[#6E6558]">
-                      <div className="p-8 text-center border border-dashed border-[#E6E0D6] rounded-lg">
-                        <div className="w-10 h-10 mx-auto rounded-full bg-[#2E7D5B]/10 border border-[#2E7D5B]/20 flex items-center justify-center text-[#2E7D5B] mb-2">✓</div>
-                        <div className="text-[#2E7D5B] font-semibold">No action required • System nominal</div>
-                        <div className="text-[10px] text-[#8A8175] mt-1">Next scheduled PM in 12 days • All 1,428 points within envelope • 99.8% uptime</div>
-                        <div className="mt-4 grid grid-cols-3 gap-2 text-[9px]">
-                          <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded p-2"><span className="text-[#8A8175]">Envelope Dev</span><br /><span className="text-[#2E7D5B] font-bold">+0.8%</span></div>
-                          <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded p-2"><span className="text-[#8A8175]">Model Conf</span><br /><span className="text-[#1F2933] font-bold">94%</span></div>
-                          <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded p-2"><span className="text-[#8A8175]">RUL</span><br /><span className="text-[#1F2933] font-bold">720h+</span></div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      <div className="grid grid-cols-2 gap-3 font-mono text-[10px]">
-                        <div><span className="text-[#8A8175] uppercase">Asset:</span><span className="text-[#1F2933] ml-2">AHU-03 Supply Fan • East Wing</span></div>
-                        <div><span className="text-[#8A8175] uppercase">Priority:</span><span className="text-[#C05043] ml-2">Critical • 7 Day Window • Live {liveValues.vib}mm/s</span></div>
-                        <div><span className="text-[#8A8175] uppercase">Diagnosis:</span><span className="text-[#B07B1C] ml-2">Bearing Outer Race • 91% • 3.2x RPM</span></div>
-                        <div><span className="text-[#8A8175] uppercase">RUL:</span><span className="text-[#1F2933] ml-2">168h ±24h • Slope 0.12A/day</span></div>
-                      </div>
-
-                      <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded-lg p-3">
-                        <div className="font-mono text-[10px] uppercase tracking-wider text-[#6E6558] mb-2">Step-by-Step Resolution Tasks • Field Ready • High Contrast</div>
-                        <ol className="space-y-2 font-mono text-[11px] text-[#3E4650] list-decimal list-inside">
-                          <li className="leading-relaxed"><span className="text-[#1F2933] font-semibold">Lockout/Tagout</span> • Isolate AHU-03 at disconnect • Verify zero energy • PPE: gloves, goggles • SOP-EL-03</li>
-                          <li className="leading-relaxed"><span className="text-[#1F2933] font-semibold">Lubricate & Inspect</span> • Bearing housing grease condition • Check for metal particulate • NLGI #2 • 2 pumps • Photo log</li>
-                          <li className="leading-relaxed"><span className="text-[#1F2933] font-semibold">Mechanical Check</span> • Pulley alignment (straight edge) • Belt tension (45-55 Hz) • Set screw torque 8 Nm • Loctite 243</li>
-                          <li className="leading-relaxed"><span className="text-[#1F2933] font-semibold">Electrical Verification</span> • Phase current under manual bypass • Expected 14.2A ±0.5A • Check imbalance &lt;2% • Fluke 376</li>
-                          <li className="leading-relaxed"><span className="text-[#1F2933] font-semibold">Post-Repair Validation</span> • Run 10min • Vibration target &lt;2.5 mm/s • Current &lt;14.8A • Log to Aegis • Close WO</li>
-                        </ol>
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded p-2">
-                          <div className="font-mono text-[9px] uppercase text-[#8A8175]">Tools Required • Field Kit</div>
-                          <div className="mt-1 font-mono text-[10px] text-[#3E4650] leading-relaxed">• Grease gun + NLGI2 • Stock: 12<br />• Vibration meter • Calibrated<br />• Clamp meter Fluke 376 • OK<br />• Straight edge, tension gauge • OK</div>
-                        </div>
-                        <div className="bg-[#FFFFFF] border border-[#E6E0D6] rounded p-2">
-                          <div className="font-mono text-[9px] uppercase text-[#8A8175]">Parts • Stock Check • Open Inventory</div>
-                          <div className="mt-1 font-mono text-[10px] text-[#3E4650] leading-relaxed">• Bearing 6205-2RS (x2) • Stock: 4 • $12/ea<br />• Belt B-62 • Stock: 6 • $18<br />• Grease cartridge • Stock: 12 • $5<br />• Total kit &lt;$180/asset</div>
-                        </div>
-                      </div>
-
-                      <div className="flex gap-2">
-                        <Button variant="teal" size="sm" className="flex-1" onClick={() => { handleCreateWorkOrder('AHU-03', '8821'); setShowFieldSheet(true); }}><Printer size={12} className="mr-1.5" /> Print Field Sheet (PDF) • Checklist</Button>
-                        <Button variant="secondary" size="sm" onClick={() => handleExport('json')}>Export Ticket JSON</Button>
-                        <Button variant="secondary" size="sm" onClick={() => handleExport('checklist')}>Checklist JSON</Button>
-                      </div>
-                      {workOrders.find(w => w.id === '8821') && (
-                        <div className="font-mono text-[10px] text-[#2E7D5B] bg-[#2E7D5B]/10 border border-[#2E7D5B]/20 rounded p-2 flex items-center gap-2">
-                          <CheckCircle2 size={12} /> Ticket generated and dispatched • Shift lead J. Rivera notified • ETA Today 14:30 • Audit logged
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </Card>
         </section>
         )}
-
-        {/* Footer */}
-        <footer className="border-t-2 border-[#1F2933] pt-4 pb-20 xl:pb-4">
-          <div className="flex flex-wrap items-center justify-between gap-4 font-mono text-[10px] text-[#8A8175]">
-            <div className="flex items-center gap-3">
-              <Shield size={14} className="text-[#2C6E9B]" />
-              <span>Aegis • Non-Profit • Open Access Facility Intelligence • MIT License • github.com/aegis-open • Built for field technicians, not boardrooms</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <span className="px-2 py-0.5 bg-[#E6E0D6] border border-[#D2C9BA] rounded text-[#6E6558]">Simulated Demonstration Bus • 1,428 points • 38 assets • {range} • Live {liveValues.vib}mm/s</span>
-            </div>
-          </div>
-          <div className="mt-4 grid md:grid-cols-4 gap-3 font-mono text-[9px] text-[#A99F90]">
-            <div>• Open hardware: DHT22, ACS712, MPU6050, YF-S201, ESP32, MQTT</div>
-            <div>• Explainable models: Seasonal ARIMA, Isolation Forest, FFT spectral</div>
-            <div>• No vendor lock-in • No proprietary gateway • $180/asset</div>
-            <div>• High-contrast industrial dark • Mobile field tablets • Offline capable</div>
-          </div>
-        </footer>
       </div>
       </div>
 

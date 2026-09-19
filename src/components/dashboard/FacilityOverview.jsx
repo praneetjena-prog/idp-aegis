@@ -1,26 +1,14 @@
 import React from 'react';
 import { 
-  Shield, 
   Activity, 
-  Radio, 
-  Cpu, 
   AlertTriangle, 
   CheckCircle2, 
   Clock, 
   ArrowRight, 
   Wrench, 
-  FileSpreadsheet, 
-  Sliders, 
   HelpCircle,
-  TrendingUp,
-  Droplets,
-  Zap,
-  Gauge,
-  Thermometer,
-  Layers,
-  ChevronRight
+  Gauge
 } from 'lucide-react';
-import { Card, CardHeader, CardTitle } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 
@@ -62,6 +50,9 @@ export const FacilityOverview = ({
                 </h1>
                 <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold border border-[#D2C9BA] bg-[#FAF8F4] dark:bg-[#141B22] text-[#1F2933] dark:text-[#FAF8F4]">
                   Central Campus • Unit 01
+                </span>
+                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold border border-[#2E7D5B]/30 bg-[#2E7D5B]/10 text-[#2E7D5B]">
+                  <Activity size={12} /> 99.8% Facility Uptime
                 </span>
                 <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-mono font-bold border ${
                   isFault 
@@ -200,242 +191,6 @@ export const FacilityOverview = ({
             </p>
           </div>
         )}
-      </div>
-
-      {/* 3. The 4 Key Numbers — Simplified for Everyone */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] font-bold">Monitored Machines</span>
-            <Cpu size={16} className="text-[#2C6E9B]" />
-          </div>
-          <div className="font-mono text-[24px] font-bold text-[#1F2933] dark:text-[#FAF8F4] mt-2">
-            38 <span className="text-[13px] font-normal text-[#8A8175]">Units</span>
-          </div>
-          <p className="font-sans text-[11px] text-[#6E6558] dark:text-[#A0988A] mt-1.5">
-            Air handling units, water pumps, cooling towers, and switchboards.
-          </p>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] font-bold">Sensors Online</span>
-            <Radio size={16} className="text-[#2C6E9B]" />
-          </div>
-          <div className="font-mono text-[24px] font-bold text-[#1F2933] dark:text-[#FAF8F4] mt-2">
-            1,428 <span className="text-[13px] font-normal text-[#8A8175]">Points</span>
-          </div>
-          <p className="font-sans text-[11px] text-[#6E6558] dark:text-[#A0988A] mt-1.5">
-            Actively measuring vibration, surface heat, current draw, and noise.
-          </p>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] font-bold">Facility Uptime</span>
-            <Activity size={16} className="text-[#2E7D5B]" />
-          </div>
-          <div className="font-mono text-[24px] font-bold text-[#1F2933] dark:text-[#FAF8F4] mt-2">
-            99.8%
-          </div>
-          <p className="font-sans text-[11px] text-[#6E6558] dark:text-[#A0988A] mt-1.5">
-            Unscheduled downtime prevented through proactive early alerts.
-          </p>
-        </Card>
-
-        <Card className="p-4">
-          <div className="flex items-center justify-between">
-            <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] font-bold">Early Warning Window</span>
-            <Clock size={16} className="text-[#2C6E9B]" />
-          </div>
-          <div className="font-mono text-[24px] font-bold text-[#1F2933] dark:text-[#FAF8F4] mt-2">
-            7–14 <span className="text-[13px] font-normal text-[#8A8175]">Days</span>
-          </div>
-          <p className="font-sans text-[11px] text-[#6E6558] dark:text-[#A0988A] mt-1.5">
-            Average lead time given to technicians before a motor stops running.
-          </p>
-        </Card>
-      </div>
-
-      {/* 4. Subsystems at a Glance — Plain Language Status */}
-      <Card className="p-5">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-4 border-b border-[#E6E0D6] dark:border-[#2C3847] pb-3">
-          <div>
-            <CardTitle>Building Subsystems Status</CardTitle>
-            <p className="text-[11px] text-[#8A8175] mt-0.5">
-              Current operational health across the 5 primary campus utility loops.
-            </p>
-          </div>
-          <button 
-            onClick={() => setTab('console')} 
-            className="text-[11px] font-mono font-bold text-[#2C6E9B] hover:underline inline-flex items-center gap-1 self-start sm:self-auto"
-          >
-            Open detailed telemetry <ChevronRight size={13} />
-          </button>
-        </div>
-
-        <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-3">
-          {[
-            { 
-              name: 'HVAC Air Handlers', 
-              score: isFault ? 79 : 92, 
-              status: isFault ? 'Warning' : 'Good',
-              note: isFault ? 'AHU-03 fan vibration' : 'Normal airflow',
-              color: isFault ? 'text-[#B07B1C]' : 'text-[#2E7D5B]',
-              barColor: isFault ? 'bg-[#B07B1C]' : 'bg-[#2E7D5B]'
-            },
-            { 
-              name: 'Mechanical Pumps', 
-              score: isFault ? 61 : 88, 
-              status: isFault ? 'Action Required' : 'Good',
-              note: isFault ? 'CW-Pump-02 strainer' : 'Pressures steady',
-              color: isFault ? 'text-[#C05043]' : 'text-[#2E7D5B]',
-              barColor: isFault ? 'bg-[#C05043]' : 'bg-[#2E7D5B]'
-            },
-            { 
-              name: 'Electrical Panels', 
-              score: isFault ? 84 : 95, 
-              status: 'Balanced',
-              note: '94.1% Phase balance',
-              color: 'text-[#2E7D5B]',
-              barColor: 'bg-[#2E7D5B]'
-            },
-            { 
-              name: 'Chilled Water Loops', 
-              score: 95, 
-              status: 'Nominal',
-              note: '4.2 bar constant',
-              color: 'text-[#2E7D5B]',
-              barColor: 'bg-[#2E7D5B]'
-            },
-            { 
-              name: 'Energy Efficiency', 
-              score: 88, 
-              status: 'Optimal',
-              note: '0.96 Power Factor',
-              color: 'text-[#2E7D5B]',
-              barColor: 'bg-[#2E7D5B]'
-            },
-          ].map((sys, idx) => (
-            <div key={idx} className="bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] p-3 rounded-lg flex flex-col justify-between">
-              <div>
-                <div className="font-display text-[12px] font-bold text-[#1F2933] dark:text-[#FAF8F4] truncate">
-                  {sys.name}
-                </div>
-                <div className="flex items-baseline justify-between mt-1">
-                  <span className={`font-mono text-[18px] font-bold ${sys.color}`}>{sys.score}%</span>
-                  <span className={`text-[10px] font-mono uppercase font-bold ${sys.color}`}>{sys.status}</span>
-                </div>
-                <div className="w-full h-1.5 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full mt-2 overflow-hidden">
-                  <div className={`h-full ${sys.barColor}`} style={{ width: `${sys.score}%` }} />
-                </div>
-              </div>
-              <div className="font-mono text-[10px] text-[#8A8175] mt-3 pt-2 border-t border-[#E6E0D6] dark:border-[#2C3847] truncate">
-                {sys.note}
-              </div>
-            </div>
-          ))}
-        </div>
-      </Card>
-
-      {/* 5. How Aegis Works — Technician Learning Guide */}
-      <div className="bg-[#FFFFFF] dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] p-5 rounded-xl">
-        <div className="mb-4">
-          <span className="font-mono text-[10px] uppercase tracking-wider font-bold text-[#8A8175]">Technician 101</span>
-          <h3 className="font-display text-[16px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">
-            How Aegis Predictive Monitoring Works
-          </h3>
-          <p className="text-[12px] text-[#6E6558] dark:text-[#A0988A] mt-0.5">
-            A simple 3-step guide for apprentices and facility maintenance staff.
-          </p>
-        </div>
-
-        <div className="grid md:grid-cols-3 gap-4">
-          <div className="p-4 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
-            <div className="w-7 h-7 rounded-md bg-[#2C6E9B]/10 text-[#2C6E9B] flex items-center justify-center font-mono text-[12px] font-bold mb-2">
-              01
-            </div>
-            <h4 className="font-display text-[13px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">Sensors Listen 24/7</h4>
-            <p className="text-[12px] text-[#554D42] dark:text-[#C5BCAD] mt-1 leading-relaxed">
-              Inexpensive sensor nodes measure mechanical vibration (mm/s), motor temperature (°C), and electrical current (Amps) every second.
-            </p>
-          </div>
-
-          <div className="p-4 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
-            <div className="w-7 h-7 rounded-md bg-[#2F8A7E]/10 text-[#2F8A7E] flex items-center justify-center font-mono text-[12px] font-bold mb-2">
-              02
-            </div>
-            <h4 className="font-display text-[13px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">Detects Tiny Drifts</h4>
-            <p className="text-[12px] text-[#554D42] dark:text-[#C5BCAD] mt-1 leading-relaxed">
-              When grease dries up or a belt loosens, vibration rises before anyone can hear or smell it. Aegis catches this drift days before failure.
-            </p>
-          </div>
-
-          <div className="p-4 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
-            <div className="w-7 h-7 rounded-md bg-[#2E7D5B]/10 text-[#2E7D5B] flex items-center justify-center font-mono text-[12px] font-bold mb-2">
-              03
-            </div>
-            <h4 className="font-display text-[13px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">Step-by-Step Fix</h4>
-            <p className="text-[12px] text-[#554D42] dark:text-[#C5BCAD] mt-1 leading-relaxed">
-              Instead of guessing or replacing entire machines, you get a clear checklist: what grease to pump, what bolts to tighten, and what to log.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* 6. Quick Operator Shortcuts */}
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-2">
-        <button
-          type="button"
-          onClick={() => setTab('console')}
-          className="text-left p-3.5 bg-[#FFFFFF] dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] rounded-lg hover:border-[#2C6E9B] hover:shadow-md transition-all group"
-        >
-          <div className="flex items-center justify-between text-[#2C6E9B] mb-2">
-            <Activity size={18} />
-            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-          </div>
-          <div className="font-display text-[13px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">Live Sensor Console</div>
-          <p className="text-[11px] text-[#8A8175] mt-1">Check real-time vibration, amp, and thermal curves.</p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setTab('analysis')}
-          className="text-left p-3.5 bg-[#FFFFFF] dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] rounded-lg hover:border-[#2C6E9B] hover:shadow-md transition-all group"
-        >
-          <div className="flex items-center justify-between text-[#2C6E9B] mb-2">
-            <Sliders size={18} />
-            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-          </div>
-          <div className="font-display text-[13px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">Analysis & Triage</div>
-          <p className="text-[11px] text-[#8A8175] mt-1">Review probable failure causes and dispatch orders.</p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setTab('simulator')}
-          className="text-left p-3.5 bg-[#FFFFFF] dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] rounded-lg hover:border-[#2C6E9B] hover:shadow-md transition-all group"
-        >
-          <div className="flex items-center justify-between text-[#2C6E9B] mb-2">
-            <Gauge size={18} />
-            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-          </div>
-          <div className="font-display text-[13px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">Scenario Simulator</div>
-          <p className="text-[11px] text-[#8A8175] mt-1">Simulate heat spikes, high load, and bearing wear.</p>
-        </button>
-
-        <button
-          type="button"
-          onClick={() => onExport('csv')}
-          className="text-left p-3.5 bg-[#FFFFFF] dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] rounded-lg hover:border-[#2C6E9B] hover:shadow-md transition-all group"
-        >
-          <div className="flex items-center justify-between text-[#2C6E9B] mb-2">
-            <FileSpreadsheet size={18} />
-            <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
-          </div>
-          <div className="font-display text-[13px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">Export Shift Report</div>
-          <p className="text-[11px] text-[#8A8175] mt-1">Download CSV of all machine readings for shift handover.</p>
-        </button>
       </div>
     </div>
   );

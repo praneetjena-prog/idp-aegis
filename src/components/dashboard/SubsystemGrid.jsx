@@ -20,32 +20,41 @@ export const SubsystemGrid = React.memo(({ mode, onSelect }) => {
   });
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2.5">
       {adjusted.map((sys) => {
         const Icon = sys.icon;
+        const tone = sys.health > 85 ? 'text-[#2E7D5B]' : sys.health > 75 ? 'text-[#B07B1C]' : 'text-[#C05043]';
+        const toneBg = sys.health > 85 ? 'bg-[#2E7D5B]' : sys.health > 75 ? 'bg-[#B07B1C]' : 'bg-[#C05043]';
         return (
-          <Card key={sys.id} hover padding={false} className="p-3.5 group" onClick={() => onSelect(sys.id)}>
-            <div className="flex items-start justify-between mb-2.5">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center border ${sys.variant==='nominal' ? 'bg-[#2E7D5B]/10 border-[#2E7D5B]/20 text-[#2E7D5B]' : sys.variant==='attention' ? 'bg-[#B07B1C]/10 border-[#B07B1C]/20 text-[#B07B1C]' : 'bg-[#C05043]/10 border-[#C05043]/20 text-[#C05043]'}`}>
-                <Icon size={16} />
+          <button
+            key={sys.id}
+            type="button"
+            onClick={() => onSelect(sys.id)}
+            className="text-left p-2.5 rounded-lg border border-[#E6E0D6] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#1A222B] hover:border-[#2C6E9B] dark:hover:border-[#58A6FF] hover:shadow-sm transition-all group"
+          >
+            <div className="flex items-center justify-between mb-1.5">
+              <div className={`w-6 h-6 rounded flex items-center justify-center border ${
+                sys.variant === 'nominal'
+                  ? 'bg-[#2E7D5B]/10 border-[#2E7D5B]/20 text-[#2E7D5B]'
+                  : sys.variant === 'attention'
+                  ? 'bg-[#B07B1C]/10 border-[#B07B1C]/20 text-[#B07B1C]'
+                  : 'bg-[#C05043]/10 border-[#C05043]/20 text-[#C05043]'
+              }`}>
+                <Icon size={13} />
               </div>
               <Badge variant={sys.variant}>{sys.status}</Badge>
             </div>
-            <div className="font-mono text-[11px] font-semibold text-[#1F2933] tracking-wide uppercase">{sys.name}</div>
-            <div className="mt-2 flex items-end justify-between">
-              <div>
-                <div className="font-mono text-[20px] font-bold leading-none" style={{color: sys.health>85 ? '#2E7D5B' : sys.health>75 ? '#B07B1C' : '#C05043'}}>{sys.health}%</div>
-                <div className="font-mono text-[9px] text-[#8A8175] uppercase tracking-wider mt-1">Health</div>
-              </div>
-              <div className="text-right">
-                <div className="font-mono text-[10px] text-[#3E4650]">{sys.metric}</div>
-                <div className="font-mono text-[9px] text-[#8A8175] mt-0.5 max-w-[110px] truncate">{sys.detail}</div>
-              </div>
+            <div className="font-mono text-[10px] font-bold text-[#1F2933] dark:text-[#FAF8F4] truncate uppercase tracking-tight">
+              {sys.name}
             </div>
-            <div className="mt-3 h-1 bg-[#F1EDE6] rounded-full overflow-hidden">
-              <div className="h-full transition-all" style={{ width: `${sys.health}%`, background: sys.health>85 ? '#2E7D5B' : sys.health>75 ? '#B07B1C' : '#C05043' }} />
+            <div className="mt-1 flex items-baseline justify-between">
+              <span className={`font-mono text-[16px] font-bold ${tone}`}>{sys.health}%</span>
+              <span className="font-mono text-[9px] text-[#8A8175] dark:text-[#A99F90] truncate max-w-[85px]">{sys.metric}</span>
             </div>
-          </Card>
+            <div className="mt-1.5 h-1 bg-[#F1EDE6] dark:bg-[#2C3847] rounded-full overflow-hidden">
+              <div className={`h-full transition-all ${toneBg}`} style={{ width: `${sys.health}%` }} />
+            </div>
+          </button>
         );
       })}
     </div>

@@ -4,7 +4,7 @@ import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { AlertTriangle, Wrench, ClipboardList, Eye, FileText, Check } from 'lucide-react';
 
-export const TriageQueue = ({ onCreateWorkOrder, onViewTelemetry, acknowledged, onAcknowledge, workOrders }) => {
+export const TriageQueue = ({ onCreateWorkOrder, onViewTelemetry, acknowledged, onAcknowledge, workOrders, onPrintFieldSheet }) => {
   return (
     <div className="space-y-3">
       {/* Urgent */}
@@ -45,20 +45,22 @@ export const TriageQueue = ({ onCreateWorkOrder, onViewTelemetry, acknowledged, 
               <div>
                 <div className="font-mono text-[10px] text-[#8A8175] uppercase tracking-wider mb-1.5">Prescriptive Action Plan</div>
                 <ol className="space-y-1 font-mono text-[11px] text-[#3E4650] list-decimal list-inside">
-                  <li>Lubricate bearing housing and inspect grease condition (NLGI #2, check for metal particulate).</li>
-                  <li>Check pulley alignment and belt tension • Tools: straight edge, tension gauge.</li>
-                  <li>Verify phase current under manual bypass • Expected: 14.2A ±0.5A.</li>
+                  <li><span className="font-semibold text-[#1F2933]">Lockout/Tagout</span>: Isolate AHU-03 at disconnect • Verify zero energy (SOP-EL-03).</li>
+                  <li><span className="font-semibold text-[#1F2933]">Lubricate & Inspect</span>: Bearing housing grease condition • Check particulate (NLGI #2, 2 pumps).</li>
+                  <li><span className="font-semibold text-[#1F2933]">Mechanical Check</span>: Pulley alignment (straight edge &lt;0.5mm) & belt tension (45–55 Hz).</li>
+                  <li><span className="font-semibold text-[#1F2933]">Electrical Verification</span>: Phase current under manual bypass (14.2A ±0.5A, imbalance &lt;2%).</li>
+                  <li><span className="font-semibold text-[#1F2933]">Post-Repair Validation</span>: Run 10min, target &lt;2.5 mm/s, log to Aegis & close WO.</li>
                 </ol>
               </div>
             </div>
             <div className="space-y-3">
               <div className="bg-[#F1EDE6] rounded-lg border border-[#E6E0D6] p-3">
-                <div className="font-mono text-[10px] text-[#8A8175] uppercase mb-2">Field Kit</div>
+                <div className="font-mono text-[10px] text-[#8A8175] uppercase mb-2">Field Kit & Inventory</div>
                 <div className="space-y-1.5 font-mono text-[10px] text-[#6E6558]">
-                  <div className="flex justify-between"><span>• Bearing 6205-2RS</span><span className="text-[#A99F90]">Stock: 4</span></div>
-                  <div className="flex justify-between"><span>• Grease Gun + NLGI2</span><span className="text-[#2E7D5B]">OK</span></div>
-                  <div className="flex justify-between"><span>• Vibration Meter</span><span className="text-[#2E7D5B]">OK</span></div>
-                  <div className="flex justify-between"><span>• Clamp Meter Fluke 376</span><span className="text-[#2E7D5B]">OK</span></div>
+                  <div className="flex justify-between"><span>• Bearing 6205-2RS (x2)</span><span className="text-[#1F2933] font-bold">Stock: 4 ($12/ea)</span></div>
+                  <div className="flex justify-between"><span>• Grease Gun + NLGI #2</span><span className="text-[#2E7D5B] font-bold">Stock: 12 ($5)</span></div>
+                  <div className="flex justify-between"><span>• Belt B-62</span><span className="text-[#1F2933] font-bold">Stock: 6 ($18)</span></div>
+                  <div className="flex justify-between"><span>• Vibration & Clamp Meters</span><span className="text-[#2E7D5B] font-bold">Calibrated OK</span></div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -71,8 +73,8 @@ export const TriageQueue = ({ onCreateWorkOrder, onViewTelemetry, acknowledged, 
                 <Button variant="secondary" onClick={() => onAcknowledge('ahu03')}>
                   {acknowledged.has('ahu03') ? <><Check size={12} className="mr-1" /> Acked</> : 'Acknowledge'}
                 </Button>
-                <Button variant="ghost" className="col-span-2 border border-dashed border-[#D2C9BA]">
-                  <FileText size={12} className="mr-1" /> Print Field Sheet (PDF)
+                <Button variant="teal" size="sm" onClick={onPrintFieldSheet} className="col-span-2">
+                  <FileText size={12} className="mr-1.5" /> Print Field Sheet (PDF) • Checklist
                 </Button>
               </div>
               {workOrders.find(w=>w.asset==='AHU-03') && (

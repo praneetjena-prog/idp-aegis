@@ -12,11 +12,64 @@ import {
   Sun, 
   Moon,
   Volume2,
-  VolumeX
+  VolumeX,
+  Download,
+  ChevronDown
 } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { isSoundEnabled, setSoundEnabled, playDispatchChime } from '../../lib/sound';
+
+const ExportDropdown = ({ onExport }) => {
+  const [open, setOpen] = React.useState(false);
+  const ref = React.useRef(null);
+
+  React.useEffect(() => {
+    const onClickOutside = (e) => {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onClickOutside);
+    return () => document.removeEventListener('mousedown', onClickOutside);
+  }, []);
+
+  return (
+    <div className="relative" ref={ref}>
+      <button
+        type="button"
+        onClick={() => setOpen(prev => !prev)}
+        className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#FAF8F4] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] font-mono text-[10px] font-semibold rounded border border-[#D2C9BA] dark:border-[#2C3847] hover:bg-[#E6E0D6] dark:hover:bg-[#2C3847] transition-all"
+        title="Export Facility Telemetry"
+      >
+        <Download size={12} className="text-[#2C6E9B]" />
+        <span>Export</span>
+        <ChevronDown size={11} className={`text-[#8A8175] transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+
+      {open && (
+        <div className="absolute right-0 mt-1.5 w-36 bg-[#FFFFFF] dark:bg-[#141B22] border-2 border-[#1F2933] dark:border-[#2C3847] rounded-lg shadow-xl py-1 z-50 font-mono text-[10px] animate-in fade-in slide-in-from-top-1">
+          <button
+            type="button"
+            onClick={() => { onExport('csv'); setOpen(false); }}
+            className="w-full px-3 py-1.5 text-left hover:bg-[#F1EDE6] dark:hover:bg-[#2C3847] flex items-center gap-2 text-[#1F2933] dark:text-[#FAF8F4]"
+          >
+            <FileSpreadsheet size={13} className="text-[#2E7D5B]" />
+            <span>Export CSV</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => { onExport('json'); setOpen(false); }}
+            className="w-full px-3 py-1.5 text-left hover:bg-[#F1EDE6] dark:hover:bg-[#2C3847] flex items-center gap-2 text-[#1F2933] dark:text-[#FAF8F4]"
+          >
+            <FileJson size={13} className="text-[#2C6E9B]" />
+            <span>Export JSON</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const TopHeader = React.memo(({
   railCollapsed,
@@ -85,20 +138,16 @@ export const TopHeader = React.memo(({
         </div>
 
         <div className="flex items-center gap-2 sm:gap-3">
-          {/* Live Facility Health Pill in Header */}
-          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border font-mono text-[10px] font-bold ${
+          {/* Consolidated Live Health & Telemetry Pill */}
+          <div className={`flex items-center gap-2 px-3 py-1 rounded-full border font-mono text-[10px] font-bold transition-colors ${
             feedMode === 'fault'
               ? 'bg-[#C05043]/10 dark:bg-[#C05043]/20 border-[#C05043]/40 text-[#C05043]'
               : 'bg-[#2E7D5B]/10 dark:bg-[#2E7D5B]/20 border-[#2E7D5B]/40 text-[#2E7D5B]'
           }`}>
             <div className={`w-1.5 h-1.5 rounded-full ${feedMode === 'fault' ? 'bg-[#C05043] animate-pulse' : 'bg-[#2E7D5B]'}`} />
             <span>{feedMode === 'fault' ? '74% Health • AHU-03 Advisory' : '91% Health • Nominal'}</span>
-          </div>
-
-          {/* Live Vibration reading */}
-          <div className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#E6E0D6] dark:bg-[#141B22] border border-[#D2C9BA] dark:border-[#2C3847]">
-            <Activity size={12} className="text-[#2C6E9B]" />
-            <span className="font-mono text-[9px] text-[#6E6558] dark:text-[#A99F90]">Vibration {vibration} mm/s</span>
+            <span className="text-[#8A8175] dark:text-[#A99F90]">•</span>
+            <span className="text-[#2C6E9B] font-semibold">{vibration} mm/s</span>
           </div>
 
           {/* Dark Mode Theme Toggle with Sun / Moon symbol */}
@@ -134,7 +183,7 @@ export const TopHeader = React.memo(({
       </div>
 
       {/* 2. Global Control Bar */}
-      <div className="min-h-[58px] px-4 lg:px-6 py-2 flex flex-wrap items-center justify-between gap-3 bg-[#FFFFFF] dark:bg-[#141B22]">
+      <div className="min-h-[52px] px-4 lg:px-6 py-2 flex flex-wrap items-center justify-between gap-3 bg-[#FFFFFF] dark:bg-[#141B22]">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
             <MapPin size={14} className="text-[#8A8175]" />
@@ -151,16 +200,7 @@ export const TopHeader = React.memo(({
         </div>
 
         <div className="w-full lg:w-auto flex items-center gap-2 overflow-x-auto pb-1 lg:pb-0">
-          <div className="relative hidden md:flex items-center">
-            <Search size={12} className="absolute left-2 text-[#A99F90]" />
-            <input
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Filter subsystems..."
-              className="pl-7 pr-2 py-1 w-[160px] bg-[#F1EDE6] dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] rounded-md font-mono text-[10px] text-[#1F2933] dark:text-white placeholder:text-[#A99F90] focus:outline-none focus:border-[#D2C9BA]"
-            />
-          </div>
-
+          {/* Time Range Selector */}
           <div className="flex items-center gap-1 p-0.5 bg-[#F1EDE6] dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
             {['1H', '24H', '7D'].map(r => (
               <button
@@ -173,28 +213,35 @@ export const TopHeader = React.memo(({
             ))}
           </div>
 
+          {/* Compact Demo Simulator Switch */}
           <div className="flex items-center gap-1 p-0.5 bg-[#F1EDE6] dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
-            <button onClick={() => setFeedMode('normal')} className={`font-mono text-[10px] px-2.5 py-1 rounded-md flex items-center gap-1 transition-all ${feedMode === 'normal' ? 'bg-[#2E7D5B]/20 text-[#2E7D5B] border border-[#2E7D5B]/30' : 'text-[#8A8175] hover:text-[#6E6558]'}`}>
-              <div className={`w-1 h-1 rounded-full ${feedMode === 'normal' ? 'bg-[#2E7D5B]' : 'bg-[#C9C0B2]'}`} /> Normal Run
+            <span className="font-mono text-[9px] uppercase px-1.5 text-[#8A8175] font-semibold">Demo:</span>
+            <button 
+              onClick={() => setFeedMode('normal')} 
+              className={`font-mono text-[10px] px-2 py-0.5 rounded transition-all ${feedMode === 'normal' ? 'bg-[#2E7D5B] text-white font-bold' : 'text-[#8A8175] hover:text-[#3E4650] dark:hover:text-white'}`}
+            >
+              Normal
             </button>
-            <button onClick={() => setFeedMode('fault')} className={`font-mono text-[10px] px-2.5 py-1 rounded-md flex items-center gap-1 transition-all ${feedMode === 'fault' ? 'bg-[#C05043]/20 text-[#C05043] border border-[#C05043]/30' : 'text-[#8A8175] hover:text-[#6E6558]'}`}>
-              <div className={`w-1 h-1 rounded-full ${feedMode === 'fault' ? 'bg-[#C05043] animate-pulse' : 'bg-[#C9C0B2]'}`} /> Induced Fault
+            <button 
+              onClick={() => setFeedMode('fault')} 
+              className={`font-mono text-[10px] px-2 py-0.5 rounded transition-all ${feedMode === 'fault' ? 'bg-[#C05043] text-white font-bold' : 'text-[#8A8175] hover:text-[#3E4650] dark:hover:text-white'}`}
+            >
+              Fault
             </button>
           </div>
 
-          <div className="flex items-center gap-1">
-            <Button variant="secondary" size="xs" onClick={() => handleExport('json')}><FileJson size={12} className="mr-1" /> JSON</Button>
-            <Button variant="secondary" size="xs" onClick={() => handleExport('csv')}><FileSpreadsheet size={12} className="mr-1" /> CSV</Button>
-            <button
-              type="button"
-              onClick={() => setSettingsOpen(true)}
-              title="Facility Settings & Sensor Calibration"
-              className="group flex items-center gap-1.5 px-2.5 py-1.5 bg-[#2C6E9B] text-white font-mono text-[10px] font-bold uppercase rounded border border-[#1F2933] dark:border-[#2C3847] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:bg-[#255C83] active:translate-x-[1px] active:translate-y-[1px] transition-all"
-            >
-              <Settings size={12} className="transition-transform duration-500 ease-out group-hover:rotate-90" />
-              <span>Settings</span>
-            </button>
-          </div>
+          {/* Unified Export Menu & Settings */}
+          <ExportDropdown onExport={handleExport} />
+
+          <button
+            type="button"
+            onClick={() => setSettingsOpen(true)}
+            title="Facility Settings & Sensor Calibration"
+            className="group flex items-center gap-1.5 px-2.5 py-1.5 bg-[#2C6E9B] text-white font-mono text-[10px] font-bold uppercase rounded border border-[#1F2933] dark:border-[#2C3847] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:bg-[#255C83] active:translate-x-[1px] active:translate-y-[1px] transition-all"
+          >
+            <Settings size={12} className="transition-transform duration-500 ease-out group-hover:rotate-90" />
+            <span>Settings</span>
+          </button>
         </div>
       </div>
     </div>

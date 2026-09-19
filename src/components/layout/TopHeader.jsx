@@ -14,14 +14,15 @@ import {
   Volume2,
   VolumeX,
   Download,
-  ChevronDown
+  ChevronDown,
+  QrCode
 } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { isSoundEnabled, setSoundEnabled, playDispatchChime } from '../../lib/sound';
 import { Printer } from 'lucide-react';
 
-const ExportDropdown = ({ onExport, onPrintFieldSheet }) => {
+const ExportDropdown = ({ onExport, onPrintFieldSheet, onOpenQrTags }) => {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef(null);
 
@@ -105,6 +106,19 @@ const ExportDropdown = ({ onExport, onPrintFieldSheet }) => {
               </div>
             </button>
           )}
+          {onOpenQrTags && (
+            <button
+              type="button"
+              onClick={() => { onOpenQrTags(); setOpen(false); }}
+              className="w-full px-3 py-1.5 text-left hover:bg-[#F1EDE6] dark:hover:bg-[#2C3847] flex items-center gap-2 text-[#1F2933] dark:text-[#FAF8F4] border-t border-[#E6E0D6] dark:border-[#2C3847] mt-1 pt-1.5 transition-colors"
+            >
+              <QrCode size={13} className="text-[#2C6E9B] shrink-0" />
+              <div className="flex flex-col">
+                <span className="font-semibold">Print QR Asset Tags</span>
+                <span className="text-[9px] text-[#8A8175]">Physical machine stickers</span>
+              </div>
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -127,7 +141,8 @@ export const TopHeader = React.memo(({
   setFeedMode,
   handleExport,
   setSettingsOpen,
-  onPrintFieldSheet
+  onPrintFieldSheet,
+  onOpenQrTags
 }) => {
   const [soundOn, setSoundOn] = React.useState(isSoundEnabled);
 
@@ -272,7 +287,11 @@ export const TopHeader = React.memo(({
           </div>
 
           {/* Unified Export Menu & Settings */}
-          <ExportDropdown onExport={handleExport} onPrintFieldSheet={onPrintFieldSheet} />
+          <ExportDropdown 
+            onExport={handleExport} 
+            onPrintFieldSheet={onPrintFieldSheet} 
+            onOpenQrTags={onOpenQrTags} 
+          />
 
           <button
             type="button"

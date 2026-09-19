@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { Shield, Activity, MapPin, Clock, Zap, Cpu, Layers, Radio, ChevronRight, ArrowLeft, Printer, FileJson, FileSpreadsheet, Thermometer, Waves, Volume2, Search, Filter, X, AlertTriangle, CheckCircle2, Settings, LayoutDashboard, ChartNoAxesCombined, Gauge, Cable, PanelLeftClose, PanelLeftOpen, Menu, Sun, Moon } from 'lucide-react';
+import { Shield, Activity, MapPin, Clock, Zap, Cpu, Layers, Radio, ChevronRight, ArrowLeft, Printer, FileJson, FileSpreadsheet, Thermometer, Waves, Volume2, Search, Filter, X, AlertTriangle, CheckCircle2, Settings, LayoutDashboard, ChartNoAxesCombined, Gauge, Cable, PanelLeftClose, PanelLeftOpen, Menu, Sun, Moon, QrCode } from 'lucide-react';
 
 import { Card, CardHeader, CardTitle } from './components/ui/Card';
 import { Badge } from './components/ui/Badge';
@@ -17,6 +17,8 @@ import { PredictiveSimulator } from './components/dashboard/PredictiveSimulator'
 import { FacilityOverview } from './components/dashboard/FacilityOverview';
 import { FieldSheetModal } from './components/dashboard/FieldSheetModal';
 import { SettingsPanel } from './components/settings/SettingsPanel';
+import { AssetPassport } from './components/asset/AssetPassport';
+import { AssetQrModal } from './components/asset/AssetQrModal';
 import { useFacilityParams } from './lib/facility';
 import { useLiveFeed } from './lib/liveFeed';
 import { playDispatchChime, playAlertChime } from './lib/sound';
@@ -40,16 +42,24 @@ const SectionLabel = ({ k, title, id }) => (
   </div>
 );
 
-const VALID_TABS = ['overview', 'console', 'analysis', 'simulator', 'platform'];
+const VALID_TABS = ['overview', 'console', 'analysis', 'simulator', 'platform', 'asset'];
 const STORAGE_WORK_ORDERS = 'aegis-work-orders';
 const STORAGE_ACKNOWLEDGED = 'aegis-acknowledged-alerts';
 
-function getInitialTab() {
-  if (typeof window !== 'undefined' && window.location.hash) {
-    const hash = window.location.hash.replace(/^#/, '').toLowerCase();
-    if (VALID_TABS.includes(hash)) return hash;
+function parseHash() {
+  if (typeof window === 'undefined' || !window.location.hash) {
+    return { tab: 'overview', assetId: 'ahu-03' };
   }
-  return 'overview';
+  const clean = window.location.hash.replace(/^#/, '');
+  const parts = clean.split('/');
+  const tabName = parts[0]?.toLowerCase();
+  if (tabName === 'asset') {
+    return { tab: 'asset', assetId: parts[1]?.toLowerCase() || 'ahu-03' };
+  }
+  if (VALID_TABS.includes(tabName)) {
+    return { tab: tabName, assetId: 'ahu-03' };
+  }
+  return { tab: 'overview', assetId: 'ahu-03' };
 }
 
 function getInitialWorkOrders() {
@@ -82,7 +92,10 @@ export default function App() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFieldSheet, setShowFieldSheet] = useState(false);
   const [telemetryFilter, setTelemetryFilter] = useState('all');
-  const [tab, setTabState] = useState(getInitialTab);
+  const initialNav = useMemo(() => parseHash(), []);
+  const [tab, setTabState] = useState(initialNav.tab);
+  const [selectedAssetId, setSelectedAssetId] = useState(initialNav.assetId);
+  const [showQrModal, setShowQrModal] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [railCollapsed, setRailCollapsed] = useState(false);
   const [railExpanded, setRailExpanded] = useState(false);
@@ -90,20 +103,40 @@ export default function App() {
   const { params, setParams, save: saveParams, saving } = useFacilityParams();
 
   // Sync tab changes to URL hash (deep linking)
-  const setTab = (nextTab) => {
+  const setTab = (nextTab, assetId) => {
     if (!VALID_TABS.includes(nextTab)) return;
     setTabState(nextTab);
-    if (typeof window !== 'undefined' && window.location.hash !== `#${nextTab}`) {
-      window.history.replaceState(null, '', `#${nextTab}`);
+    const targetAsset = assetId || selectedAssetId || 'ahu-03';
+    if (assetId) {
+      setSelectedAssetId(assetId);
+    }
+    if (typeof window !== 'undefined') {
+      const newHash = nextTab === 'asset' 
+        ? `#asset/${targetAsset}` 
+        : `#${nextTab}`;
+      if (window.location.hash !== newHash) {
+        window.history.replaceState(null, '', newHash);
+      }
+    }
+  };
+
+  const handleSelectAsset = (assetId) => {
+    setSelectedAssetId(assetId);
+    if (tab === 'asset' && typeof window !== 'undefined') {
+      const newHash = `#asset/${assetId}`;
+      if (window.location.hash !== newHash) {
+        window.history.replaceState(null, '', newHash);
+      }
     }
   };
 
   // Listen to browser Back / Forward buttons
   useEffect(() => {
     const onHashChange = () => {
-      const hash = window.location.hash.replace(/^#/, '').toLowerCase();
-      if (VALID_TABS.includes(hash)) {
-        setTabState(hash);
+      const parsed = parseHash();
+      setTabState(parsed.tab);
+      if (parsed.assetId) {
+        setSelectedAssetId(parsed.assetId);
       }
     };
     window.addEventListener('hashchange', onHashChange);
@@ -388,12 +421,30 @@ export default function App() {
           handleExport={handleExport}
           setSettingsOpen={setSettingsOpen}
           onPrintFieldSheet={() => setShowFieldSheet(true)}
+          onOpenQrTags={() => setShowQrModal(true)}
         />
 
       {/* Main Content */}
       <div className="max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-5 py-4 space-y-5">
 
         <TabBar tab={tab} setTab={setTab} onSettings={() => setSettingsOpen(true)} />
+
+        {/* Mobile / Direct Equipment Passport View (via QR Scan or Deep Link) */}
+        {tab === 'asset' && (
+          <AssetPassport
+            assetId={selectedAssetId}
+            onSelectAsset={handleSelectAsset}
+            onBack={() => setTab('console')}
+            liveValues={liveValues}
+            feedMode={effectiveFeedMode}
+            isLive={isLive}
+            workOrders={workOrders}
+            onCreateWorkOrder={handleCreateWorkOrder}
+            onShowQrModal={() => setShowQrModal(true)}
+            onPrintFieldSheet={() => setShowFieldSheet(true)}
+            showToast={showToast}
+          />
+        )}
 
         {/* Platform Header & Mission Overview */}
         <section ref={overviewRef} className="space-y-6 scroll-mt-[120px]">
@@ -665,6 +716,24 @@ export default function App() {
                     <CardTitle>Live Sensor Tiles • {activeSubsystem.toUpperCase()} • AHU-03 Primary Supply Fan • Real-Time</CardTitle>
                     <div className="flex gap-1">
                       <Button variant="ghost" size="xs" onClick={() => setActiveSubsystem(null)}>← Return</Button>
+                      <Button 
+                        variant="secondary" 
+                        size="xs" 
+                        onClick={() => {
+                          const assetMap = {
+                            water: 'cw-pump-02',
+                            electrical: 'elec-01',
+                            hvac: 'ahu-03',
+                            mechanical: 'ahu-03',
+                            energy: 'vav-4b'
+                          };
+                          const target = assetMap[activeSubsystem] || 'ahu-03';
+                          setSelectedAssetId(target);
+                          setShowQrModal(true);
+                        }}
+                      >
+                        <QrCode size={10} className="mr-1" /> QR Tag
+                      </Button>
                       <Button variant="secondary" size="xs" onClick={() => setShowFieldSheet(true)}><Printer size={10} className="mr-1" /> Field Sheet</Button>
                     </div>
                   </CardHeader>
@@ -722,6 +791,18 @@ export default function App() {
                     <div className="grid grid-cols-2 gap-2">
                       <Button variant="critical" size="sm" onClick={() => handleCreateWorkOrder('AHU-03', '8821')}>Create WO #8821</Button>
                       <Button variant="secondary" size="sm" onClick={() => setShowFieldSheet(true)}>Print Field Sheet</Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          setSelectedAssetId('ahu-03');
+                          setTab('asset', 'ahu-03');
+                        }}
+                        className="col-span-2 flex items-center justify-center gap-1.5 font-mono text-[10px]"
+                      >
+                        <QrCode size={12} className="text-[#2C6E9B]" />
+                        <span>Open AHU-03 Asset Passport</span>
+                      </Button>
                     </div>
                   </div>
                 </Card>
@@ -760,6 +841,18 @@ export default function App() {
         liveValues={liveValues}
         params={params}
         onExport={handleExport}
+      />
+
+      {/* Machine QR Asset Tag Modal */}
+      <AssetQrModal
+        open={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        assetId={selectedAssetId}
+        onSelectAsset={handleSelectAsset}
+        onOpenPassport={(id) => {
+          setSelectedAssetId(id);
+          setTab('asset', id);
+        }}
       />
 
       {/* Toast */}

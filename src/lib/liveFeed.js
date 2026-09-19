@@ -19,7 +19,7 @@ const STALE_MS = 90_000;
  * Streams the newest reading per metric from Aegis Telemetry Cloud.
  * Falls back to the built-in demonstration feed until real hardware reports in.
  */
-export function useLiveFeed(feedMode, params) {
+export function useLiveFeed(feedMode) {
   const [readings, setReadings] = useState({});
   const [lastSeen, setLastSeen] = useState(null);
   const [demo, setDemo] = useState({ vib: 6.8, cur: 17.6, temp: 71.8, acoustic: 12 });

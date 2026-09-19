@@ -88,6 +88,7 @@ export default function App() {
   const [railCollapsed, setRailCollapsed] = useState(false);
   const [railExpanded, setRailExpanded] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
+  const { params, setParams, save: saveParams, saving } = useFacilityParams();
 
   // Sync tab changes to URL hash (deep linking)
   const setTab = (nextTab) => {
@@ -135,7 +136,7 @@ export default function App() {
     backendStatus, 
     backendAnomalies, 
     recordCount 
-  } = useLiveFeed(feedMode, params);
+  } = useLiveFeed(feedMode);
 
   // When live backend is streaming, automatically reflect real hardware status
   const effectiveFeedMode = isLive && backendStatus

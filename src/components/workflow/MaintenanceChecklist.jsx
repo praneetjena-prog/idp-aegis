@@ -16,7 +16,7 @@ const initialTasks = [
   { id: 9, text: "Log repair to Aegis • Upload vibration spectrum • Close WO #8821", category: "Documentation", checked: false },
 ];
 
-export const MaintenanceChecklist = ({ onExport }) => {
+export const MaintenanceChecklist = ({ onExport, onPrintFieldSheet }) => {
   const [tasks, setTasks] = useState(initialTasks);
 
   const toggle = (id) => setTasks(prev => prev.map(t => t.id === id ? { ...t, checked: !t.checked } : t));
@@ -47,7 +47,7 @@ export const MaintenanceChecklist = ({ onExport }) => {
         ))}
       </div>
       <div className="mt-3 flex gap-2">
-        <Button variant="teal" size="sm" className="flex-1" onClick={() => onExport('checklist')}><Printer size={12} className="mr-1.5" /> Print Field Sheet (PDF)</Button>
+        <Button variant="teal" size="sm" className="flex-1" onClick={onPrintFieldSheet || (() => onExport('checklist'))}><Printer size={12} className="mr-1.5" /> Print Field Sheet (PDF)</Button>
         <Button variant="secondary" size="sm" onClick={() => onExport('json')}><Download size={12} className="mr-1" /> Export JSON</Button>
       </div>
       <div className="mt-2 font-mono text-[9px] text-[#A99F90]">Designed for mobile field tablets • High contrast • Offline capable • No vendor lock-in</div>

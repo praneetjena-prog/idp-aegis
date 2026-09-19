@@ -222,8 +222,9 @@ export default function App() {
     }
   }, [feedMode]);
 
-  const handleExport = (type) => {
+  const handleExport = (type = 'csv') => {
     const timestamp = new Date().toISOString();
+    const isFault = feedMode === 'fault';
     const data = {
       station: "Central Campus / Facility Unit 01",
       timestamp,
@@ -231,57 +232,95 @@ export default function App() {
       range,
       assets: 38,
       points: 1428,
-      health: feedMode === 'fault' ? 74 : 87,
+      health: isFault ? 74 : 91,
       live_telemetry: liveValues,
       subsystems: [
-        { id: 'hvac', health: feedMode === 'fault' ? 79 : 91, load: '242 kW', status: feedMode === 'fault' ? 'Attention' : 'Nominal' },
-        { id: 'electrical', health: feedMode === 'fault' ? 74 : 82, balance: '94.1%', status: 'Attention' },
-        { id: 'water', health: 95, pressure: '4.2 bar', status: 'Nominal' },
-        { id: 'mechanical', health: feedMode === 'fault' ? 61 : 74, units: 38, status: feedMode === 'fault' ? 'Critical' : 'Action Required' },
-        { id: 'energy', health: 88, pf: 0.96, status: 'Nominal' }
+        { id: 'hvac', name: 'HVAC Air Handlers', health: isFault ? 79 : 92, status: isFault ? 'Warning' : 'Good', load: '242 kW' },
+        { id: 'electrical', name: 'Electrical Panels', health: isFault ? 84 : 95, status: 'Balanced', balance: '94.1%' },
+        { id: 'water', name: 'Chilled Water Loops', health: 95, status: 'Nominal', pressure: '4.2 bar' },
+        { id: 'mechanical', name: 'Mechanical Pumps', health: isFault ? 61 : 88, status: isFault ? 'Action Required' : 'Good' },
+        { id: 'energy', name: 'Energy Efficiency', health: 88, status: 'Optimal', pf: 0.96 }
       ],
       anomalies: [
-        { asset: 'AHU-03', vibration: `${liveValues.vib} mm/s`, current: `${liveValues.cur} A`, temp: `${liveValues.temp}°C`, diagnosis: 'Bearing Degradation', conf: 0.91, rul: '168h ±24h' },
-        { asset: 'CW-Pump-02', flow: '4.1 L/s', diagnosis: 'Strainer clogging', conf: 0.84 },
-        { asset: 'VAV-4B', damper: '20-80% hunting', diagnosis: 'Calibration drift' }
+        { asset: 'AHU-03', vibration: `${liveValues.vib} mm/s`, current: `${liveValues.cur} A`, temp: `${liveValues.temp}°C`, acoustic: `+${liveValues.acoustic} dB`, diagnosis: 'Bearing Outer Race Wear', conf: 0.91, rul: '168h (7 days)' },
+        { asset: 'CW-Pump-02', flow: '4.1 L/s', pressure: '4.5 bar', diagnosis: 'Strainer basket partial clog', conf: 0.84, rul: 'Inspection scheduled' },
+        { asset: 'VAV-4B', damper: '20-80% hunting', diagnosis: 'Actuator calibration drift', conf: 0.79, rul: 'Optimal' }
       ],
       work_orders: workOrders,
       checklist: type === 'checklist' ? [
-        "Lockout/Tagout • Isolate AHU-03",
-        "Inspect bearing grease • Check particulate",
-        "Lubricate NLGI #2 • 2 pumps",
-        "Pulley alignment <0.5mm",
-        "Belt tension 45-55 Hz",
-        "Phase current 14.2A ±0.5A",
-        "10min validation <2.5 mm/s",
-        "Log to Aegis"
+        "Lockout/Tagout • Isolate AHU-03 at disconnect • Verify zero energy (SOP-EL-03)",
+        "Inspect bearing grease • Check for metal particulate (take photo log)",
+        "Lubricate bearing • NLGI #2 • 2 pumps • Wipe excess",
+        "Check pulley alignment (laser/straight-edge <0.5mm offset)",
+        "Verify belt tension • 45-55 Hz with acoustic tension gauge",
+        "Torque mounting bolts to 8 Nm • Apply Loctite 243",
+        "Phase current under manual bypass • Expected 14.2A ±0.5A • Check imbalance <2%",
+        "10-minute spin validation • Vibration target <2.5 mm/s • Current <14.8A",
+        "Log completion to Aegis • Close WO #8821"
       ] : undefined
     };
 
     if (type === 'json' || type === 'checklist') {
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `aegis-${type}-${range}-${Date.now()}.json`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
-      showToast(`Exported ${type.toUpperCase()} • ${type === 'checklist' ? '8 tasks' : '1,428 points'}`);
+      document.body.removeChild(a);
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 2000);
+      showToast(`✓ Exported ${type.toUpperCase()} • ${type === 'checklist' ? '9 tasks' : '1,428 points'}`);
     } else {
-      const csv = `timestamp,asset,parameter,value,unit,status,confidence,rul
-${timestamp},AHU-03,vibration,${liveValues.vib},mm/s,critical,91%,168h
-${timestamp},AHU-03,current,${liveValues.cur},A,critical,91%,168h
-${timestamp},AHU-03,temperature,${liveValues.temp},C,warning,91%,168h
-${timestamp},CW-Pump-02,flow,4.1,L/s,advisory,84%,-
-${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
-      const blob = new Blob([csv], { type: 'text/csv' });
+      const csvRows = [
+        ['# AEGIS FACILITY INTELLIGENCE — TELEMETRY & SHIFT REPORT'],
+        ['# Station', 'Central Campus / Facility Unit 01'],
+        ['# Generated', timestamp],
+        ['# Time Window', range],
+        ['# Operational Mode', isFault ? 'Induced Fault / Anomaly Active' : 'Normal Baseline Run'],
+        ['# Overall Health Score', `${data.health}%`],
+        [],
+        ['TIMESTAMP', 'SUBSYSTEM', 'ASSET_ID', 'PARAMETER', 'VALUE', 'UNIT', 'LIMIT_BASELINE', 'STATUS', 'CONFIDENCE', 'RUL_ESTIMATE'],
+        [timestamp, 'HVAC Air Handlers', 'AHU-03', 'Vibration Velocity RMS', liveValues.vib, 'mm/s', '2.5 mm/s', isFault ? 'CRITICAL' : 'NOMINAL', '91%', isFault ? '168h (7 days)' : '720h+'],
+        [timestamp, 'HVAC Air Handlers', 'AHU-03', 'Motor Phase Current', liveValues.cur, 'A', '14.2 A', isFault ? 'ATTENTION' : 'NOMINAL', '91%', isFault ? '168h' : '720h+'],
+        [timestamp, 'HVAC Air Handlers', 'AHU-03', 'Bearing Outer Race Temp', liveValues.temp, 'C', '65.0 C', isFault ? 'WARNING' : 'NOMINAL', '91%', isFault ? '168h' : '720h+'],
+        [timestamp, 'HVAC Air Handlers', 'AHU-03', 'Acoustic HF Emission', `+${liveValues.acoustic}`, 'dB', '0.0 dB', isFault ? 'ATTENTION' : 'NOMINAL', '88%', '-'],
+        [timestamp, 'Hydraulic / Water Loops', 'CW-Pump-02', 'Cooling Flow Rate', '4.1', 'L/s', '5.8 L/s', isFault ? 'ADVISORY' : 'NOMINAL', '84%', 'Strainer Inspect'],
+        [timestamp, 'Hydraulic / Water Loops', 'CW-Pump-02', 'Discharge Pressure', '4.5', 'bar', '4.2 bar', isFault ? 'DEVIATION' : 'NOMINAL', '84%', '-'],
+        [timestamp, 'HVAC Network', 'VAV-4B', 'Damper Modulation', '20-80', '%', 'Continuous', isFault ? 'HUNTING' : 'NOMINAL', '79%', 'Recalibrate'],
+        [timestamp, 'Electrical Infrastructure', 'SW-Panel-01', '3-Phase Current Balance', '94.1', '%', '>92.0%', 'NOMINAL', '95%', '-'],
+        [timestamp, 'Overall Energy Efficiency', 'Facility Bus', 'Power Factor (PF)', '0.96', 'pf', '>0.95', 'OPTIMAL', '98%', '-'],
+        [],
+        ['# ACTIVE DISPATCHED WORK ORDERS'],
+        ['WO_ID', 'ASSET', 'DESCRIPTION', 'STATUS', 'LOG_DATE', 'TECHNICIAN'],
+        ...workOrders.map(wo => [
+          wo.id,
+          wo.asset,
+          `"${(wo.diagnosis || (wo.asset === 'AHU-03' ? 'Bearing outer race wear — lubrication & belt tension' : 'Strainer partial clog')).replace(/"/g, '""')}"`,
+          wo.status,
+          wo.created ? new Date(wo.created).toLocaleDateString() : 'Today',
+          'J. Rivera'
+        ]),
+        ['8818', 'AHU-02', '"Belt tension adjustment"', 'completed', '2026-09-08', 'M. Singh'],
+        ['8819', 'ELEC-E3', '"Phase imbalance correction L2"', 'completed', '2026-09-09', 'J. Rivera'],
+        ['8820', 'CW-P01', '"Seal replacement"', 'in_progress', '2026-09-11', 'A. Kumar']
+      ];
+
+      const csvContent = csvRows.map(row => row.join(',')).join('\n');
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
       a.download = `aegis-telemetry-${range}-${Date.now()}.csv`;
+      document.body.appendChild(a);
       a.click();
-      URL.revokeObjectURL(url);
-      showToast('Exported CSV • 5 anomalies • Multi-param correlated');
+      document.body.removeChild(a);
+      setTimeout(() => {
+        URL.revokeObjectURL(url);
+      }, 2000);
+      showToast('✓ Exported CSV • Full Telemetry & Work Order Log');
     }
   };
 
@@ -348,6 +387,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
           setFeedMode={setFeedMode}
           handleExport={handleExport}
           setSettingsOpen={setSettingsOpen}
+          onPrintFieldSheet={() => setShowFieldSheet(true)}
         />
 
       {/* Main Content */}
@@ -584,7 +624,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
               <CorrelationChart mode={effectiveFeedMode} />
             </div>
             <div className="lg:col-span-4 space-y-4">
-              <MaintenanceChecklist onExport={handleExport} />
+              <MaintenanceChecklist onExport={handleExport} onPrintFieldSheet={() => setShowFieldSheet(true)} />
               <Card>
                 <CardHeader>
                   <CardTitle>Public Good Guardrail • Open Access</CardTitle>
@@ -697,7 +737,7 @@ ${timestamp},VAV-4B,damper,20-80,%,optimization,-,-`;
                     <div className="flex justify-between"><span>Sampling</span><span className="text-[#1F2933]">{range} @ {range === '1H' ? '1m' : range === '24H' ? '15m' : '1h'}</span></div>
                   </div>
                 </Card>
-                <MaintenanceChecklist onExport={handleExport} />
+                <MaintenanceChecklist onExport={handleExport} onPrintFieldSheet={() => setShowFieldSheet(true)} />
               </div>
             </div>
           </section>

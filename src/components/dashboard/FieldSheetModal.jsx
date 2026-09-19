@@ -251,7 +251,10 @@ export const FieldSheetModal = ({
         <div className="print:hidden px-5 py-3.5 bg-[#FAF8F4] dark:bg-[#1A222B] border-t-2 border-[#1F2933] dark:border-[#2C3847] flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Button variant="secondary" size="xs" onClick={() => onExport('checklist')}>
-              <FileText size={11} className="mr-1" /> Export JSON
+              <FileText size={11} className="mr-1" /> Export Checklist JSON
+            </Button>
+            <Button variant="secondary" size="xs" onClick={() => onExport('csv')}>
+              <Download size={11} className="mr-1" /> Export CSV
             </Button>
           </div>
 

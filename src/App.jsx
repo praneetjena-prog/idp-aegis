@@ -564,7 +564,7 @@ export default function App() {
                 </div>
               </div>
               <p className="font-mono text-[10px] text-[#8A8175] mt-2 leading-relaxed">
-                Open hardware: DHT22, ACS712, MPU6050, YF-S201, ESP32, MQTT • Explainable models: Seasonal ARIMA, Isolation Forest, FFT spectral analysis • Built for field technicians, not boardrooms.
+                Open hardware: DHT22, ACS712, MPU6050, MQ-2, SCD40, PIR, YF-S201, ESP32, MQTT • Explainable models: Seasonal ARIMA, Isolation Forest, FFT spectral analysis • Built for field technicians, not boardrooms.
               </p>
             </Card>
 

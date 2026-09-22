@@ -29,7 +29,7 @@ export const ArchitectureDiagram = () => {
         <div className="font-mono text-[11px] font-semibold tracking-wider uppercase text-[#6E6558] mb-3">Hardware to Console Pipeline</div>
         <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-[10px] p-4 overflow-x-auto">
           <div className="flex items-center gap-1 min-w-max">
-            <Node label="Open Sensors" sub="DHT22, ACS712, MPU6050" color="slate" />
+            <Node label="Open Sensors" sub="MPU6050, MQ2, SCD40, PIR, CT" color="slate" />
             <Arrow />
             <Node label="Edge MCU" sub="ESP32 / Open Gateway" color="cyan" />
             <Arrow />

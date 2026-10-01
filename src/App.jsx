@@ -15,6 +15,7 @@ import { WorkOrderHistory } from './components/dashboard/WorkOrderHistory';
 import { CorrelationChart } from './components/dashboard/CorrelationChart';
 import { PredictiveSimulator } from './components/dashboard/PredictiveSimulator';
 import { FacilityOverview } from './components/dashboard/FacilityOverview';
+import { LandingShowcase } from './components/landing/LandingShowcase';
 import { FieldSheetModal } from './components/dashboard/FieldSheetModal';
 import { MaintenanceScheduler } from './components/dashboard/MaintenanceScheduler';
 import { MaintenanceCalendarModal } from './components/dashboard/MaintenanceCalendarModal';
@@ -427,6 +428,8 @@ export default function App() {
           onPrintFieldSheet={() => setShowFieldSheet(true)}
           onOpenQrTags={() => setShowQrModal(true)}
           onOpenCalendar={() => setShowCalendarModal(true)}
+          tab={tab}
+          setTab={setTab}
         />
 
       {/* Main Content */}
@@ -457,17 +460,21 @@ export default function App() {
           />
         )}
 
-        {/* Platform Header & Mission Overview */}
+        {/* Platform Header & Modern Landing Showcase */}
         <section ref={overviewRef} className="space-y-6 scroll-mt-[120px]">
           {tab === 'overview' && (
-            <FacilityOverview
+            <LandingShowcase
+              onExploreDashboard={() => setTab('console')}
+              onSelectAsset={handleSelectAsset}
+              onOpenHardware={() => setTab('platform')}
+              onOpenWorkflows={() => setTab('analysis')}
+              onOpenCalendar={() => setShowCalendarModal(true)}
+              onPrintFieldSheet={() => setShowFieldSheet(true)}
+              onOpenQrTags={() => setShowQrModal(true)}
               feedMode={effectiveFeedMode}
               liveValues={liveValues}
               isLive={isLive}
-              setTab={setTab}
-              onCreateWorkOrder={handleCreateWorkOrder}
               workOrders={workOrders}
-              onExport={handleExport}
             />
           )}
 

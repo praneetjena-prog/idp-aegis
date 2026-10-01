@@ -157,7 +157,9 @@ export const TopHeader = React.memo(({
   setSettingsOpen,
   onPrintFieldSheet,
   onOpenQrTags,
-  onOpenCalendar
+  onOpenCalendar,
+  tab,
+  setTab
 }) => {
   const [soundOn, setSoundOn] = React.useState(isSoundEnabled);
 
@@ -283,6 +285,37 @@ export const TopHeader = React.memo(({
               </button>
             ))}
           </div>
+
+          {/* Dual-Mode View Switcher (Overview Showcase vs Live Console) */}
+          {setTab && (
+            <div className="flex items-center gap-1 p-0.5 bg-[#F1EDE6] dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
+              <button
+                type="button"
+                onClick={() => setTab('overview')}
+                className={`font-mono text-[10px] uppercase px-2 py-0.5 rounded transition-all font-semibold ${
+                  tab === 'overview'
+                    ? 'bg-[#2C6E9B] text-white shadow-sm'
+                    : 'text-[#6E6558] dark:text-[#C5BCAD] hover:text-[#1F2933]'
+                }`}
+                title="Switch to System Overview & Showcase Landing"
+              >
+                Overview
+              </button>
+              <button
+                type="button"
+                onClick={() => setTab('console')}
+                className={`font-mono text-[10px] uppercase px-2 py-0.5 rounded transition-all font-semibold flex items-center gap-1 ${
+                  tab === 'console'
+                    ? 'bg-[#2C6E9B] text-white shadow-sm'
+                    : 'text-[#6E6558] dark:text-[#C5BCAD] hover:text-[#1F2933]'
+                }`}
+                title="Switch to Live Operations SCADA Console"
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${feedMode === 'fault' ? 'bg-[#C05043] animate-pulse' : 'bg-[#2E7D5B]'}`} />
+                <span>Console</span>
+              </button>
+            </div>
+          )}
 
           {/* Compact Demo Simulator Switch */}
           <div className="flex items-center gap-1 p-0.5 bg-[#F1EDE6] dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">

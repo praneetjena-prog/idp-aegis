@@ -15,14 +15,15 @@ import {
   VolumeX,
   Download,
   ChevronDown,
-  QrCode
+  QrCode,
+  CalendarDays
 } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { isSoundEnabled, setSoundEnabled, playDispatchChime } from '../../lib/sound';
 import { Printer } from 'lucide-react';
 
-const ExportDropdown = ({ onExport, onPrintFieldSheet, onOpenQrTags }) => {
+const ExportDropdown = ({ onExport, onPrintFieldSheet, onOpenQrTags, onOpenCalendar }) => {
   const [open, setOpen] = React.useState(false);
   const ref = React.useRef(null);
 
@@ -119,6 +120,19 @@ const ExportDropdown = ({ onExport, onPrintFieldSheet, onOpenQrTags }) => {
               </div>
             </button>
           )}
+          {onOpenCalendar && (
+            <button
+              type="button"
+              onClick={() => { onOpenCalendar(); setOpen(false); }}
+              className="w-full px-3 py-1.5 text-left hover:bg-[#F1EDE6] dark:hover:bg-[#2C3847] flex items-center gap-2 text-[#1F2933] dark:text-[#FAF8F4] border-t border-[#E6E0D6] dark:border-[#2C3847] mt-1 pt-1.5 transition-colors"
+            >
+              <CalendarDays size={13} className="text-[#2E7D5B] shrink-0" />
+              <div className="flex flex-col">
+                <span className="font-semibold">PM Schedule & Calendar</span>
+                <span className="text-[9px] text-[#8A8175]">Facility shift plan & .ics sync</span>
+              </div>
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -142,7 +156,8 @@ export const TopHeader = React.memo(({
   handleExport,
   setSettingsOpen,
   onPrintFieldSheet,
-  onOpenQrTags
+  onOpenQrTags,
+  onOpenCalendar
 }) => {
   const [soundOn, setSoundOn] = React.useState(isSoundEnabled);
 
@@ -291,7 +306,20 @@ export const TopHeader = React.memo(({
             onExport={handleExport} 
             onPrintFieldSheet={onPrintFieldSheet} 
             onOpenQrTags={onOpenQrTags} 
+            onOpenCalendar={onOpenCalendar}
           />
+
+          {onOpenCalendar && (
+            <button
+              type="button"
+              onClick={onOpenCalendar}
+              title="Open Preventive Maintenance Calendar & Schedule"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 bg-[#FAF8F4] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] font-mono text-[10px] font-bold uppercase rounded border border-[#D2C9BA] dark:border-[#2C3847] shadow-sm hover:border-[#2C6E9B] hover:text-[#2C6E9B] transition-all"
+            >
+              <CalendarDays size={12} className="text-[#2C6E9B]" />
+              <span className="hidden sm:inline">PM Schedule</span>
+            </button>
+          )}
 
           <button
             type="button"

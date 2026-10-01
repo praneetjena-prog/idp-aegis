@@ -17,7 +17,8 @@ import {
   Shield, 
   Radio, 
   Printer,
-  ChevronRight
+  ChevronRight,
+  Calendar as CalendarIcon
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -263,6 +264,7 @@ export const AssetPassport = ({
   onCreateWorkOrder,
   onShowQrModal,
   onPrintFieldSheet,
+  onOpenCalendar,
   showToast
 }) => {
   const currentAsset = ASSET_REGISTRY[assetId] || ASSET_REGISTRY['ahu-03'];
@@ -421,6 +423,18 @@ export const AssetPassport = ({
               >
                 <Printer size={13} />
                 <span>Field Sheet (PDF)</span>
+              </Button>
+            )}
+            {onOpenCalendar && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={onOpenCalendar}
+                className="flex items-center gap-1.5 border-[#2C6E9B] text-[#2C6E9B] hover:bg-[#2C6E9B] hover:text-white"
+                title="View equipment maintenance window on calendar"
+              >
+                <CalendarIcon size={13} />
+                <span>PM Calendar</span>
               </Button>
             )}
           </div>

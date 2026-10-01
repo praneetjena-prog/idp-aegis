@@ -2,9 +2,9 @@ import React from 'react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
-import { AlertTriangle, Wrench, ClipboardList, Eye, FileText, Check } from 'lucide-react';
+import { AlertTriangle, Wrench, ClipboardList, Eye, FileText, Check, Calendar as CalendarIcon } from 'lucide-react';
 
-export const TriageQueue = ({ onCreateWorkOrder, onViewTelemetry, acknowledged, onAcknowledge, workOrders, onPrintFieldSheet }) => {
+export const TriageQueue = ({ onCreateWorkOrder, onViewTelemetry, acknowledged, onAcknowledge, workOrders, onPrintFieldSheet, onOpenCalendar }) => {
   return (
     <div className="space-y-3">
       {/* Urgent */}
@@ -76,6 +76,16 @@ export const TriageQueue = ({ onCreateWorkOrder, onViewTelemetry, acknowledged, 
                 <Button variant="teal" size="sm" onClick={onPrintFieldSheet} className="col-span-2">
                   <FileText size={12} className="mr-1.5" /> Print Field Sheet (PDF) • Checklist
                 </Button>
+                {onOpenCalendar && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={onOpenCalendar} 
+                    className="col-span-2 border-[#2C6E9B] text-[#2C6E9B] hover:bg-[#2C6E9B] hover:text-white"
+                  >
+                    <CalendarIcon size={12} className="mr-1.5" /> Auto-Slot PM Window in Calendar
+                  </Button>
+                )}
               </div>
               {workOrders.find(w=>w.asset==='AHU-03') && (
                 <div className="font-mono text-[10px] text-[#2E7D5B] bg-[#2E7D5B]/10 border border-[#2E7D5B]/20 rounded p-2">

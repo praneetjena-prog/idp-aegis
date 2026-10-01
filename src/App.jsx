@@ -16,6 +16,8 @@ import { CorrelationChart } from './components/dashboard/CorrelationChart';
 import { PredictiveSimulator } from './components/dashboard/PredictiveSimulator';
 import { FacilityOverview } from './components/dashboard/FacilityOverview';
 import { FieldSheetModal } from './components/dashboard/FieldSheetModal';
+import { MaintenanceScheduler } from './components/dashboard/MaintenanceScheduler';
+import { MaintenanceCalendarModal } from './components/dashboard/MaintenanceCalendarModal';
 import { SettingsPanel } from './components/settings/SettingsPanel';
 import { AssetPassport } from './components/asset/AssetPassport';
 import { AssetQrModal } from './components/asset/AssetQrModal';
@@ -96,6 +98,7 @@ export default function App() {
   const [tab, setTabState] = useState(initialNav.tab);
   const [selectedAssetId, setSelectedAssetId] = useState(initialNav.assetId);
   const [showQrModal, setShowQrModal] = useState(false);
+  const [showCalendarModal, setShowCalendarModal] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [railCollapsed, setRailCollapsed] = useState(false);
   const [railExpanded, setRailExpanded] = useState(false);
@@ -423,6 +426,7 @@ export default function App() {
           setSettingsOpen={setSettingsOpen}
           onPrintFieldSheet={() => setShowFieldSheet(true)}
           onOpenQrTags={() => setShowQrModal(true)}
+          onOpenCalendar={() => setShowCalendarModal(true)}
         />
 
       {/* Main Content */}
@@ -448,6 +452,7 @@ export default function App() {
             onCreateWorkOrder={handleCreateWorkOrder}
             onShowQrModal={() => setShowQrModal(true)}
             onPrintFieldSheet={() => setShowFieldSheet(true)}
+            onOpenCalendar={() => setShowCalendarModal(true)}
             showToast={showToast}
           />
         )}
@@ -663,6 +668,7 @@ export default function App() {
               onAcknowledge={handleAcknowledge}
               workOrders={workOrders}
               onPrintFieldSheet={() => setShowFieldSheet(true)}
+              onOpenCalendar={() => setShowCalendarModal(true)}
             />
           </div>
 
@@ -696,6 +702,16 @@ export default function App() {
                 </div>
               </Card>
             </div>
+          </div>
+
+          <div className="pt-2">
+            <SectionLabel k="07" title="Automated PM Scheduling & Multi-Asset Calendar Integration" id="scheduler" />
+            <MaintenanceScheduler
+              feedMode={effectiveFeedMode}
+              onSelectAsset={handleSelectAsset}
+              onPrintFieldSheet={() => setShowFieldSheet(true)}
+              showToast={showToast}
+            />
           </div>
           </div>
           )}
@@ -833,7 +849,7 @@ export default function App() {
         {/* Interactive Scenario Simulator */}
         {tab === 'simulator' && (
         <section className="space-y-4 pb-10">
-          <SectionLabel k="07" title='Interactive Scenario Simulator: "Normal Run" vs. "Mechanical Degradation"' id="simulator" />
+          <SectionLabel k="08" title='Interactive Scenario Simulator: "Normal Run" vs. "Mechanical Degradation"' id="simulator" />
           <PredictiveSimulator params={params} liveValues={liveValues} isLive={isLive} />
         </section>
         )}
@@ -859,6 +875,16 @@ export default function App() {
           setSelectedAssetId(id);
           setTab('asset', id);
         }}
+      />
+
+      {/* Maintenance Calendar Modal */}
+      <MaintenanceCalendarModal
+        open={showCalendarModal}
+        onClose={() => setShowCalendarModal(false)}
+        feedMode={effectiveFeedMode}
+        onSelectAsset={handleSelectAsset}
+        onPrintFieldSheet={() => setShowFieldSheet(true)}
+        showToast={showToast}
       />
 
       {/* Toast */}

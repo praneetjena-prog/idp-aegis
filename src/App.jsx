@@ -401,6 +401,7 @@ export default function App() {
         onToggleCollapse={() => setRailCollapsed(true)} 
         expanded={railExpanded}
         onToggleExpand={() => setRailExpanded(v => !v)}
+        assetCode={selectedAssetId ? selectedAssetId.toUpperCase() : 'AHU-03'}
       />
 
       <div className={`min-w-0 transition-[margin] duration-300 ${railCollapsed ? 'xl:ml-0' : (railExpanded ? 'xl:ml-[230px]' : 'xl:ml-[76px]')}`}>
@@ -427,7 +428,12 @@ export default function App() {
       {/* Main Content */}
       <div className="max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-5 py-4 space-y-5">
 
-        <TabBar tab={tab} setTab={setTab} onSettings={() => setSettingsOpen(true)} />
+        <TabBar 
+          tab={tab} 
+          setTab={setTab} 
+          onSettings={() => setSettingsOpen(true)} 
+          assetCode={selectedAssetId ? selectedAssetId.toUpperCase() : 'AHU-03'} 
+        />
 
         {/* Mobile / Direct Equipment Passport View (via QR Scan or Deep Link) */}
         {tab === 'asset' && (
@@ -864,11 +870,17 @@ export default function App() {
       )}
 
       {/* Mobile jump nav */}
-      <div className="xl:hidden fixed bottom-0 left-0 right-0 bg-[#FFFFFF]/95 backdrop-blur border-t border-[#E6E0D6] p-2 flex gap-1 overflow-x-auto z-40">
+      <div className="xl:hidden fixed bottom-0 left-0 right-0 bg-[#FFFFFF]/95 dark:bg-[#141B22]/95 backdrop-blur border-t border-[#E6E0D6] dark:border-[#2C3847] p-2 flex gap-1 overflow-x-auto z-40">
         {TABS.map(t => (
-          <button key={t.id} onClick={() => { setTab(t.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`whitespace-nowrap font-mono text-[10px] px-3 py-1.5 rounded border uppercase transition-colors ${tab === t.id ? 'bg-[#2C6E9B] border-[#2C6E9B] text-[#FFFFFF]' : 'bg-[#E6E0D6] border-[#D2C9BA] text-[#3E4650] hover:bg-[#D2C9BA]'}`}>{t.label}</button>
+          <button key={t.id} onClick={() => { setTab(t.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`whitespace-nowrap font-mono text-[10px] px-3 py-1.5 rounded border uppercase transition-colors ${tab === t.id ? 'bg-[#2C6E9B] border-[#2C6E9B] text-[#FFFFFF]' : 'bg-[#E6E0D6] dark:bg-[#1A222B] border-[#D2C9BA] dark:border-[#2C3847] text-[#3E4650] dark:text-[#C5BCAD] hover:bg-[#D2C9BA]'}`}>{t.label}</button>
         ))}
-        <div className="ml-auto flex items-center gap-1 pl-2 border-l border-[#E6E0D6]">
+        {tab === 'asset' && (
+          <button onClick={() => { setTab('asset'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="whitespace-nowrap font-mono text-[10px] px-3 py-1.5 rounded border uppercase bg-[#2C6E9B] border-[#2C6E9B] text-[#FFFFFF] flex items-center gap-1.5 shadow-sm">
+            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+            <span>Passport: {selectedAssetId ? selectedAssetId.toUpperCase() : 'ASSET'}</span>
+          </button>
+        )}
+        <div className="ml-auto flex items-center gap-1 pl-2 border-l border-[#E6E0D6] dark:border-[#2C3847]">
           <div className="w-1 h-1 rounded-full bg-[#2E7D5B] animate-pulse" />
           <span className="font-mono text-[9px] text-[#8A8175] whitespace-nowrap">Live {liveValues.vib}mm/s</span>
         </div>

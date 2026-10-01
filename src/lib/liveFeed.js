@@ -111,21 +111,26 @@ export function useLiveFeed(feedMode) {
 
   // Demonstration feed, used while no hardware is reporting.
   useEffect(() => {
+    const generateDemo = (mode) => (mode === 'fault'
+      ? {
+          vib: +(6.5 + Math.random() * 0.7).toFixed(1),
+          cur: +(17.2 + Math.random() * 0.9).toFixed(1),
+          temp: +(70 + Math.random() * 4).toFixed(1),
+          acoustic: Math.floor(10 + Math.random() * 5),
+        }
+      : {
+          vib: +(2.0 + Math.random() * 0.4).toFixed(1),
+          cur: +(14.0 + Math.random() * 0.4).toFixed(1),
+          temp: +(53 + Math.random() * 2.5).toFixed(1),
+          acoustic: Math.floor(Math.random() * 3),
+        });
+
+    // Immediately reflect new mode baseline without waiting for the 1.8s tick
+    setDemo(generateDemo(feedMode));
+
     const iv = setInterval(() => {
       forceTick(t => t + 1);
-      setDemo(() => (feedMode === 'fault'
-        ? {
-            vib: +(6.5 + Math.random() * 0.7).toFixed(1),
-            cur: +(17.2 + Math.random() * 0.9).toFixed(1),
-            temp: +(70 + Math.random() * 4).toFixed(1),
-            acoustic: Math.floor(10 + Math.random() * 5),
-          }
-        : {
-            vib: +(2.0 + Math.random() * 0.4).toFixed(1),
-            cur: +(14.0 + Math.random() * 0.4).toFixed(1),
-            temp: +(53 + Math.random() * 2.5).toFixed(1),
-            acoustic: Math.floor(Math.random() * 3),
-          }));
+      setDemo(generateDemo(feedMode));
     }, 1800);
     return () => clearInterval(iv);
   }, [feedMode]);

@@ -174,7 +174,7 @@ export const FailureForecast = ({ mode = 'fault' }) => {
             </g>
           </svg>
         </div>
-        <div className="grid grid-cols-3 gap-2 font-mono text-[10px]">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 font-mono text-[10px]">
           <div className="bg-[#F1EDE6] dark:bg-[#19222C] border border-[#E6E0D6] dark:border-[#2A3441] rounded p-2">
             <div className="text-[#8A8175] dark:text-[#8D96A0] text-[9px]">Rate of change</div>
             <div className="text-[#1F2933] dark:text-[#E6E0D6] font-bold mt-1">{mode === 'fault' ? '0.12 A/day' : '0.01 A/day'}</div>

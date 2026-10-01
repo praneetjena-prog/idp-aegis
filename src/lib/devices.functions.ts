@@ -1,3 +1,5 @@
+import { supabase } from '@/integrations/supabase/client';
+
 export type DeviceCredentials = {
   deviceId: string;
   label: string;
@@ -8,7 +10,6 @@ export type DeviceCredentials = {
 /** Returns the ESP32 node's identity and ingest key for the settings panel. */
 export async function getDeviceCredentials(): Promise<DeviceCredentials | null> {
   try {
-    const { supabase } = await import('@/integrations/supabase/client');
     const { data } = await supabase
       .from('devices')
       .select('id, label, ingest_key, last_seen_at')

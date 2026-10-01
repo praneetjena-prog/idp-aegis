@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   ArrowLeft, 
   QrCode, 
@@ -24,6 +24,234 @@ import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { ASSET_REGISTRY } from './AssetQrModal';
 
+export const ASSET_SOP_TASKS = {
+  'ahu-03': [
+    { id: 1, text: 'Lockout/Tagout applied at electrical disconnect (SOP-EL-03)', done: true },
+    { id: 2, text: 'Bearing housing visual check • Inspect grease for metallic glitter', done: true },
+    { id: 3, text: 'Lubrication • Inject 2 pumps NLGI #2 synthetic grease', done: false },
+    { id: 4, text: 'Pulley alignment (straight-edge <0.5mm) & belt tension (45–55 Hz)', done: false },
+    { id: 5, text: 'Phase current under manual bypass (14.2A ±0.5A, imbalance <2%)', done: false },
+    { id: 6, text: 'Post-repair spin test • 10min validation (target vibration <2.5 mm/s)', done: false }
+  ],
+  'cw-pump-02': [
+    { id: 1, text: 'Isolate suction & discharge valves • Tag hydraulic circuit (SOP-HY-02)', done: true },
+    { id: 2, text: 'Differential pressure audit • Inspect duplex strainer basket for debris', done: true },
+    { id: 3, text: 'Mechanical seal inspection • Check flush line & verify zero drip rate', done: false },
+    { id: 4, text: 'Flexible shaft coupling check • Measure radial & angular misalignment', done: false },
+    { id: 5, text: 'Grease motor bearings • Apply 1.5 pumps Polyurea #2 grease', done: false },
+    { id: 6, text: 'Dynamic prime & cavitation check • Acoustic listening wand verification', done: false }
+  ],
+  'elec-01': [
+    { id: 1, text: 'Establish Arc-Flash safety perimeter (NFPA 70E Category 2 PPE)', done: true },
+    { id: 2, text: 'Thermal IR imaging scan • Check L1/L2/L3 busbars & breaker lugs (<10°C delta)', done: true },
+    { id: 3, text: 'Torque verification on main 2000A incoming feeder lug connections', done: false },
+    { id: 4, text: 'Neutral-to-ground stray voltage check (verify <1.5 VAC under load)', done: false },
+    { id: 5, text: 'Phase current balance validation (target >92% balance across phases)', done: false },
+    { id: 6, text: 'Clean enclosure dust filters & verify panel ventilation exhaust fans', done: false }
+  ],
+  'chiller-01': [
+    { id: 1, text: 'Review compressor run log • Verify refrigerant R-134a charge pressure', done: true },
+    { id: 2, text: 'Evaporator & condenser approach temperature delta audit (<1.5°C)', done: true },
+    { id: 3, text: 'Oil sump inspection • Verify level sight glass & sample acid test kit', done: false },
+    { id: 4, text: 'VFD cooling fan filter change & inspect 4160V power electronics heat sinks', done: false },
+    { id: 5, text: 'Purge unit diagnostic cycle & leak test on hermetic seals', done: false },
+    { id: 6, text: 'Verify chiller water flow proving switches & freeze protection interlocks', done: false }
+  ],
+  'vav-4b': [
+    { id: 1, text: 'Inspect Belimo 24VAC damper actuator mechanical linkage & U-bolt clamp', done: true },
+    { id: 2, text: 'Calibrate full actuator stroke • 0° (fully closed) to 90° (fully open)', done: true },
+    { id: 3, text: 'Zero-point calibration on differential pressure pitot tube sensor', done: false },
+    { id: 4, text: 'Reheat hydronic 2-way valve stroke & temperature differential check', done: false },
+    { id: 5, text: 'Room thermostat setpoint step-response test (verify hunting stops in 120s)', done: false },
+    { id: 6, text: 'Verify BACnet MS/TP bus communication & telemetry signal strength', done: false }
+  ]
+};
+
+export const ASSET_HISTORIES = {
+  'ahu-03': [
+    { date: '2026-08-14', type: 'Scheduled PM', tech: 'M. Singh', desc: 'Quarterly belt tensioning & filter media replacement. Vibration was nominal (2.1 mm/s).' },
+    { date: '2026-05-10', type: 'Bearing Replacement', tech: 'J. Rivera', desc: 'Installed new SKF 6205-2RS bearings on drive and non-drive ends. Balanced rotor.' }
+  ],
+  'cw-pump-02': [
+    { date: '2026-08-28', type: 'Impeller & Strainer Audit', tech: 'A. Kumar', desc: 'Backflushed duplex strainer basket; flow rate restored to nominal 5.8 L/s.' },
+    { date: '2026-04-12', type: 'Mechanical Seal PM', tech: 'J. Rivera', desc: 'Replaced tungsten carbide mechanical face seal. Zero drip rate confirmed.' }
+  ],
+  'elec-01': [
+    { date: '2026-07-10', type: 'Thermal IR Scan & Torquing', tech: 'M. Singh', desc: 'Annual thermographic inspection. All phase lugs torqued to 50 Nm. Delta T <3.2°C.' },
+    { date: '2026-01-20', type: 'Breaker Trip Calibration', tech: 'E. Vance', desc: 'Secondary injection test on main 2000A breaker. Trip curve within ANSI tolerances.' }
+  ],
+  'chiller-01': [
+    { date: '2026-09-01', type: 'Refrigerant & Oil Analysis', tech: 'J. Rivera', desc: 'Spectrometric oil analysis showed 0 ppm copper/iron wear. R-134a charge optimal.' },
+    { date: '2026-03-15', type: 'Condenser Tube Brushing', tech: 'A. Kumar', desc: 'Cleaned 480 condenser copper tubes. Approach temp improved to 0.8°C.' }
+  ],
+  'vav-4b': [
+    { date: '2026-06-15', type: 'Actuator Re-zeroing', tech: 'M. Singh', desc: 'Re-calibrated feedback potentiometer. Damper hunt cycle dampened.' },
+    { date: '2025-11-04', type: 'Plenum Filter Replacement', tech: 'A. Kumar', desc: 'Replaced MERV 13 ceiling plenum air filter and cleaned pitot sensor tube.' }
+  ]
+};
+
+function getAssetVitals(assetId, liveValues, feedMode) {
+  const isFault = feedMode === 'fault';
+  switch (assetId) {
+    case 'cw-pump-02':
+      return [
+        {
+          label: 'Hydraulic Flow Rate',
+          icon: Activity,
+          value: isFault ? '4.1 L/s' : '5.8 L/s',
+          isWarning: isFault,
+          sub: isFault ? 'Advisory: Strainer Inspection' : 'Nominal: 5.8 L/s Design'
+        },
+        {
+          label: 'Discharge Head',
+          icon: Zap,
+          value: isFault ? '4.5 bar' : '4.2 bar',
+          isWarning: isFault,
+          sub: isFault ? '+0.3 bar Head Loss' : 'Balanced Pressure'
+        },
+        {
+          label: 'Pump Motor Current',
+          icon: Zap,
+          value: isFault ? '16.8 A' : '14.1 A',
+          isWarning: isFault,
+          sub: 'Rated: 15.0 A FLC'
+        },
+        {
+          label: 'Seal Chamber Temp',
+          icon: Thermometer,
+          value: isFault ? '58.2°C' : '48.0°C',
+          isWarning: false,
+          sub: 'Threshold: 75.0°C'
+        }
+      ];
+    case 'elec-01':
+      return [
+        {
+          label: '3-Phase Current Balance',
+          icon: Activity,
+          value: '94.1%',
+          isWarning: false,
+          sub: 'Threshold: >92.0% Nominal'
+        },
+        {
+          label: 'Main Feeder Load',
+          icon: Zap,
+          value: '1,280 A',
+          isWarning: false,
+          sub: 'Bus Rating: 2,000 A'
+        },
+        {
+          label: 'L1/L2/L3 Busbar Temp',
+          icon: Thermometer,
+          value: '42.5°C',
+          isWarning: false,
+          sub: 'IR Delta: <2.8°C (Optimal)'
+        },
+        {
+          label: 'Power Factor (PF)',
+          icon: Volume2,
+          value: '0.96 pf',
+          isWarning: false,
+          sub: 'Grid Compliance >0.95'
+        }
+      ];
+    case 'chiller-01':
+      return [
+        {
+          label: 'Cooling Plant Load',
+          icon: Activity,
+          value: '385 Tons',
+          isWarning: false,
+          sub: 'Capacity: 450 Tons'
+        },
+        {
+          label: 'Evaporator Approach',
+          icon: Thermometer,
+          value: '1.1°C',
+          isWarning: false,
+          sub: 'Threshold: <1.5°C'
+        },
+        {
+          label: 'Compressor Draw',
+          icon: Zap,
+          value: '72.0 A',
+          isWarning: false,
+          sub: '4160V Medium Voltage'
+        },
+        {
+          label: 'Refrigerant Pressure',
+          icon: Volume2,
+          value: '3.2 bar',
+          isWarning: false,
+          sub: 'R-134a Suction Normal'
+        }
+      ];
+    case 'vav-4b':
+      return [
+        {
+          label: 'Damper Modulation',
+          icon: Activity,
+          value: isFault ? '20–80%' : '55%',
+          isWarning: isFault,
+          sub: isFault ? 'Hunting Drift Detected' : 'Modulation Stable'
+        },
+        {
+          label: 'Plenum Airflow',
+          icon: Zap,
+          value: isFault ? '380 CFM' : '450 CFM',
+          isWarning: isFault,
+          sub: 'Set: 450 CFM @ 21.5°C'
+        },
+        {
+          label: 'Discharge Air Temp',
+          icon: Thermometer,
+          value: '21.4°C',
+          isWarning: false,
+          sub: 'Room Setpoint: 22.0°C'
+        },
+        {
+          label: 'Actuator Torque',
+          icon: Volume2,
+          value: '4.8 Nm',
+          isWarning: false,
+          sub: 'Belimo 24VAC Feedback'
+        }
+      ];
+    case 'ahu-03':
+    default:
+      return [
+        {
+          label: 'Vibration Velocity',
+          icon: Activity,
+          value: isFault ? `${liveValues?.vib ?? 6.8} mm/s` : `${liveValues?.vib ?? 2.1} mm/s`,
+          isWarning: isFault,
+          sub: `ISO Limit: 2.5 mm/s • ${isFault ? '+172% Over' : 'Nominal'}`
+        },
+        {
+          label: 'Motor Phase Draw',
+          icon: Zap,
+          value: isFault ? `${liveValues?.cur ?? 17.6} A` : `${liveValues?.cur ?? 14.2} A`,
+          isWarning: isFault,
+          sub: `Nominal: 14.2 A • ${isFault ? '+24% Surge' : 'Balanced'}`
+        },
+        {
+          label: 'Bearing Outer Ring',
+          icon: Thermometer,
+          value: isFault ? `${liveValues?.temp ?? 71.8}°C` : `${liveValues?.temp ?? 52.0}°C`,
+          isWarning: isFault,
+          sub: `Critical Threshold: 65.0°C • ${isFault ? 'Overheating' : 'Cold Baseline'}`
+        },
+        {
+          label: 'Acoustic HF Noise',
+          icon: Volume2,
+          value: isFault ? `+${liveValues?.acoustic ?? 14} dB` : `+${liveValues?.acoustic ?? 0} dB`,
+          isWarning: isFault,
+          sub: `Spectral Peak: ${isFault ? '3.2 kHz Harmonic' : 'Smooth Baseline'}`
+        }
+      ];
+  }
+}
+
 export const AssetPassport = ({
   assetId = 'ahu-03',
   onSelectAsset,
@@ -41,16 +269,19 @@ export const AssetPassport = ({
   const isAhu = currentAsset.id === 'ahu-03';
   const isFault = feedMode === 'fault' && isAhu;
 
-  const [fieldTasks, setFieldTasks] = useState([
-    { id: 1, text: 'Lockout/Tagout applied at electrical disconnect (SOP-EL-03)', done: true },
-    { id: 2, text: 'Bearing housing visual check • Inspect grease for metallic glitter', done: true },
-    { id: 3, text: 'Lubrication • Inject 2 pumps NLGI #2 synthetic grease', done: false },
-    { id: 4, text: 'Pulley alignment (straight-edge <0.5mm) & belt tension (45–55 Hz)', done: false },
-    { id: 5, text: 'Phase current under manual bypass (14.2A ±0.5A, imbalance <2%)', done: false },
-    { id: 6, text: 'Post-repair spin test • 10min validation (target vibration <2.5 mm/s)', done: false }
-  ]);
+  const [fieldTasks, setFieldTasks] = useState(() => {
+    const list = ASSET_SOP_TASKS[currentAsset.id] || ASSET_SOP_TASKS['ahu-03'];
+    return list.map(t => ({ ...t }));
+  });
 
   const [serviceLogged, setServiceLogged] = useState(false);
+
+  // Sync field tasks whenever the technician switches to a different asset
+  useEffect(() => {
+    const list = ASSET_SOP_TASKS[currentAsset.id] || ASSET_SOP_TASKS['ahu-03'];
+    setFieldTasks(list.map(t => ({ ...t })));
+    setServiceLogged(false);
+  }, [currentAsset.id]);
 
   const toggleTask = (id) => {
     setFieldTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
@@ -198,73 +429,32 @@ export const AssetPassport = ({
 
       {/* 4. Live Sensor Vitals (Instant Field Diagnostic Readout) */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {/* Vibration */}
-        <div className={`p-4 rounded-xl border-2 transition-all ${
-          isFault 
-            ? 'bg-[#C05043]/5 border-[#C05043]' 
-            : 'bg-white dark:bg-[#1A222B] border-[#D2C9BA] dark:border-[#2C3847]'
-        }`}>
-          <div className="flex items-center justify-between text-[#8A8175] mb-1">
-            <span className="font-mono text-[10px] uppercase font-bold">Vibration Velocity</span>
-            <Activity size={14} className={isFault ? 'text-[#C05043]' : 'text-[#2E7D5B]'} />
-          </div>
-          <div className={`font-mono text-[22px] font-bold ${isFault ? 'text-[#C05043]' : 'text-[#1F2933] dark:text-[#FAF8F4]'}`}>
-            {isFault ? `${liveValues?.vib ?? 6.8} mm/s` : `${liveValues?.vib ?? 2.1} mm/s`}
-          </div>
-          <div className="font-mono text-[10px] text-[#8A8175] mt-1">
-            ISO Limit: 2.5 mm/s • <span className={isFault ? 'text-[#C05043] font-bold' : 'text-[#2E7D5B]'}>{isFault ? '+172% Over' : 'Nominal'}</span>
-          </div>
-        </div>
-
-        {/* Current */}
-        <div className={`p-4 rounded-xl border-2 transition-all ${
-          isFault 
-            ? 'bg-[#B07B1C]/5 border-[#B07B1C]' 
-            : 'bg-white dark:bg-[#1A222B] border-[#D2C9BA] dark:border-[#2C3847]'
-        }`}>
-          <div className="flex items-center justify-between text-[#8A8175] mb-1">
-            <span className="font-mono text-[10px] uppercase font-bold">Motor Phase Draw</span>
-            <Zap size={14} className={isFault ? 'text-[#B07B1C]' : 'text-[#2E7D5B]'} />
-          </div>
-          <div className={`font-mono text-[22px] font-bold ${isFault ? 'text-[#B07B1C]' : 'text-[#1F2933] dark:text-[#FAF8F4]'}`}>
-            {isFault ? `${liveValues?.cur ?? 17.6} A` : `${liveValues?.cur ?? 14.2} A`}
-          </div>
-          <div className="font-mono text-[10px] text-[#8A8175] mt-1">
-            Nominal: 14.2 A • <span className={isFault ? 'text-[#B07B1C] font-bold' : 'text-[#2E7D5B]'}>{isFault ? '+24% Surge' : 'Balanced'}</span>
-          </div>
-        </div>
-
-        {/* Temperature */}
-        <div className={`p-4 rounded-xl border-2 transition-all ${
-          isFault 
-            ? 'bg-[#C05043]/5 border-[#C05043]' 
-            : 'bg-white dark:bg-[#1A222B] border-[#D2C9BA] dark:border-[#2C3847]'
-        }`}>
-          <div className="flex items-center justify-between text-[#8A8175] mb-1">
-            <span className="font-mono text-[10px] uppercase font-bold">Bearing Outer Ring</span>
-            <Thermometer size={14} className={isFault ? 'text-[#C05043]' : 'text-[#2E7D5B]'} />
-          </div>
-          <div className={`font-mono text-[22px] font-bold ${isFault ? 'text-[#C05043]' : 'text-[#1F2933] dark:text-[#FAF8F4]'}`}>
-            {isFault ? `${liveValues?.temp ?? 71.8}°C` : `${liveValues?.temp ?? 52.0}°C`}
-          </div>
-          <div className="font-mono text-[10px] text-[#8A8175] mt-1">
-            Critical Threshold: 65.0°C • <span className={isFault ? 'text-[#C05043] font-bold' : 'text-[#2E7D5B]'}>{isFault ? 'Overheating' : 'Cold Baseline'}</span>
-          </div>
-        </div>
-
-        {/* Acoustic Noise */}
-        <div className="p-4 rounded-xl border-2 border-[#D2C9BA] dark:border-[#2C3847] bg-white dark:bg-[#1A222B]">
-          <div className="flex items-center justify-between text-[#8A8175] mb-1">
-            <span className="font-mono text-[10px] uppercase font-bold">Acoustic HF Noise</span>
-            <Volume2 size={14} className="text-[#2C6E9B]" />
-          </div>
-          <div className="font-mono text-[22px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">
-            {isFault ? `+${liveValues?.acoustic ?? 14} dB` : `+${liveValues?.acoustic ?? 0} dB`}
-          </div>
-          <div className="font-mono text-[10px] text-[#8A8175] mt-1">
-            Spectral Peak: {isFault ? '3.2 kHz Harmonic' : 'Smooth Baseline'}
-          </div>
-        </div>
+        {getAssetVitals(currentAsset.id, liveValues, feedMode).map((v, idx) => {
+          const Icon = v.icon;
+          return (
+            <div 
+              key={idx} 
+              className={`p-4 rounded-xl border-2 transition-all ${
+                v.isWarning 
+                  ? 'bg-[#C05043]/5 border-[#C05043]' 
+                  : 'bg-white dark:bg-[#1A222B] border-[#D2C9BA] dark:border-[#2C3847]'
+              }`}
+            >
+              <div className="flex items-center justify-between text-[#8A8175] mb-1">
+                <span className="font-mono text-[10px] uppercase font-bold">{v.label}</span>
+                <Icon size={14} className={v.isWarning ? 'text-[#C05043]' : 'text-[#2E7D5B]'} />
+              </div>
+              <div className={`font-mono text-[22px] font-bold ${
+                v.isWarning ? 'text-[#C05043]' : 'text-[#1F2933] dark:text-[#FAF8F4]'
+              }`}>
+                {v.value}
+              </div>
+              <div className="font-mono text-[10px] text-[#8A8175] mt-1">
+                {v.sub}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* 5. Active Work Orders & Mobile Field Checklist */}
@@ -384,30 +574,22 @@ export const AssetPassport = ({
                     <span>J. Rivera</span>
                   </div>
                   <div className="text-[#3E4650] dark:text-[#C5BCAD] mt-1">
-                    Checklist executed via QR scan. Bearing lubricated, alignment confirmed. Target vibration normalized.
+                    Checklist completed via QR passport for {currentAsset.code}. Field inspection tasks logged to Aegis audit ledger.
                   </div>
                 </div>
               )}
 
-              <div className="p-2.5 rounded bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847]">
-                <div className="flex justify-between items-center font-bold text-[#1F2933] dark:text-[#FAF8F4]">
-                  <span>2026-08-14 • Scheduled PM</span>
-                  <span className="text-[#8A8175]">M. Singh</span>
+              {(ASSET_HISTORIES[currentAsset.id] || ASSET_HISTORIES['ahu-03']).map((item, idx) => (
+                <div key={idx} className="p-2.5 rounded bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847]">
+                  <div className="flex justify-between items-center font-bold text-[#1F2933] dark:text-[#FAF8F4]">
+                    <span>{item.date} • {item.type}</span>
+                    <span className="text-[#8A8175]">{item.tech}</span>
+                  </div>
+                  <div className="text-[#6E6558] dark:text-[#A0988A] mt-0.5">
+                    {item.desc}
+                  </div>
                 </div>
-                <div className="text-[#6E6558] dark:text-[#A0988A] mt-0.5">
-                  Quarterly belt tensioning & filter media replacement. Vibration was nominal (2.1 mm/s).
-                </div>
-              </div>
-
-              <div className="p-2.5 rounded bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847]">
-                <div className="flex justify-between items-center font-bold text-[#1F2933] dark:text-[#FAF8F4]">
-                  <span>2026-05-10 • Bearing Replacement</span>
-                  <span className="text-[#8A8175]">J. Rivera</span>
-                </div>
-                <div className="text-[#6E6558] dark:text-[#A0988A] mt-0.5">
-                  Installed new SKF 6205-2RS bearings on drive and non-drive ends. Balanced rotor.
-                </div>
-              </div>
+              ))}
             </div>
           </Card>
 

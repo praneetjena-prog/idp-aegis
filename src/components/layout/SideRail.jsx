@@ -7,7 +7,8 @@ import {
   LayoutDashboard, 
   ChartNoAxesCombined, 
   Cable, 
-  Menu 
+  Menu,
+  QrCode 
 } from 'lucide-react';
 
 export const TABS = [
@@ -60,7 +61,7 @@ export const TABS = [
   },
 ];
 
-export const TabBar = React.memo(({ tab, setTab, onSettings }) => (
+export const TabBar = React.memo(({ tab, setTab, onSettings, assetCode }) => (
   <div className="flex xl:hidden overflow-x-auto items-center bg-[#FFFFFF] dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] justify-between">
     <div className="flex items-center overflow-x-auto">
       {TABS.map(t => (
@@ -72,6 +73,16 @@ export const TabBar = React.memo(({ tab, setTab, onSettings }) => (
           {t.shortLabel}
         </button>
       ))}
+      {tab === 'asset' && (
+        <button
+          type="button"
+          onClick={() => setTab('asset')}
+          className="whitespace-nowrap font-display text-[10px] font-bold uppercase px-3.5 py-2.5 border-b-2 border-[#2C6E9B] text-[#2C6E9B] bg-[#2C6E9B]/10 flex items-center gap-1.5"
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-[#2C6E9B] animate-pulse" />
+          <span>Passport • {assetCode || 'Asset'}</span>
+        </button>
+      )}
     </div>
     {onSettings && (
       <button
@@ -98,7 +109,8 @@ export const SideRail = React.memo(({
   collapsed, 
   onToggleCollapse, 
   expanded,
-  onToggleExpand
+  onToggleExpand,
+  assetCode
 }) => {
   const isFault = feedMode === 'fault';
   const widthClass = collapsed ? 'w-0' : (expanded ? 'w-[230px]' : 'w-[76px]');
@@ -153,6 +165,41 @@ export const SideRail = React.memo(({
 
         {/* Navigation Items */}
         <nav className="flex-1 py-4 flex flex-col gap-2 items-center px-2">
+          {tab === 'asset' && (
+            expanded ? (
+              <button
+                type="button"
+                onClick={() => { setTab('asset'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className="w-full p-2.5 mb-1 rounded-lg border-2 border-[#2C6E9B] bg-[#2C6E9B] text-white shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C] flex items-center justify-between text-left"
+              >
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="w-8 h-8 rounded-md bg-white/20 flex items-center justify-center shrink-0">
+                    <QrCode size={16} className="text-white" />
+                  </div>
+                  <div className="min-w-0 truncate">
+                    <div className="font-display text-[12px] font-bold uppercase tracking-wider truncate">
+                      Asset Passport
+                    </div>
+                    <div className="font-mono text-[9px] text-white/80 truncate">
+                      {assetCode || 'Active Tag'}
+                    </div>
+                  </div>
+                </div>
+                <span className="w-2 h-2 rounded-full bg-white animate-pulse shrink-0" />
+              </button>
+            ) : (
+              <div className="relative group flex items-center justify-center mb-1">
+                <button
+                  type="button"
+                  onClick={() => { setTab('asset'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                  className="w-12 h-12 flex items-center justify-center border-2 border-[#2C6E9B] bg-[#2C6E9B] text-white shadow-[3px_3px_0_#D2C9BA] dark:shadow-[3px_3px_0_#0F151C]"
+                  title={`Asset Passport: ${assetCode || 'Active Tag'}`}
+                >
+                  <QrCode size={18} />
+                </button>
+              </div>
+            )
+          )}
           {TABS.map((item) => {
             const Icon = item.icon;
             const isActive = tab === item.id;

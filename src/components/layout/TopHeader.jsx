@@ -16,12 +16,14 @@ import {
   Download,
   ChevronDown,
   QrCode,
-  CalendarDays
+  CalendarDays,
+  Home
 } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
 import { isSoundEnabled, setSoundEnabled, playDispatchChime } from '../../lib/sound';
 import { Printer } from 'lucide-react';
+import { UserRoleDropdown } from './UserRoleDropdown';
 
 const ExportDropdown = ({ onExport, onPrintFieldSheet, onOpenQrTags, onOpenCalendar }) => {
   const [open, setOpen] = React.useState(false);
@@ -157,7 +159,8 @@ export const TopHeader = React.memo(({
   setSettingsOpen,
   onPrintFieldSheet,
   onOpenQrTags,
-  onOpenCalendar
+  onOpenCalendar,
+  onGoHome
 }) => {
   const [soundOn, setSoundOn] = React.useState(isSoundEnabled);
 
@@ -175,6 +178,19 @@ export const TopHeader = React.memo(({
       {/* 1. Top Integrity Bar */}
       <div className="min-h-[48px] px-3 lg:px-5 flex items-center justify-between gap-3 border-b border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B]">
         <div className="flex items-center gap-3">
+          {/* Home Return Button */}
+          {onGoHome && (
+            <button
+              type="button"
+              onClick={onGoHome}
+              title="Return to Public Home Portal"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-[#1F2933] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] font-mono text-[10px] font-bold shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:border-[#2C6E9B] hover:text-[#2C6E9B] active:translate-x-[1px] active:translate-y-[1px] transition-all cursor-pointer"
+            >
+              <Home size={13} className="text-[#2C6E9B]" />
+              <span className="hidden sm:inline">Home</span>
+            </button>
+          )}
+
           {/* 3-line hamburger menu icon to expand sidebar when collapsed */}
           {railCollapsed && (
             <button
@@ -220,6 +236,9 @@ export const TopHeader = React.memo(({
             <span className="text-[#8A8175] dark:text-[#A99F90]">•</span>
             <span className="text-[#2C6E9B] font-semibold">{vibration} mm/s</span>
           </div>
+
+          {/* User Profile & Role Dropdown */}
+          <UserRoleDropdown onGoHome={onGoHome} />
 
           {/* Dark Mode Theme Toggle with Sun / Moon symbol */}
           <button

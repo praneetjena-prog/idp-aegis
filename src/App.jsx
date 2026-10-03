@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { Shield, Activity, MapPin, Clock, Zap, Cpu, Layers, Radio, ChevronRight, ArrowLeft, Printer, FileJson, FileSpreadsheet, Thermometer, Waves, Volume2, Search, Filter, X, AlertTriangle, CheckCircle2, Settings, LayoutDashboard, ChartNoAxesCombined, Gauge, Cable, PanelLeftClose, PanelLeftOpen, Menu, Sun, Moon, QrCode } from 'lucide-react';
+import { Shield, Activity, MapPin, Clock, Zap, Cpu, Layers, Radio, ChevronRight, ArrowLeft, Printer, FileJson, FileSpreadsheet, Thermometer, Waves, Volume2, Search, Filter, X, AlertTriangle, CheckCircle2, Settings, LayoutDashboard, ChartNoAxesCombined, Gauge, Cable, PanelLeftClose, PanelLeftOpen, Menu, Sun, Moon, QrCode, Home } from 'lucide-react';
 
 import { Card, CardHeader, CardTitle } from './components/ui/Card';
 import { Badge } from './components/ui/Badge';
@@ -36,6 +36,10 @@ import { HardwareTable } from './components/workflow/HardwareTable';
 import { RootCauseInspector } from './components/workflow/RootCauseInspector';
 import { MaintenanceChecklist } from './components/workflow/MaintenanceChecklist';
 
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { GoogleSignInModal } from './components/auth/GoogleSignInModal';
+import { HomePage } from './components/home/HomePage';
+
 const SectionLabel = ({ k, title, id }) => (
   <div id={id} className="flex items-center gap-3 mb-4 scroll-mt-[112px]">
     <div className="w-7 h-7 bg-[#F1EDE6] border border-[#D2C9BA] flex items-center justify-center font-mono text-[10px] font-bold text-[#6E6558]">{k}</div>
@@ -44,13 +48,13 @@ const SectionLabel = ({ k, title, id }) => (
   </div>
 );
 
-const VALID_TABS = ['overview', 'console', 'analysis', 'simulator', 'platform', 'asset'];
+const VALID_TABS = ['home', 'overview', 'console', 'analysis', 'simulator', 'platform', 'asset'];
 const STORAGE_WORK_ORDERS = 'aegis-work-orders';
 const STORAGE_ACKNOWLEDGED = 'aegis-acknowledged-alerts';
 
 function parseHash() {
   if (typeof window === 'undefined' || !window.location.hash) {
-    return { tab: 'overview', assetId: 'ahu-03' };
+    return { tab: 'home', assetId: 'ahu-03' };
   }
   const clean = window.location.hash.replace(/^#/, '');
   const parts = clean.split('/');
@@ -61,7 +65,7 @@ function parseHash() {
   if (VALID_TABS.includes(tabName)) {
     return { tab: tabName, assetId: 'ahu-03' };
   }
-  return { tab: 'overview', assetId: 'ahu-03' };
+  return { tab: 'home', assetId: 'ahu-03' };
 }
 
 function getInitialWorkOrders() {
@@ -85,6 +89,24 @@ function getInitialAcknowledged() {
 }
 
 export default function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
+}
+
+function AppContent() {
+  const { 
+    user, 
+    isAuthenticated, 
+    signInModalOpen, 
+    openSignInModal, 
+    closeSignInModal, 
+    intendedRoute,
+    roleConfig 
+  } = useAuth();
+
   const [range, setRange] = useState('24H');
   const [feedMode, setFeedMode] = useState('fault');
   const [activeSubsystem, setActiveSubsystem] = useState(null);
@@ -105,9 +127,13 @@ export default function App() {
   const [darkMode, setDarkMode] = useState(false);
   const { params, setParams, save: saveParams, saving } = useFacilityParams();
 
-  // Sync tab changes to URL hash (deep linking)
+  // Sync tab changes to URL hash (deep linking) & Auth gate
   const setTab = (nextTab, assetId) => {
     if (!VALID_TABS.includes(nextTab)) return;
+    if (nextTab !== 'home' && !isAuthenticated) {
+      openSignInModal(nextTab);
+      return;
+    }
     setTabState(nextTab);
     const targetAsset = assetId || selectedAssetId || 'ahu-03';
     if (assetId) {
@@ -116,7 +142,7 @@ export default function App() {
     if (typeof window !== 'undefined') {
       const newHash = nextTab === 'asset' 
         ? `#asset/${targetAsset}` 
-        : `#${nextTab}`;
+        : (nextTab === 'home' ? '#home' : `#${nextTab}`);
       if (window.location.hash !== newHash) {
         window.history.replaceState(null, '', newHash);
       }
@@ -391,6 +417,44 @@ export default function App() {
     return all.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.id.includes(searchQuery.toLowerCase()));
   }, [searchQuery]);
 
+  // Render dedicated full-screen HomePage when tab is 'home'
+  if (tab === 'home') {
+    return (
+      <div className={darkMode ? 'dark' : ''}>
+        <HomePage
+          onNavigate={(targetTab, assetId) => {
+            if (!isAuthenticated) {
+              openSignInModal(targetTab || 'console');
+            } else {
+              setTab(targetTab || 'console', assetId);
+            }
+          }}
+          liveValues={liveValues}
+          isLive={isLive}
+          feedMode={effectiveFeedMode}
+          darkMode={darkMode}
+          toggleTheme={toggleTheme}
+          onOpenQrTags={() => setShowQrModal(true)}
+          onOpenCalendar={() => setShowCalendarModal(true)}
+        />
+        <GoogleSignInModal
+          open={signInModalOpen}
+          onClose={closeSignInModal}
+          onSuccess={(role) => {
+            showToast(`✓ Authenticated as ${role.toUpperCase()} • Welcome to Console`);
+            setTab(intendedRoute || 'console');
+          }}
+        />
+        {toast && (
+          <div className="fixed bottom-4 right-4 z-[130] bg-[#FFFFFF] border border-[#D2C9BA] text-[#1F2933] px-3 py-2.5 rounded-lg shadow-xl flex items-center gap-2 font-mono text-[11px] animate-in slide-in-from-bottom-2 max-w-[360px]">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#2E7D5B] animate-pulse shrink-0" />
+            <span className="leading-relaxed">{toast}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#F1EDE6] text-[#2A3138] selection:bg-[#2C6E9B]/30 transition-colors duration-300">
       <SideRail 
@@ -427,6 +491,7 @@ export default function App() {
           onPrintFieldSheet={() => setShowFieldSheet(true)}
           onOpenQrTags={() => setShowQrModal(true)}
           onOpenCalendar={() => setShowCalendarModal(true)}
+          onGoHome={() => setTab('home')}
         />
 
       {/* Main Content */}
@@ -887,6 +952,20 @@ export default function App() {
         showToast={showToast}
       />
 
+      {/* Google Sign-In Gate if visiting operational tabs while unauthenticated */}
+      <GoogleSignInModal
+        open={!isAuthenticated || signInModalOpen}
+        onClose={() => {
+          closeSignInModal();
+          if (!isAuthenticated) {
+            setTab('home');
+          }
+        }}
+        onSuccess={(role) => {
+          showToast(`✓ Authenticated as ${role.toUpperCase()} • Welcome to Console`);
+        }}
+      />
+
       {/* Toast */}
       {toast && (
         <div className="fixed bottom-4 right-4 z-[100] bg-[#FFFFFF] border border-[#D2C9BA] text-[#1F2933] px-3 py-2.5 rounded-lg shadow-xl flex items-center gap-2 font-mono text-[11px] animate-in slide-in-from-bottom-2 max-w-[360px]">
@@ -897,6 +976,13 @@ export default function App() {
 
       {/* Mobile jump nav */}
       <div className="xl:hidden fixed bottom-0 left-0 right-0 bg-[#FFFFFF]/95 dark:bg-[#141B22]/95 backdrop-blur border-t border-[#E6E0D6] dark:border-[#2C3847] p-2 flex gap-1 overflow-x-auto z-40">
+        <button
+          onClick={() => { setTab('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+          className="whitespace-nowrap font-mono text-[10px] px-2.5 py-1.5 rounded border uppercase bg-[#FAF8F4] dark:bg-[#1A222B] border-[#D2C9BA] dark:border-[#2C3847] text-[#2C6E9B] font-bold flex items-center gap-1 shadow-sm"
+        >
+          <Home size={11} />
+          <span>Home</span>
+        </button>
         {TABS.map(t => (
           <button key={t.id} onClick={() => { setTab(t.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`whitespace-nowrap font-mono text-[10px] px-3 py-1.5 rounded border uppercase transition-colors ${tab === t.id ? 'bg-[#2C6E9B] border-[#2C6E9B] text-[#FFFFFF]' : 'bg-[#E6E0D6] dark:bg-[#1A222B] border-[#D2C9BA] dark:border-[#2C3847] text-[#3E4650] dark:text-[#C5BCAD] hover:bg-[#D2C9BA]'}`}>{t.label}</button>
         ))}

@@ -8,7 +8,8 @@ import {
   ChartNoAxesCombined, 
   Cable, 
   Menu,
-  QrCode 
+  QrCode,
+  Home 
 } from 'lucide-react';
 
 export const TABS = [
@@ -64,6 +65,14 @@ export const TABS = [
 export const TabBar = React.memo(({ tab, setTab, onSettings, assetCode }) => (
   <div className="flex xl:hidden overflow-x-auto items-center bg-[#FFFFFF] dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] justify-between">
     <div className="flex items-center overflow-x-auto">
+      <button
+        type="button"
+        onClick={() => setTab('home')}
+        className={`whitespace-nowrap font-display text-[10px] font-bold uppercase px-3 py-2.5 border-b-2 flex items-center gap-1 transition-colors ${tab === 'home' ? 'border-[#2C6E9B] text-[#2C6E9B] bg-[#2C6E9B]/5' : 'border-transparent text-[#6E6558] dark:text-[#C5BCAD] hover:bg-[#F1EDE6] dark:hover:bg-[#141B22]'}`}
+      >
+        <Home size={12} className="text-[#2C6E9B]" />
+        <span>Home</span>
+      </button>
       {TABS.map(t => (
         <button
           key={t.id}
@@ -165,6 +174,44 @@ export const SideRail = React.memo(({
 
         {/* Navigation Items */}
         <nav className="flex-1 py-4 flex flex-col gap-2 items-center px-2">
+          {/* Home Portal Gateway Button */}
+          {expanded ? (
+            <button
+              type="button"
+              onClick={() => { setTab('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+              className="w-full p-2.5 mb-2 rounded-lg border-2 border-[#D2C9BA] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] hover:border-[#2C6E9B] hover:text-[#2C6E9B] transition-all flex items-center justify-between text-left shadow-sm cursor-pointer"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-md bg-[#2C6E9B]/10 flex items-center justify-center shrink-0 text-[#2C6E9B]">
+                  <Home size={16} />
+                </div>
+                <div className="min-w-0 truncate">
+                  <div className="font-display text-[12px] font-bold uppercase tracking-wider truncate">
+                    Home Portal
+                  </div>
+                  <div className="font-mono text-[9px] text-[#8A8175] truncate">
+                    Overview & Gateway
+                  </div>
+                </div>
+              </div>
+            </button>
+          ) : (
+            <div className="relative group flex items-center justify-center mb-2">
+              <button
+                type="button"
+                onClick={() => { setTab('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                className="w-12 h-12 flex items-center justify-center border-2 border-[#1F2933] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#2C6E9B] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:bg-[#2C6E9B] hover:text-white transition-all cursor-pointer"
+                title="Return to Public Home Portal"
+              >
+                <Home size={18} />
+              </button>
+              <div className="absolute left-[calc(100%+12px)] px-3 py-1.5 bg-[#FFFFFF] dark:bg-[#1A222B] border-2 border-[#1F2933] dark:border-[#2C3847] shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C] rounded-lg whitespace-nowrap opacity-0 pointer-events-none group-hover:opacity-100 transition-opacity z-50">
+                <div className="font-display text-[11px] font-bold uppercase text-[#1F2933] dark:text-[#FAF8F4]">Home Portal</div>
+                <div className="font-mono text-[9px] text-[#8A8175]">Platform Gateway & Features</div>
+              </div>
+            </div>
+          )}
+
           {tab === 'asset' && (
             expanded ? (
               <button

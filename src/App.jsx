@@ -163,18 +163,6 @@ function AppContent() {
     }
   };
 
-  // Back-navigation from Console to Home
-  const handleBack = () => {
-    if (typeof window !== 'undefined') {
-      if (window.history.length > 1 && window.history.state?.from === 'home') {
-        window.history.back();
-      } else {
-        setTab('home');
-      }
-    } else {
-      setTab('home');
-    }
-  };
 
   const handleSelectAsset = (assetId) => {
     setSelectedAssetId(assetId);
@@ -538,7 +526,6 @@ function AppContent() {
           onPrintFieldSheet={() => setShowFieldSheet(true)}
           onOpenQrTags={() => setShowQrModal(true)}
           onOpenCalendar={() => setShowCalendarModal(true)}
-          onBack={handleBack}
         />
 
       {/* Main Content */}

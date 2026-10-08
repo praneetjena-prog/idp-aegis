@@ -16,8 +16,7 @@ import {
   Download,
   ChevronDown,
   QrCode,
-  CalendarDays,
-  ArrowLeft
+  CalendarDays
 } from 'lucide-react';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
@@ -159,8 +158,7 @@ export const TopHeader = React.memo(({
   setSettingsOpen,
   onPrintFieldSheet,
   onOpenQrTags,
-  onOpenCalendar,
-  onBack
+  onOpenCalendar
 }) => {
   const [soundOn, setSoundOn] = React.useState(isSoundEnabled);
 
@@ -178,20 +176,6 @@ export const TopHeader = React.memo(({
       {/* 1. Top Integrity Bar */}
       <div className="min-h-[48px] px-3 lg:px-5 flex items-center justify-between gap-3 border-b border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B]">
         <div className="flex items-center gap-3">
-          {/* Generic Back Navigation Button */}
-          {onBack && (
-            <button
-              type="button"
-              onClick={onBack}
-              title="Back"
-              aria-label="Back"
-              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border-2 border-[#1F2933] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] font-mono text-[10px] font-bold shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:border-[#2C6E9B] hover:text-[#2C6E9B] active:translate-x-[1px] active:translate-y-[1px] transition-all cursor-pointer"
-            >
-              <ArrowLeft size={13} />
-              <span className="hidden sm:inline">Back</span>
-            </button>
-          )}
-
           {/* 3-line hamburger menu icon to expand sidebar when collapsed */}
           {railCollapsed && (
             <button

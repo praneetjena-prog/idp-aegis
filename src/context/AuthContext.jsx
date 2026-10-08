@@ -272,6 +272,34 @@ export function AuthProvider({ children }) {
     return Boolean(activePermissions[permKey]);
   }, [activePermissions]);
 
+  const signInWithGoogleCredential = useCallback((credentialJwt, roleId = 'manager') => {
+    try {
+      const base64Url = credentialJwt.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const profile = JSON.parse(jsonPayload);
+      const authenticatedUser = {
+        id: 'google_' + profile.sub,
+        name: profile.name,
+        email: profile.email,
+        avatar: profile.picture || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(profile.name)}`,
+        role: roleId,
+        provider: 'google_gis',
+        signedInAt: new Date().toISOString()
+      };
+      setUser(authenticatedUser);
+      setSignInModalOpen(false);
+      return authenticatedUser;
+    } catch (err) {
+      console.error('Failed to parse Google JWT credential', err);
+    }
+  }, []);
+
   const value = {
     user,
     role: user?.role || null,
@@ -280,6 +308,7 @@ export function AuthProvider({ children }) {
     hasPermission,
     isAuthenticated: Boolean(user),
     signInWithGoogle,
+    signInWithGoogleCredential,
     signOut,
     switchRole,
     signInModalOpen,

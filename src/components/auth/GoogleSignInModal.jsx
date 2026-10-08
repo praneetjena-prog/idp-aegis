@@ -13,12 +13,65 @@ export const GoogleIcon = ({ size = 18 }) => (
 );
 
 export function GoogleSignInModal({ open, onClose, onSuccess }) {
-  const { signInWithGoogle } = useAuth();
+  const { signInWithGoogle, signInWithGoogleCredential } = useAuth();
+  const [authTab, setAuthTab] = useState('my_account'); // 'my_account' | 'personas'
   const [selectedRole, setSelectedRole] = useState('manager');
   const [loading, setLoading] = useState(false);
-  const [useCustomAccount, setUseCustomAccount] = useState(false);
-  const [customName, setCustomName] = useState('');
-  const [customEmail, setCustomEmail] = useState('');
+  
+  const [customName, setCustomName] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const saved = JSON.parse(window.localStorage.getItem('aegis_saved_google_profile') || '{}');
+      return saved.name || '';
+    } catch {
+      return '';
+    }
+  });
+
+  const [customEmail, setCustomEmail] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    try {
+      const saved = JSON.parse(window.localStorage.getItem('aegis_saved_google_profile') || '{}');
+      return saved.email || '';
+    } catch {
+      return '';
+    }
+  });
+
+  const [googleClientId, setGoogleClientId] = useState(() => {
+    return (typeof import.meta !== 'undefined' && import.meta.env?.VITE_GOOGLE_CLIENT_ID) || 
+      (typeof window !== 'undefined' ? window.localStorage.getItem('aegis_google_client_id') || '' : '');
+  });
+
+  const gisContainerRef = React.useRef(null);
+
+  // Initialize Google Identity Services if Client ID is configured
+  React.useEffect(() => {
+    if (!open || !googleClientId || typeof window === 'undefined' || !window.google?.accounts?.id) return;
+    try {
+      window.google.accounts.id.initialize({
+        client_id: googleClientId,
+        callback: (response) => {
+          if (response?.credential) {
+            signInWithGoogleCredential(response.credential, selectedRole);
+            if (onSuccess) onSuccess(selectedRole);
+          }
+        }
+      });
+      if (gisContainerRef.current) {
+        gisContainerRef.current.innerHTML = '';
+        window.google.accounts.id.renderButton(gisContainerRef.current, {
+          theme: 'outline',
+          size: 'large',
+          width: 320,
+          text: 'signin_with',
+          shape: 'rectangular'
+        });
+      }
+    } catch (e) {
+      console.warn('GIS initialization error:', e);
+    }
+  }, [open, googleClientId, selectedRole, signInWithGoogleCredential, onSuccess]);
 
   if (!open) return null;
 
@@ -26,12 +79,19 @@ export function GoogleSignInModal({ open, onClose, onSuccess }) {
     setLoading(true);
     try {
       let customProfile = null;
-      if (useCustomAccount && customEmail.trim()) {
+      if (authTab === 'my_account') {
+        const name = customName.trim() || (customEmail.trim() ? customEmail.split('@')[0] : 'Google User');
+        const email = customEmail.trim() || 'user@gmail.com';
         customProfile = {
-          name: customName.trim() || customEmail.split('@')[0],
-          email: customEmail.trim(),
-          avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(customName || customEmail)}`
+          name,
+          email,
+          avatar: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`
         };
+        try {
+          window.localStorage.setItem('aegis_saved_google_profile', JSON.stringify({ name, email }));
+        } catch {
+          // ignore
+        }
       }
       await signInWithGoogle(selectedRole, customProfile);
       if (onSuccess) onSuccess(selectedRole);
@@ -82,20 +142,90 @@ export function GoogleSignInModal({ open, onClose, onSuccess }) {
               Access Aegis Operations Cockpit
             </h3>
             <p className="mt-1 text-[12px] text-[#6E6558] dark:text-[#A0988A] leading-relaxed">
-              Authenticate with your Google account to access real-time facility telemetry, anomaly triaging, and equipment controls.
+              Sign in with your personal Google account or test with predefined facility personas.
             </p>
           </div>
 
-          {/* Role Selection Picker */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <label className="font-mono text-[10px] uppercase tracking-wider font-bold text-[#8A8175]">
-                Select Console Role (RBAC)
-              </label>
-              <span className="font-mono text-[10px] text-[#2C6E9B]">Role-based telemetry view</span>
-            </div>
+          {/* Account Mode Tabs */}
+          <div className="flex rounded-xl bg-[#F1EDE6] dark:bg-[#141B22] p-1 border border-[#D2C9BA] dark:border-[#2C3847]">
+            <button
+              type="button"
+              onClick={() => setAuthTab('my_account')}
+              className={`flex-1 py-1.5 px-3 rounded-lg font-mono text-[11px] font-bold transition-all flex items-center justify-center gap-2 ${
+                authTab === 'my_account'
+                  ? 'bg-white dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] shadow-xs'
+                  : 'text-[#6E6558] dark:text-[#A0988A] hover:text-[#1F2933]'
+              }`}
+            >
+              <GoogleIcon size={14} />
+              <span>My Google Account</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setAuthTab('personas')}
+              className={`flex-1 py-1.5 px-3 rounded-lg font-mono text-[11px] font-bold transition-all flex items-center justify-center gap-2 ${
+                authTab === 'personas'
+                  ? 'bg-white dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] shadow-xs'
+                  : 'text-[#6E6558] dark:text-[#A0988A] hover:text-[#1F2933]'
+              }`}
+            >
+              <Shield size={14} className="text-[#2C6E9B]" />
+              <span>Demo Role Personas</span>
+            </button>
+          </div>
 
-            <div className="grid gap-2.5">
+          {/* TAB 1: My Google Account */}
+          {authTab === 'my_account' && (
+            <div className="space-y-3.5 animate-in fade-in">
+              <div className="p-3.5 rounded-xl bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[10px] uppercase font-bold text-[#8A8175]">Google Profile Details</span>
+                  <span className="font-mono text-[10px] text-[#2E7D5B] font-semibold flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#2E7D5B] animate-pulse" />
+                    Personal Account
+                  </span>
+                </div>
+
+                <div>
+                  <label className="block font-mono text-[10px] text-[#6E6558] dark:text-[#A0988A] mb-1">
+                    Your Full Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Praneet Jena"
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                    className="w-full px-3 py-2 text-[13px] bg-white dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] rounded-lg focus:outline-none focus:border-[#2C6E9B] text-[#1F2933] dark:text-[#FAF8F4] font-medium"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-mono text-[10px] text-[#6E6558] dark:text-[#A0988A] mb-1">
+                    Google / Gmail Address
+                  </label>
+                  <input
+                    type="email"
+                    placeholder="e.g. praneetjena@gmail.com"
+                    value={customEmail}
+                    onChange={(e) => setCustomEmail(e.target.value)}
+                    className="w-full px-3 py-2 text-[13px] bg-white dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] rounded-lg focus:outline-none focus:border-[#2C6E9B] text-[#1F2933] dark:text-[#FAF8F4] font-medium"
+                  />
+                </div>
+              </div>
+
+              {/* Optional Real Google GIS Popup Container */}
+              {googleClientId && (
+                <div className="flex flex-col items-center justify-center p-3 rounded-xl bg-white dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] space-y-2">
+                  <span className="font-mono text-[10px] text-[#8A8175]">One-Click Google Cloud OAuth Popup:</span>
+                  <div ref={gisContainerRef} className="flex justify-center" />
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* TAB 2: Demo Role Personas */}
+          {authTab === 'personas' && (
+            <div className="grid gap-2 animate-in fade-in">
               {Object.values(ROLES).map((r) => {
                 const IconComponent = roleIcons[r.id] || Shield;
                 const isSelected = selectedRole === r.id;
@@ -104,7 +234,7 @@ export function GoogleSignInModal({ open, onClose, onSuccess }) {
                     key={r.id}
                     type="button"
                     onClick={() => setSelectedRole(r.id)}
-                    className={`text-left p-3 rounded-xl border-2 transition-all flex items-start gap-3 ${
+                    className={`text-left p-3 rounded-xl border-2 transition-all flex items-start gap-3 cursor-pointer ${
                       isSelected
                         ? 'border-[#2C6E9B] bg-[#2C6E9B]/5 dark:bg-[#2C6E9B]/10 shadow-sm'
                         : 'border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] hover:border-[#D2C9BA]'
@@ -128,7 +258,7 @@ export function GoogleSignInModal({ open, onClose, onSuccess }) {
                         {r.description}
                       </p>
                       <div className="mt-1.5 flex items-center gap-1.5 font-mono text-[10px] text-[#8A8175]">
-                        <span>Default: {r.defaultUser.name}</span>
+                        <span>Persona: {r.defaultUser.name}</span>
                         <span>•</span>
                         <span>{r.defaultUser.email}</span>
                       </div>
@@ -140,58 +270,40 @@ export function GoogleSignInModal({ open, onClose, onSuccess }) {
                 );
               })}
             </div>
-          </div>
+          )}
 
-          {/* Auth Engine Status & Setup Guide */}
-          <div className="p-3 rounded-lg bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] text-[11px] font-mono">
-            <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 font-bold text-[#1F2933] dark:text-[#FAF8F4]">
-                <span className={`w-2 h-2 rounded-full ${typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL ? 'bg-[#2E7D5B] animate-pulse' : 'bg-[#B07B1C]'}`} />
-                {typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL 
-                  ? 'Live Supabase OAuth Ready' 
-                  : 'Interactive Demo Sandbox'}
-              </span>
-              <button
-                type="button"
-                onClick={() => setUseCustomAccount(!useCustomAccount)}
-                className="text-[#2C6E9B] hover:underline flex items-center gap-1"
-              >
-                <KeyRound size={11} />
-                <span>{useCustomAccount ? 'Close Persona Form' : 'Custom Email'}</span>
-              </button>
-            </div>
-
-            {!(typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) && (
-              <p className="mt-1.5 text-[10px] text-[#8A8175] leading-relaxed">
-                Running in zero-friction demo mode. To connect real <strong className="text-[#1F2933] dark:text-[#FAF8F4]">@organization.com</strong> Google accounts, configure <code className="bg-[#E6E0D6] dark:bg-[#2C3847] px-1 py-0.5 rounded">.env</code> using <code className="text-[#2C6E9B]">.env.example</code>.
-              </p>
-            )}
-
-            {useCustomAccount && (
-              <div className="mt-2.5 pt-2 border-t border-[#E6E0D6] dark:border-[#2C3847] space-y-2 animate-in fade-in">
-                <div>
-                  <label className="block text-[10px] text-[#8A8175] mb-1">Your Full Name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g. Alex Morgan"
-                    value={customName}
-                    onChange={(e) => setCustomName(e.target.value)}
-                    className="w-full px-2.5 py-1.5 text-[12px] bg-white dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] rounded focus:outline-none focus:border-[#2C6E9B] text-[#1F2933] dark:text-[#FAF8F4]"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] text-[#8A8175] mb-1">Google / Facility Email</label>
-                  <input
-                    type="email"
-                    placeholder="e.g. alex.morgan@facility.org"
-                    value={customEmail}
-                    onChange={(e) => setCustomEmail(e.target.value)}
-                    className="w-full px-2.5 py-1.5 text-[12px] bg-white dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] rounded focus:outline-none focus:border-[#2C6E9B] text-[#1F2933] dark:text-[#FAF8F4]"
-                  />
-                </div>
+          {/* Role Picker for My Google Account */}
+          {authTab === 'my_account' && (
+            <div>
+              <label className="block font-mono text-[10px] uppercase tracking-wider font-bold text-[#8A8175] mb-2">
+                Select Your Operational Role (RBAC):
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {Object.values(ROLES).map((r) => {
+                  const Icon = roleIcons[r.id] || Shield;
+                  const isSelected = selectedRole === r.id;
+                  return (
+                    <button
+                      key={r.id}
+                      type="button"
+                      onClick={() => setSelectedRole(r.id)}
+                      className={`p-2.5 rounded-lg border text-left transition-all cursor-pointer ${
+                        isSelected
+                          ? 'border-[#2C6E9B] bg-[#2C6E9B]/10 text-[#1F2933] dark:text-[#FAF8F4] font-bold shadow-xs'
+                          : 'border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] text-[#554D42] dark:text-[#C5BCAD]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Icon size={12} className={isSelected ? 'text-[#2C6E9B]' : 'text-[#8A8175]'} />
+                        <span className="font-mono text-[10px] uppercase">{r.shortName}</span>
+                      </div>
+                      <div className="font-mono text-[8px] text-[#8A8175] line-clamp-1">{r.badge}</div>
+                    </button>
+                  );
+                })}
               </div>
-            )}
-          </div>
+            </div>
+          )}
 
           {/* Primary Action Button: Sign in with Google */}
           <div className="pt-1 space-y-2">
@@ -204,8 +316,10 @@ export function GoogleSignInModal({ open, onClose, onSuccess }) {
               <GoogleIcon size={18} />
               <span>
                 {loading 
-                  ? 'Connecting to Google OAuth...' 
-                  : `Sign in with Google as ${ROLES[selectedRole]?.shortName || 'User'}`}
+                  ? 'Authenticating...' 
+                  : (authTab === 'my_account' && customName.trim()
+                    ? `Sign in as ${customName.trim()} (${ROLES[selectedRole]?.shortName})`
+                    : `Sign in with Google as ${ROLES[selectedRole]?.shortName}`)}
               </span>
               <ArrowRight size={16} className="text-[#8A8175]" />
             </button>

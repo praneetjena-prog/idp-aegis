@@ -16,7 +16,6 @@ import { CorrelationChart } from './components/dashboard/CorrelationChart';
 import { PredictiveSimulator } from './components/dashboard/PredictiveSimulator';
 import { FacilityOverview } from './components/dashboard/FacilityOverview';
 import { FieldSheetModal } from './components/dashboard/FieldSheetModal';
-import { MaintenanceScheduler } from './components/dashboard/MaintenanceScheduler';
 import { MaintenanceCalendarModal } from './components/dashboard/MaintenanceCalendarModal';
 import { SettingsPanel } from './components/settings/SettingsPanel';
 import { AssetPassport } from './components/asset/AssetPassport';
@@ -746,7 +745,12 @@ function AppContent() {
                 <FailureForecast mode={effectiveFeedMode} />
               </div>
               <div className="lg:col-span-7">
-                <WorkOrderHistory workOrders={workOrders} onExport={handleExport} onClear={handleClearWorkOrders} />
+                <WorkOrderHistory 
+                  workOrders={workOrders} 
+                  onExport={handleExport} 
+                  onClear={handleClearWorkOrders} 
+                  onOpenCalendar={() => setShowCalendarModal(true)} 
+                />
               </div>
             </div>
           </div>
@@ -767,7 +771,6 @@ function AppContent() {
               onAcknowledge={handleAcknowledge}
               workOrders={workOrders}
               onPrintFieldSheet={() => setShowFieldSheet(true)}
-              onOpenCalendar={() => setShowCalendarModal(true)}
             />
           </div>
 
@@ -801,16 +804,6 @@ function AppContent() {
                 </div>
               </Card>
             </div>
-          </div>
-
-          <div className="pt-2">
-            <SectionLabel k="07" title="Automated PM Scheduling & Multi-Asset Calendar Integration" id="scheduler" />
-            <MaintenanceScheduler
-              feedMode={effectiveFeedMode}
-              onSelectAsset={handleSelectAsset}
-              onPrintFieldSheet={() => setShowFieldSheet(true)}
-              showToast={showToast}
-            />
           </div>
           </div>
           )}
@@ -948,7 +941,7 @@ function AppContent() {
         {/* Interactive Scenario Simulator */}
         {tab === 'simulator' && (
         <section className="space-y-4 pb-10">
-          <SectionLabel k="08" title='Interactive Scenario Simulator: "Normal Run" vs. "Mechanical Degradation"' id="simulator" />
+          <SectionLabel k="07" title='Interactive Scenario Simulator: "Normal Run" vs. "Mechanical Degradation"' id="simulator" />
           <PredictiveSimulator params={params} liveValues={liveValues} isLive={isLive} />
         </section>
         )}

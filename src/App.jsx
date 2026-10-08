@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { Shield, Activity, MapPin, Clock, Zap, Cpu, Layers, Radio, ChevronRight, ArrowLeft, Printer, FileJson, FileSpreadsheet, Thermometer, Waves, Volume2, Search, Filter, X, AlertTriangle, CheckCircle2, Settings, LayoutDashboard, ChartNoAxesCombined, Gauge, Cable, PanelLeftClose, PanelLeftOpen, Menu, Sun, Moon, QrCode, Home } from 'lucide-react';
+import { Shield, Activity, MapPin, Clock, Zap, Cpu, Layers, Radio, ChevronRight, ArrowLeft, Printer, FileJson, FileSpreadsheet, Thermometer, Waves, Volume2, Search, Filter, X, AlertTriangle, CheckCircle2, Settings, LayoutDashboard, ChartNoAxesCombined, Gauge, Cable, PanelLeftClose, PanelLeftOpen, Menu, Sun, Moon, QrCode } from 'lucide-react';
 
 import { Card, CardHeader, CardTitle } from './components/ui/Card';
 import { Badge } from './components/ui/Badge';
@@ -127,13 +127,14 @@ function AppContent() {
   const [darkMode, setDarkMode] = useState(false);
   const { params, setParams, save: saveParams, saving } = useFacilityParams();
 
-  // Sync tab changes to URL hash (deep linking) & Auth gate
+  // Sync tab changes to URL hash (deep linking) & Auth gate with natural history stack
   const setTab = (nextTab, assetId) => {
     if (!VALID_TABS.includes(nextTab)) return;
     if (nextTab !== 'home' && !isAuthenticated) {
       openSignInModal(nextTab);
       return;
     }
+    const prevTab = tab;
     setTabState(nextTab);
     const targetAsset = assetId || selectedAssetId || 'ahu-03';
     if (assetId) {
@@ -144,8 +145,34 @@ function AppContent() {
         ? `#asset/${targetAsset}` 
         : (nextTab === 'home' ? '#home' : `#${nextTab}`);
       if (window.location.hash !== newHash) {
-        window.history.replaceState(null, '', newHash);
+        if (prevTab === 'home' && nextTab !== 'home') {
+          // Navigating from Home into Console/Modules: Push state so Back naturally returns to Home
+          window.history.pushState({ tab: nextTab, from: 'home', initialized: true }, '', newHash);
+        } else if (nextTab === 'home') {
+          // Returning to Home: If previous history entry was home, pop back; otherwise push
+          if (window.history.state?.from === 'home' && window.history.length > 1) {
+            window.history.back();
+          } else {
+            window.history.pushState({ tab: 'home', initialized: true }, '', '#home');
+          }
+        } else {
+          // Switching between sub-tabs within Console: Replace state so Back always goes straight to Home
+          window.history.replaceState({ tab: nextTab, from: 'home', initialized: true }, '', newHash);
+        }
       }
+    }
+  };
+
+  // Back-navigation from Console to Home
+  const handleBack = () => {
+    if (typeof window !== 'undefined') {
+      if (window.history.length > 1 && window.history.state?.from === 'home') {
+        window.history.back();
+      } else {
+        setTab('home');
+      }
+    } else {
+      setTab('home');
     }
   };
 
@@ -154,22 +181,42 @@ function AppContent() {
     if (tab === 'asset' && typeof window !== 'undefined') {
       const newHash = `#asset/${assetId}`;
       if (window.location.hash !== newHash) {
-        window.history.replaceState(null, '', newHash);
+        window.history.replaceState({ tab: 'asset', assetId, from: 'home', initialized: true }, '', newHash);
       }
     }
   };
 
-  // Listen to browser Back / Forward buttons
+  // Listen to browser Back / Forward buttons & ensure Home is in history stack
   useEffect(() => {
-    const onHashChange = () => {
+    if (typeof window !== 'undefined') {
+      const currentParsed = parseHash();
+      // If user arrived directly on a console tab, seed history so Home is previous entry
+      if (currentParsed.tab !== 'home' && !window.history.state?.initialized) {
+        window.history.replaceState({ tab: 'home', initialized: true }, '', '#home');
+        window.history.pushState(
+          { tab: currentParsed.tab, assetId: currentParsed.assetId, from: 'home', initialized: true },
+          '',
+          window.location.hash
+        );
+      } else if (!window.history.state?.initialized) {
+        window.history.replaceState({ tab: 'home', initialized: true }, '', window.location.hash || '#home');
+      }
+    }
+
+    const onHistoryNavigation = () => {
       const parsed = parseHash();
       setTabState(parsed.tab);
       if (parsed.assetId) {
         setSelectedAssetId(parsed.assetId);
       }
     };
-    window.addEventListener('hashchange', onHashChange);
-    return () => window.removeEventListener('hashchange', onHashChange);
+
+    window.addEventListener('popstate', onHistoryNavigation);
+    window.addEventListener('hashchange', onHistoryNavigation);
+    return () => {
+      window.removeEventListener('popstate', onHistoryNavigation);
+      window.removeEventListener('hashchange', onHistoryNavigation);
+    };
   }, []);
 
   // Persist work orders across sessions
@@ -491,7 +538,7 @@ function AppContent() {
           onPrintFieldSheet={() => setShowFieldSheet(true)}
           onOpenQrTags={() => setShowQrModal(true)}
           onOpenCalendar={() => setShowCalendarModal(true)}
-          onGoHome={() => setTab('home')}
+          onBack={handleBack}
         />
 
       {/* Main Content */}
@@ -976,13 +1023,6 @@ function AppContent() {
 
       {/* Mobile jump nav */}
       <div className="xl:hidden fixed bottom-0 left-0 right-0 bg-[#FFFFFF]/95 dark:bg-[#141B22]/95 backdrop-blur border-t border-[#E6E0D6] dark:border-[#2C3847] p-2 flex gap-1 overflow-x-auto z-40">
-        <button
-          onClick={() => { setTab('home'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-          className="whitespace-nowrap font-mono text-[10px] px-2.5 py-1.5 rounded border uppercase bg-[#FAF8F4] dark:bg-[#1A222B] border-[#D2C9BA] dark:border-[#2C3847] text-[#2C6E9B] font-bold flex items-center gap-1 shadow-sm"
-        >
-          <Home size={11} />
-          <span>Home</span>
-        </button>
         {TABS.map(t => (
           <button key={t.id} onClick={() => { setTab(t.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`whitespace-nowrap font-mono text-[10px] px-3 py-1.5 rounded border uppercase transition-colors ${tab === t.id ? 'bg-[#2C6E9B] border-[#2C6E9B] text-[#FFFFFF]' : 'bg-[#E6E0D6] dark:bg-[#1A222B] border-[#D2C9BA] dark:border-[#2C3847] text-[#3E4650] dark:text-[#C5BCAD] hover:bg-[#D2C9BA]'}`}>{t.label}</button>
         ))}

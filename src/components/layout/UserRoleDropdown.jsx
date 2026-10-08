@@ -6,14 +6,13 @@ import {
   BarChart3, 
   Microscope, 
   Check, 
-  Home, 
   Shield, 
   UserCheck 
 } from 'lucide-react';
 import { useAuth, ROLES } from '../../context/AuthContext';
 import { GoogleIcon } from '../auth/GoogleSignInModal';
 
-export function UserRoleDropdown({ onGoHome }) {
+export function UserRoleDropdown() {
   const { user, isAuthenticated, signOut, switchRole, roleConfig, openSignInModal } = useAuth();
   const [open, setOpen] = useState(false);
   const menuRef = useRef(null);
@@ -137,22 +136,8 @@ export function UserRoleDropdown({ onGoHome }) {
             </div>
           </div>
 
-          {/* Navigation Links */}
+          {/* Account Actions */}
           <div className="p-1">
-            {onGoHome && (
-              <button
-                type="button"
-                onClick={() => {
-                  onGoHome();
-                  setOpen(false);
-                }}
-                className="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-[11px] font-mono text-[#554D42] dark:text-[#C5BCAD] hover:bg-[#F1EDE6] dark:hover:bg-[#141B22] transition-colors"
-              >
-                <Home size={13} className="text-[#2C6E9B]" />
-                <span>Return to Home Portal</span>
-              </button>
-            )}
-
             <button
               type="button"
               onClick={() => {

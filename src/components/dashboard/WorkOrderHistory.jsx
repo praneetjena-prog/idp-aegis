@@ -2,9 +2,13 @@ import React from 'react';
 import { Card, CardHeader, CardTitle } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
-import { Clock, Check, Wrench, FileText, CalendarDays } from 'lucide-react';
+import { Clock, Check, Wrench, FileText, CalendarDays, Lock } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const WorkOrderHistory = React.memo(({ workOrders, onExport, onClear, onOpenCalendar }) => {
+  const { user, permissions } = useAuth();
+  const role = user?.role || 'manager';
+
   const history = [
     { id: '8818', asset: 'AHU-02', title: 'Belt tension adjustment', status: 'completed', date: '2026-09-08', tech: 'M. Singh' },
     { id: '8819', asset: 'ELEC-E3', title: 'Phase imbalance correction L2', status: 'completed', date: '2026-09-09', tech: 'J. Rivera' },
@@ -23,16 +27,22 @@ export const WorkOrderHistory = React.memo(({ workOrders, onExport, onClear, onO
     <Card>
       <CardHeader>
         <CardTitle>Maintenance work orders</CardTitle>
-        <div className="flex gap-1.5 items-center">
+        <div className="flex gap-1.5 items-center flex-wrap">
           <Badge variant="neutral">{history.length} Total</Badge>
           <Button variant="secondary" size="xs" onClick={() => onExport('json')}><FileText size={10} className="mr-1" /> Export list</Button>
-          {onOpenCalendar && (
+          {onOpenCalendar && role === 'manager' && (
             <Button variant="outline" size="xs" onClick={onOpenCalendar} className="border-[#2C6E9B] text-[#2C6E9B] hover:bg-[#2C6E9B] hover:text-white">
               <CalendarDays size={10} className="mr-1" /> PM Calendar
             </Button>
           )}
-          {workOrders?.length > 0 && onClear && (
-            <Button variant="ghost" size="xs" onClick={onClear} title="Clear user dispatched work orders">Clear Dispatched</Button>
+          {role === 'auditor' ? (
+            <span className="font-mono text-[9px] text-[#B07B1C] bg-[#B07B1C]/10 px-2 py-0.5 rounded border border-[#B07B1C]/20 font-bold flex items-center gap-1">
+              <Lock size={9} /> Ledger Immutable
+            </span>
+          ) : (
+            workOrders?.length > 0 && onClear && role === 'manager' && (
+              <Button variant="ghost" size="xs" onClick={onClear} title="Clear user dispatched work orders">Clear Dispatched</Button>
+            )
           )}
         </div>
       </CardHeader>

@@ -142,21 +142,35 @@ export function GoogleSignInModal({ open, onClose, onSuccess }) {
             </div>
           </div>
 
-          {/* Optional Custom Google Account Input for Testing */}
-          <div className="pt-1">
-            <button
-              type="button"
-              onClick={() => setUseCustomAccount(!useCustomAccount)}
-              className="text-[11px] font-mono text-[#2C6E9B] hover:underline flex items-center gap-1"
-            >
-              <KeyRound size={12} />
-              <span>{useCustomAccount ? '− Use default role persona' : '+ Use custom Google email/name'}</span>
-            </button>
+          {/* Auth Engine Status & Setup Guide */}
+          <div className="p-3 rounded-lg bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] text-[11px] font-mono">
+            <div className="flex items-center justify-between">
+              <span className="flex items-center gap-1.5 font-bold text-[#1F2933] dark:text-[#FAF8F4]">
+                <span className={`w-2 h-2 rounded-full ${typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL ? 'bg-[#2E7D5B] animate-pulse' : 'bg-[#B07B1C]'}`} />
+                {typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL 
+                  ? 'Live Supabase OAuth Ready' 
+                  : 'Interactive Demo Sandbox'}
+              </span>
+              <button
+                type="button"
+                onClick={() => setUseCustomAccount(!useCustomAccount)}
+                className="text-[#2C6E9B] hover:underline flex items-center gap-1"
+              >
+                <KeyRound size={11} />
+                <span>{useCustomAccount ? 'Close Persona Form' : 'Custom Email'}</span>
+              </button>
+            </div>
+
+            {!(typeof import.meta !== 'undefined' && import.meta.env?.VITE_SUPABASE_URL) && (
+              <p className="mt-1.5 text-[10px] text-[#8A8175] leading-relaxed">
+                Running in zero-friction demo mode. To connect real <strong className="text-[#1F2933] dark:text-[#FAF8F4]">@organization.com</strong> Google accounts, configure <code className="bg-[#E6E0D6] dark:bg-[#2C3847] px-1 py-0.5 rounded">.env</code> using <code className="text-[#2C6E9B]">.env.example</code>.
+              </p>
+            )}
 
             {useCustomAccount && (
-              <div className="mt-2.5 p-3 rounded-lg bg-[#F1EDE6] dark:bg-[#141B22] border border-[#D2C9BA] dark:border-[#2C3847] space-y-2 animate-in fade-in">
+              <div className="mt-2.5 pt-2 border-t border-[#E6E0D6] dark:border-[#2C3847] space-y-2 animate-in fade-in">
                 <div>
-                  <label className="block font-mono text-[10px] text-[#8A8175] mb-1">Your Full Name</label>
+                  <label className="block text-[10px] text-[#8A8175] mb-1">Your Full Name</label>
                   <input
                     type="text"
                     placeholder="e.g. Alex Morgan"
@@ -166,7 +180,7 @@ export function GoogleSignInModal({ open, onClose, onSuccess }) {
                   />
                 </div>
                 <div>
-                  <label className="block font-mono text-[10px] text-[#8A8175] mb-1">Google / Facility Email</label>
+                  <label className="block text-[10px] text-[#8A8175] mb-1">Google / Facility Email</label>
                   <input
                     type="email"
                     placeholder="e.g. alex.morgan@facility.org"
@@ -180,7 +194,7 @@ export function GoogleSignInModal({ open, onClose, onSuccess }) {
           </div>
 
           {/* Primary Action Button: Sign in with Google */}
-          <div className="pt-2 space-y-2">
+          <div className="pt-1 space-y-2">
             <button
               type="button"
               onClick={handleSignIn}

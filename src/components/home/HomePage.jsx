@@ -49,6 +49,14 @@ export function HomePage({
     }
   };
 
+  const scrollToSection = (e, sectionId) => {
+    if (e && e.preventDefault) e.preventDefault();
+    const el = document.getElementById(sectionId);
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
   const features = [
     {
       id: 'console',
@@ -152,12 +160,31 @@ export function HomePage({
 
           {/* Center Navigation Anchors */}
           <nav className="hidden md:flex items-center gap-6 font-mono text-[11px] text-[#6E6558] dark:text-[#A0988A]">
-            <a href="#features" className="hover:text-[#1F2933] dark:hover:text-[#FAF8F4] transition-colors">Features</a>
-            <a href="#roles" className="hover:text-[#1F2933] dark:hover:text-[#FAF8F4] transition-colors">Roles (RBAC)</a>
-            <a href="#hardware" className="hover:text-[#1F2933] dark:hover:text-[#FAF8F4] transition-colors">Hardware BOM</a>
             <button 
+              type="button" 
+              onClick={(e) => scrollToSection(e, 'features')} 
+              className="hover:text-[#1F2933] dark:hover:text-[#FAF8F4] transition-colors cursor-pointer"
+            >
+              Features
+            </button>
+            <button 
+              type="button" 
+              onClick={(e) => scrollToSection(e, 'roles')} 
+              className="hover:text-[#1F2933] dark:hover:text-[#FAF8F4] transition-colors cursor-pointer"
+            >
+              Roles (RBAC)
+            </button>
+            <button 
+              type="button" 
+              onClick={(e) => scrollToSection(e, 'hardware')} 
+              className="hover:text-[#1F2933] dark:hover:text-[#FAF8F4] transition-colors cursor-pointer"
+            >
+              Hardware BOM
+            </button>
+            <button 
+              type="button"
               onClick={() => handleLaunchConsole('platform')} 
-              className="hover:text-[#1F2933] dark:hover:text-[#FAF8F4] transition-colors"
+              className="hover:text-[#1F2933] dark:hover:text-[#FAF8F4] transition-colors cursor-pointer"
             >
               Architecture
             </button>
@@ -266,12 +293,13 @@ export function HomePage({
                 <ArrowRight size={16} />
               </button>
 
-              <a
-                href="#features"
-                className="px-5 py-3 rounded-xl border-2 border-[#1F2933] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] font-display text-[14px] font-bold shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C] hover:bg-[#FAF8F4] dark:hover:bg-[#202B37] active:translate-x-[1px] active:translate-y-[1px] transition-all flex items-center gap-2"
+              <button
+                type="button"
+                onClick={(e) => scrollToSection(e, 'features')}
+                className="px-5 py-3 rounded-xl border-2 border-[#1F2933] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] font-display text-[14px] font-bold shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C] hover:bg-[#FAF8F4] dark:hover:bg-[#202B37] active:translate-x-[1px] active:translate-y-[1px] transition-all flex items-center gap-2 cursor-pointer"
               >
                 <span>Explore Features</span>
-              </a>
+              </button>
 
               <a
                 href="https://github.com/praneetjena-prog/idp-aegis"
@@ -372,7 +400,7 @@ export function HomePage({
       </section>
 
       {/* 4. Core System Features Grid */}
-      <section id="features" className="py-16 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="features" className="py-16 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-20">
         <div className="mb-12">
           <div className="font-mono text-[10px] uppercase tracking-wider font-bold text-[#8A8175] mb-2">
             System Modules & Routing
@@ -492,7 +520,7 @@ export function HomePage({
       </section>
 
       {/* 5. Role-Based Access Control (RBAC) Section */}
-      <section id="roles" className="py-16 sm:py-20 bg-[#FAF8F4] dark:bg-[#141B22] border-t border-b border-[#E6E0D6] dark:border-[#2C3847]">
+      <section id="roles" className="py-16 sm:py-20 bg-[#FAF8F4] dark:bg-[#141B22] border-t border-b border-[#E6E0D6] dark:border-[#2C3847] scroll-mt-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-3xl mb-12">
             <div className="font-mono text-[10px] uppercase tracking-wider font-bold text-[#8A8175] mb-2">
@@ -562,7 +590,7 @@ export function HomePage({
                         handleLaunchConsole('console');
                       }
                     }}
-                    className="mt-6 w-full py-2 px-3 rounded-lg border border-[#D2C9BA] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] text-[#1F2933] dark:text-[#FAF8F4] font-display text-[12px] font-bold hover:bg-[#2C6E9B] hover:text-white hover:border-[#2C6E9B] transition-all flex items-center justify-center gap-1.5"
+                    className="mt-6 w-full py-2 px-3 rounded-lg border border-[#D2C9BA] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] text-[#1F2933] dark:text-[#FAF8F4] font-display text-[12px] font-bold hover:bg-[#2C6E9B] hover:text-white hover:border-[#2C6E9B] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
                     <span>Sign In as {r.shortName}</span>
                     <ArrowRight size={13} />
@@ -575,7 +603,7 @@ export function HomePage({
       </section>
 
       {/* 6. Hardware BOM Summary Section */}
-      <section id="hardware" className="py-16 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="hardware" className="py-16 sm:py-20 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 scroll-mt-20">
         <div className="max-w-3xl mb-12">
           <div className="font-mono text-[10px] uppercase tracking-wider font-bold text-[#8A8175] mb-2">
             Open Electronics & Cost Breakdown

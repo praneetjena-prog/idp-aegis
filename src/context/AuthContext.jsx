@@ -67,7 +67,59 @@ export const ROLES = {
   }
 };
 
+export const ROLE_PERMISSIONS = {
+  technician: {
+    canDispatchWorkOrders: true,
+    canSignLOTO: true,
+    canPrintFieldSheet: true,
+    canScanQR: true,
+    canManageSchedules: false,
+    canEditThresholds: false,
+    canClearWorkOrders: false,
+    showMacroFinancialMetrics: false,
+    showIso10816Compliance: false,
+    showModelExplainability: false,
+    isReadOnly: false,
+    badgeTitle: 'FIELD TECHNICIAN • SAFETY & LOTO ENFORCEMENT',
+    bannerText: 'Field Technician Mode Active • Emphasizing physical checklists, LOTO zero-energy verification, and work order execution. Macro financial and energy metrics are hidden.',
+    focusArea: 'Checklists & LOTO'
+  },
+  manager: {
+    canDispatchWorkOrders: true,
+    canSignLOTO: true,
+    canPrintFieldSheet: true,
+    canScanQR: true,
+    canManageSchedules: true,
+    canEditThresholds: true,
+    canClearWorkOrders: true,
+    showMacroFinancialMetrics: true,
+    showIso10816Compliance: false,
+    showModelExplainability: true,
+    isReadOnly: false,
+    badgeTitle: 'OPERATIONS MANAGER • FLEET DISPATCH AUTHORITY',
+    bannerText: 'Operations Lead Mode Active • Full access to alert thresholds, automated PM scheduling, fleet-wide equipment status, and maintenance dispatch.',
+    focusArea: 'Fleet Telemetry & Dispatch'
+  },
+  auditor: {
+    canDispatchWorkOrders: false,
+    canSignLOTO: false,
+    canPrintFieldSheet: true,
+    canScanQR: true,
+    canManageSchedules: false,
+    canEditThresholds: false,
+    canClearWorkOrders: false,
+    showMacroFinancialMetrics: true,
+    showIso10816Compliance: true,
+    showModelExplainability: true,
+    isReadOnly: true,
+    badgeTitle: 'RELIABILITY AUDITOR • READ-ONLY COMPLIANCE & ISO 10816',
+    bannerText: 'Auditor Compliance Mode Active (Read-Only) • Mutation actions locked. Highlighting ISO 10816 Class II vibration severity zones, model explainability, and raw audit exports.',
+    focusArea: 'ISO 10816 Compliance & Audit'
+  }
+};
+
 const STORAGE_AUTH_KEY = 'aegis_auth_user';
+const STORAGE_PENDING_ROLE = 'aegis_pending_oauth_role';
 
 const AuthContext = createContext(null);
 
@@ -106,7 +158,8 @@ export function AuthProvider({ children }) {
       if (supabase?.auth?.onAuthStateChange) {
         const { data } = supabase.auth.onAuthStateChange((_event, session) => {
           if (session?.user) {
-            const role = user?.role || 'manager';
+            const pendingRole = window.localStorage.getItem(STORAGE_PENDING_ROLE);
+            const role = pendingRole || user?.role || 'manager';
             const roleDef = ROLES[role] || ROLES.manager;
             setUser({
               id: session.user.id,
@@ -117,6 +170,7 @@ export function AuthProvider({ children }) {
               provider: 'google',
               signedInAt: new Date().toISOString()
             });
+            window.localStorage.removeItem(STORAGE_PENDING_ROLE);
           }
         });
         subscription = data?.subscription;
@@ -146,6 +200,9 @@ export function AuthProvider({ children }) {
 
     if (hasLiveSupabase && !customProfile) {
       try {
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem(STORAGE_PENDING_ROLE, roleId);
+        }
         const { error } = await supabase.auth.signInWithOAuth({
           provider: 'google',
           options: {
@@ -209,11 +266,18 @@ export function AuthProvider({ children }) {
   }, []);
 
   const activeRoleConfig = ROLES[user?.role] || ROLES.manager;
+  const activePermissions = ROLE_PERMISSIONS[user?.role] || ROLE_PERMISSIONS.manager;
+
+  const hasPermission = useCallback((permKey) => {
+    return Boolean(activePermissions[permKey]);
+  }, [activePermissions]);
 
   const value = {
     user,
     role: user?.role || null,
     roleConfig: activeRoleConfig,
+    permissions: activePermissions,
+    hasPermission,
     isAuthenticated: Boolean(user),
     signInWithGoogle,
     signOut,
@@ -222,7 +286,8 @@ export function AuthProvider({ children }) {
     openSignInModal,
     closeSignInModal,
     intendedRoute,
-    ROLES
+    ROLES,
+    ROLE_PERMISSIONS
   };
 
   return (

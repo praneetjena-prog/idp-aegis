@@ -2,9 +2,13 @@ import React from 'react';
 import { Card } from '../ui/Card';
 import { Badge } from '../ui/Badge';
 import { Button } from '../ui/Button';
-import { AlertTriangle, Wrench, ClipboardList, Eye, FileText, Check } from 'lucide-react';
+import { AlertTriangle, Wrench, ClipboardList, Eye, FileText, Check, Lock } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 
 export const TriageQueue = ({ onCreateWorkOrder, onViewTelemetry, acknowledged, onAcknowledge, workOrders, onPrintFieldSheet }) => {
+  const { user, permissions } = useAuth();
+  const role = user?.role || 'manager';
+  const isReadOnly = permissions?.isReadOnly;
   return (
     <div className="space-y-3">
       {/* Urgent */}
@@ -64,17 +68,38 @@ export const TriageQueue = ({ onCreateWorkOrder, onViewTelemetry, acknowledged, 
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <Button variant="critical" onClick={() => onCreateWorkOrder('AHU-03', '8821')} className="col-span-2">
-                  <Wrench size={12} className="mr-1.5" /> Create Work Order #8821
-                </Button>
+                {isReadOnly ? (
+                  <Button 
+                    variant="outline" 
+                    disabled 
+                    className="col-span-2 border-[#B07B1C]/50 text-[#B07B1C] bg-[#B07B1C]/5 cursor-not-allowed opacity-90 text-[11px]"
+                  >
+                    <Lock size={12} className="mr-1.5" /> Read-Only Compliance • Dispatch Restricted to Operations Lead
+                  </Button>
+                ) : (
+                  <Button variant="critical" onClick={() => onCreateWorkOrder('AHU-03', '8821')} className="col-span-2">
+                    <Wrench size={12} className="mr-1.5" /> Create Work Order #8821
+                  </Button>
+                )}
                 <Button variant="secondary" onClick={onViewTelemetry}>
                   <Eye size={12} className="mr-1" /> View Trend Telemetry
                 </Button>
-                <Button variant="secondary" onClick={() => onAcknowledge('ahu03')}>
-                  {acknowledged.has('ahu03') ? <><Check size={12} className="mr-1" /> Acked</> : 'Acknowledge'}
-                </Button>
-                <Button variant="teal" size="sm" onClick={onPrintFieldSheet} className="col-span-2">
-                  <FileText size={12} className="mr-1.5" /> Print Field Sheet (PDF) • Checklist
+                {isReadOnly ? (
+                  <Button variant="ghost" disabled className="text-[#8A8175] cursor-not-allowed text-[11px]">
+                    <Check size={12} className="mr-1" /> Audit Observed
+                  </Button>
+                ) : (
+                  <Button variant="secondary" onClick={() => onAcknowledge('ahu03')}>
+                    {acknowledged.has('ahu03') ? <><Check size={12} className="mr-1" /> Acked</> : 'Acknowledge'}
+                  </Button>
+                )}
+                <Button 
+                  variant="teal" 
+                  size="sm" 
+                  onClick={onPrintFieldSheet} 
+                  className={`col-span-2 ${role === 'technician' ? 'ring-2 ring-[#2E7D5B]/40 font-bold' : ''}`}
+                >
+                  <FileText size={12} className="mr-1.5" /> Print Field Sheet (PDF) • Checklist {role === 'technician' ? '★ Priority' : ''}
                 </Button>
               </div>
               {workOrders.find(w=>w.asset==='AHU-03') && (
@@ -102,8 +127,14 @@ export const TriageQueue = ({ onCreateWorkOrder, onViewTelemetry, acknowledged, 
             <div className="mt-2 font-mono text-[10px] text-[#8A8175]">Diagnosis: Strainer basket partial clogging (84% probability). Action Window: Inspect during scheduled bi-weekly rounds • Tools: isolation valves, drain pan.</div>
           </div>
           <div className="flex gap-2 md:justify-end">
-            <Button variant="secondary" size="xs" onClick={() => onCreateWorkOrder('CW-Pump-02', '8822')}><ClipboardList size={10} className="mr-1" /> Work Order #8822</Button>
-            <Button variant="ghost" size="xs" onClick={() => onAcknowledge('cwp2')}>{acknowledged.has('cwp2') ? 'Acked' : 'Acknowledge'}</Button>
+            {isReadOnly ? (
+              <Button variant="secondary" size="xs" disabled className="opacity-60 cursor-not-allowed">
+                <Lock size={10} className="mr-1" /> WO Restricted
+              </Button>
+            ) : (
+              <Button variant="secondary" size="xs" onClick={() => onCreateWorkOrder('CW-Pump-02', '8822')}><ClipboardList size={10} className="mr-1" /> Work Order #8822</Button>
+            )}
+            <Button variant="ghost" size="xs" onClick={() => !isReadOnly && onAcknowledge('cwp2')}>{acknowledged.has('cwp2') ? 'Acked' : 'Acknowledge'}</Button>
           </div>
         </div>
       </Card>

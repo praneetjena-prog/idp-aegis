@@ -38,6 +38,8 @@ import { MaintenanceChecklist } from './components/workflow/MaintenanceChecklist
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { GoogleSignInModal } from './components/auth/GoogleSignInModal';
 import { HomePage } from './components/home/HomePage';
+import { RoleContextBanner } from './components/layout/RoleContextBanner';
+import { AuditorComplianceCard } from './components/analysis/AuditorComplianceCard';
 
 const SectionLabel = ({ k, title, id }) => (
   <div id={id} className="flex items-center gap-3 mb-4 scroll-mt-[112px]">
@@ -60,6 +62,9 @@ function parseHash() {
   const tabName = parts[0]?.toLowerCase();
   if (tabName === 'asset') {
     return { tab: 'asset', assetId: parts[1]?.toLowerCase() || 'ahu-03' };
+  }
+  if (['features', 'roles', 'hardware'].includes(tabName)) {
+    return { tab: 'home', assetId: 'ahu-03', scrollTo: tabName };
   }
   if (VALID_TABS.includes(tabName)) {
     return { tab: tabName, assetId: 'ahu-03' };
@@ -188,6 +193,13 @@ function AppContent() {
       } else if (!window.history.state?.initialized) {
         window.history.replaceState({ tab: 'home', initialized: true }, '', window.location.hash || '#home');
       }
+
+      if (currentParsed.scrollTo) {
+        setTimeout(() => {
+          const el = document.getElementById(currentParsed.scrollTo);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 150);
+      }
     }
 
     const onHistoryNavigation = () => {
@@ -195,6 +207,12 @@ function AppContent() {
       setTabState(parsed.tab);
       if (parsed.assetId) {
         setSelectedAssetId(parsed.assetId);
+      }
+      if (parsed.scrollTo) {
+        setTimeout(() => {
+          const el = document.getElementById(parsed.scrollTo);
+          if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
       }
     };
 
@@ -530,6 +548,17 @@ function AppContent() {
       {/* Main Content */}
       <div className="max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-5 py-4 space-y-5">
 
+        {tab !== 'home' && (
+          <RoleContextBanner
+            onPrintFieldSheet={() => setShowFieldSheet(true)}
+            onOpenQrTags={() => setShowQrModal(true)}
+            onOpenCalendar={() => setShowCalendarModal(true)}
+            onOpenSettings={() => setSettingsOpen(true)}
+            onExport={handleExport}
+            setTab={setTab}
+          />
+        )}
+
         <TabBar 
           tab={tab} 
           setTab={setTab} 
@@ -764,6 +793,7 @@ function AppContent() {
           <div ref={rootCauseRef} className="space-y-4 scroll-mt-[120px]">
             <SectionLabel k="06" title="Root Cause Inspector & Active Triage Queue" />
             <RootCauseInspector mode={effectiveFeedMode} />
+            <AuditorComplianceCard liveVibration={liveValues.vib} onExport={handleExport} />
             <TriageQueue
               onCreateWorkOrder={handleCreateWorkOrder}
               onViewTelemetry={handleViewTelemetry}

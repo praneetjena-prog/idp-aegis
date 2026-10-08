@@ -19,12 +19,14 @@ import {
   Thermometer, 
   Zap, 
   Droplets,
-  HelpCircle
+  HelpCircle,
+  Lock
 } from 'lucide-react';
 import { Button } from '../ui/Button';
 import { Badge } from '../ui/Badge';
 import { DEFAULT_PARAMS } from '@/lib/facility';
 import { getDeviceCredentials } from '@/lib/devices.functions';
+import { useAuth } from '../../context/AuthContext';
 
 const PRESETS = [
   {
@@ -100,6 +102,8 @@ const CopyRow = ({ label, value }) => {
 };
 
 export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, lastSeen }) => {
+  const { user, permissions, roleConfig } = useAuth();
+  const canEdit = Boolean(permissions?.canEditThresholds);
   const [draft, setDraft] = useState(params);
   const [tab, setTab] = useState('thresholds');
   const [device, setDevice] = useState(null);
@@ -154,9 +158,13 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
 
   if (!open) return null;
 
-  const set = (key, value) => setDraft(prev => ({ ...prev, [key]: value }));
+  const set = (key, value) => {
+    if (!canEdit) return;
+    setDraft(prev => ({ ...prev, [key]: value }));
+  };
 
   const applyPreset = (preset) => {
+    if (!canEdit) return;
     setActivePreset(preset.id);
     setDraft(prev => ({ ...prev, ...preset.values }));
   };
@@ -267,6 +275,12 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
           {/* TAB 1: SAFETY THRESHOLDS */}
           {tab === 'thresholds' && (
             <div className="space-y-5">
+              {!canEdit && (
+                <div className="p-3 rounded-lg bg-[#B07B1C]/10 border border-[#B07B1C]/30 text-[#B07B1C] font-mono text-[11px] flex items-center gap-2">
+                  <Lock size={14} className="shrink-0" />
+                  <span>Threshold editing is locked to Operations Lead. Viewing in read-only audit mode as {roleConfig?.shortName || 'User'}.</span>
+                </div>
+              )}
               
               {/* Quick Presets Banner */}
               <div className="bg-[#FFFFFF] dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg p-3.5 shadow-sm">
@@ -623,6 +637,7 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
             variant="ghost" 
             size="sm"
             onClick={() => setDraft(DEFAULT_PARAMS)}
+            disabled={!canEdit}
           >
             <RotateCcw size={12} className="mr-1.5" /> Reset Defaults
           </Button>
@@ -638,13 +653,13 @@ export const SettingsPanel = ({ open, onClose, params, onSave, saving, isLive, l
             <Button 
               variant="primary" 
               size="sm"
-              disabled={saving} 
+              disabled={saving || !canEdit} 
               onClick={async () => { 
                 await onSave(draft); 
                 onClose(); 
               }}
             >
-              <Save size={12} className="mr-1.5" /> {saving ? 'Saving…' : 'Save Configuration'}
+              <Save size={12} className="mr-1.5" /> {saving ? 'Saving…' : (!canEdit ? 'Read-Only (Locked)' : 'Save Configuration')}
             </Button>
           </div>
         </div>

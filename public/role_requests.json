@@ -1,0 +1,41 @@
+{
+  "devanshmishra3108@gmail.com": {
+    "id": 8,
+    "email": "devanshmishra3108@gmail.com",
+    "name": "Devansh",
+    "requested_role": "technician",
+    "facility_id": "FACILITY-01",
+    "status": "approved",
+    "created_at": "2026-10-13T20:31:05.544303",
+    "reviewed_at": "2026-10-13T20:31:35.708399"
+  },
+  "pending.manager@facility.org": {
+    "id": 22,
+    "email": "pending.manager@facility.org",
+    "name": "Pending Manager",
+    "requested_role": "manager",
+    "facility_id": "FACILITY-02",
+    "status": "approved",
+    "created_at": "2026-10-14T21:10:57.324270",
+    "reviewed_at": "2026-10-14T21:10:57.341357"
+  },
+  "rejected.user@facility.org": {
+    "id": 23,
+    "email": "rejected.user@facility.org",
+    "name": "rejected.user",
+    "requested_role": "auditor",
+    "facility_id": "FACILITY-01",
+    "status": "rejected",
+    "created_at": "2026-10-14T21:10:57.362950",
+    "reviewed_at": "2026-10-14T21:10:57.376100"
+  },
+  "applicant.tech@facility.org": {
+    "id": 11,
+    "email": "applicant.tech@facility.org",
+    "name": "Applicant Tech",
+    "requested_role": "technician",
+    "facility_id": "FACILITY-01",
+    "status": "pending",
+    "created_at": "2026-10-14T21:10:57.407810"
+  }
+}

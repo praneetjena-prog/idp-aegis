@@ -1,0 +1,22 @@
+{
+  "test.admin@aegis.org": {
+    "role": "manager",
+    "facility_id": "FACILITY-01",
+    "updated_at": "2026-10-13T19:20:27"
+  },
+  "technician.user@facility.org": {
+    "role": "technician",
+    "facility_id": "FACILITY-01",
+    "updated_at": "2026-10-14T21:10:57.278100"
+  },
+  "pending.manager@facility.org": {
+    "role": "manager",
+    "facility_id": "FACILITY-02",
+    "updated_at": "2026-10-14T21:10:57.341357"
+  },
+  "devanshmishra3108@gmail.com": {
+    "role": "technician",
+    "facility_id": "FACILITY-01",
+    "updated_at": "2026-10-13T20:31:35.708399"
+  }
+}

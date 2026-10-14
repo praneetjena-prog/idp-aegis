@@ -2,101 +2,142 @@ import React from 'react';
 import { Gauge } from '../ui/Gauge';
 import { Card } from '../ui/Card';
 import { useAuth } from '../../context/AuthContext';
+import { AlertTriangle, CheckCircle2, Shield, Wrench, Clock, Activity } from 'lucide-react';
 
-export const FacilityHealth = ({ mode }) => {
-  const { user, permissions } = useAuth();
+export const FacilityHealth = ({ mode, onInspectAlert, onCreateWorkOrder, isDispatched }) => {
+  const { user } = useAuth();
   const role = user?.role || 'manager';
-  const health = mode === 'fault' ? 74 : 87;
+  const isFault = mode === 'fault';
+  const health = isFault ? 74 : 91;
 
   return (
-    <Card>
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-4 pb-3 border-b border-[#E6E0D6] dark:border-[#2C3847]">
+    <div className="bg-[#FFFFFF] dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] rounded-xl p-5 shadow-xs transition-colors">
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 pb-4 border-b border-[#E6E0D6] dark:border-[#2C3847]">
         <div>
-          <h2 className="font-display text-[15px] font-semibold text-[#1F2933] dark:text-[#FAF8F4]">Facility health</h2>
-          <p className="mt-1 text-[11px] text-[#6E6558] dark:text-[#A0988A]">
-            {role === 'technician' 
-              ? 'Field operational status, active machine work orders, and safety readiness.' 
-              : role === 'auditor'
-              ? 'ISO 10816 compliance status, vibration severity metrics, and fleet uptime.'
-              : 'A quick view of equipment condition, energy use, and upcoming risk.'}
+          <div className="flex items-center gap-2">
+            <h2 className="font-display text-[17px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">
+              Facility Health & Condition Index
+            </h2>
+            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold border ${
+              isFault 
+                ? 'bg-[#C05043]/10 border-[#C05043]/30 text-[#C05043]' 
+                : 'bg-[#2E7D5B]/10 border-[#2E7D5B]/30 text-[#2E7D5B]'
+            }`}>
+              {isFault ? <AlertTriangle size={11} /> : <CheckCircle2 size={11} />}
+              {isFault ? 'Attention Required (AHU-03)' : 'All 38 Units Nominal'}
+            </span>
+          </div>
+          <p className="mt-1 text-[12px] text-[#6E6558] dark:text-[#A0988A] leading-relaxed">
+            {isFault
+              ? 'Multi-parameter anomaly detected on Air Handler AHU-03 supply fan. Other 37 campus machines operating within nominal ISO baseline.'
+              : 'Fleet vibration velocity, phase currents, and bearing temperatures are balanced across all 5 monitored campus subsystems.'}
           </p>
         </div>
-        <div className={`px-2.5 py-1 border font-display text-[11px] font-semibold ${mode === 'fault' ? 'bg-[#C05043]/10 border-[#C05043]/20 text-[#C05043]' : 'bg-[#2E7D5B]/10 border-[#2E7D5B]/20 text-[#2E7D5B]'}`}>
-          {mode === 'fault' ? '2 items need attention' : 'Facility operating normally'}
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="text-[11px] font-mono text-[#8A8175]">Target Baseline: &gt; 85%</span>
         </div>
       </div>
-      <div className="flex flex-col lg:flex-row items-start gap-6">
-        <Gauge value={health} delta={mode==='fault' ? '-4.2%' : '+2.1%'} />
-        <div className="flex-1 w-full">
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="bg-[#F1EDE6] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg p-3">
-              <div className="text-[11px] text-[#6E6558] dark:text-[#A0988A] mb-1">Equipment</div>
-              <div className="flex items-baseline gap-1.5">
-                <span className="font-mono text-[18px] font-bold text-[#2E7D5B]">{mode==='fault' ? '31' : '34'}</span>
-                <span className="font-mono text-[11px] text-[#6E6558] dark:text-[#A0988A]">Nominal</span>
+
+      <div className="mt-5 grid grid-cols-1 md:grid-cols-12 gap-5 items-center">
+        {/* Left: Overall Health Gauge */}
+        <div className="md:col-span-4 lg:col-span-3 flex justify-center py-1">
+          <Gauge value={health} delta={isFault ? '-4.2% (7D)' : '+2.1% (7D)'} />
+        </div>
+
+        {/* Right: Operational KPI Grid */}
+        <div className="md:col-span-8 lg:col-span-9 space-y-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <div className="p-3 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
+              <div className="text-[10px] font-mono uppercase font-bold text-[#8A8175] flex items-center justify-between">
+                <span>Equipment</span>
+                <Activity size={12} className="text-[#2C6E9B]" />
               </div>
-              <div className="mt-1 flex gap-2 font-mono text-[10px]">
-                <span className="text-[#B07B1C]">{mode==='fault' ? '5 Advisory' : '3 Advisory'}</span>
-                <span className="text-[#C05043]">{mode==='fault' ? '2 Critical' : '1 Critical'}</span>
+              <div className="mt-1.5 flex items-baseline gap-1.5">
+                <span className="font-mono text-[20px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">
+                  {isFault ? '37/38' : '38/38'}
+                </span>
+                <span className="text-[10px] font-mono text-[#2E7D5B] font-semibold">Running</span>
+              </div>
+              <div className="mt-1 text-[10px] font-mono text-[#8A8175]">
+                {isFault ? '1 Unit Advisory' : '0 Offline'}
               </div>
             </div>
 
-            {/* Middle Card: Gated per Role */}
-            {role === 'technician' ? (
-              <div className="bg-[#F1EDE6] dark:bg-[#141B22] border border-[#2E7D5B]/30 rounded-lg p-3">
-                <div className="text-[11px] text-[#6E6558] dark:text-[#A0988A] mb-1">Field Work Orders</div>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="font-mono text-[18px] font-bold text-[#2E7D5B]">{mode === 'fault' ? '2 Tasks' : '0 Pending'}</span>
-                  <span className="font-mono text-[11px] text-[#6E6558] dark:text-[#A0988A]">Ready</span>
-                </div>
-                <div className="mt-1 text-[10px] text-[#2E7D5B] font-mono">LOTO SOP-EL-03 Ready</div>
-                <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#2E7D5B]" style={{ width: mode === 'fault' ? '75%' : '15%' }} />
-                </div>
+            <div className="p-3 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
+              <div className="text-[10px] font-mono uppercase font-bold text-[#8A8175] flex items-center justify-between">
+                <span>Active Alerts</span>
+                <AlertTriangle size={12} className={isFault ? 'text-[#C05043]' : 'text-[#8A8175]'} />
               </div>
-            ) : role === 'auditor' ? (
-              <div className="bg-[#F1EDE6] dark:bg-[#141B22] border border-[#B07B1C]/30 rounded-lg p-3">
-                <div className="text-[11px] text-[#6E6558] dark:text-[#A0988A] mb-1">ISO 10816 Severity</div>
-                <div className="font-mono text-[12px] font-medium text-[#C05043]">{mode === 'fault' ? 'Zone C (6.8 mm/s)' : 'Zone A (1.2 mm/s)'}</div>
-                <div className="mt-1 text-[10px] text-[#B07B1C]">Class II Medium Machines</div>
-                <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#C05043]" style={{ width: mode === 'fault' ? '85%' : '20%' }} />
-                </div>
+              <div className="mt-1.5 flex items-baseline gap-1.5">
+                <span className={`font-mono text-[20px] font-bold ${isFault ? 'text-[#C05043]' : 'text-[#2E7D5B]'}`}>
+                  {isFault ? '1 Critical' : '0 Active'}
+                </span>
               </div>
-            ) : (
-              <div className="bg-[#F1EDE6] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg p-3">
-                <div className="text-[11px] text-[#6E6558] dark:text-[#A0988A] mb-1">Energy use</div>
-                <div className="font-mono text-[12px] font-medium text-[#B07B1C]">{mode==='fault' ? '12.4%' : '6.4%'} above expected</div>
-                <div className="mt-1 text-[10px] text-[#8A8175]">Inspect HVAC-E3</div>
-                <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#B07B1C]" style={{width: mode==='fault' ? '78%' : '64%'}} />
-                </div>
+              <div className="mt-1 text-[10px] font-mono text-[#8A8175]">
+                {isFault ? '1 Advisory (Strainer)' : 'Zero Alarm State'}
               </div>
-            )}
-            <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-3">
-              <div className="text-[11px] text-[#6E6558] mb-1">Uptime · last 30 days</div>
-              <div className="font-mono text-[18px] font-bold text-[#1F2933]">99.8%</div>
-              <div className="mt-1 text-[10px] text-[#2E7D5B]">94% of issues caught early</div>
+            </div>
+
+            <div className="p-3 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
+              <div className="text-[10px] font-mono uppercase font-bold text-[#8A8175] flex items-center justify-between">
+                <span>Work Orders</span>
+                <Wrench size={12} className="text-[#2C6E9B]" />
+              </div>
+              <div className="mt-1.5 flex items-baseline gap-1.5">
+                <span className="font-mono text-[20px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">
+                  {isDispatched ? '1 Dispatched' : isFault ? '1 Pending' : '0 Open'}
+                </span>
+              </div>
+              <div className="mt-1 text-[10px] font-mono text-[#8A8175]">
+                {isDispatched ? 'WO #8821 Active' : isFault ? 'WO #8821 Ready' : 'Routine Cycle'}
+              </div>
+            </div>
+
+            <div className="p-3 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
+              <div className="text-[10px] font-mono uppercase font-bold text-[#8A8175] flex items-center justify-between">
+                <span>Facility Uptime</span>
+                <Clock size={12} className="text-[#2E7D5B]" />
+              </div>
+              <div className="mt-1.5 flex items-baseline gap-1.5">
+                <span className="font-mono text-[20px] font-bold text-[#2E7D5B]">
+                  99.8%
+                </span>
+                <span className="text-[10px] font-mono text-[#8A8175]">30d</span>
+              </div>
+              <div className="mt-1 text-[10px] font-mono text-[#8A8175]">
+                94% issues caught early
+              </div>
             </div>
           </div>
-          <div className="space-y-2">
-            <div className="flex justify-between font-mono text-[10px] text-[#8A8175] uppercase">
-              <span>Expected risk over the next 14 days</span>
-              <span>{mode==='fault' ? 'Elevated' : 'Low'}</span>
+
+          {/* 14-Day Risk Horizon Projection */}
+          <div className="p-3 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg space-y-1.5">
+            <div className="flex justify-between items-center text-[10px] font-mono uppercase text-[#8A8175] font-semibold">
+              <span>Projected 14-Day Risk Horizon</span>
+              <span className={isFault ? 'text-[#C05043] font-bold' : 'text-[#2E7D5B] font-bold'}>
+                {isFault ? 'Elevated (Intervention in ~7 Days)' : 'Low Risk (Nominal Operation)'}
+              </span>
             </div>
-            <div className="h-1.5 bg-[#F1EDE6] border border-[#E6E0D6] rounded-full overflow-hidden flex">
-              <div className="h-full bg-[#2E7D5B]" style={{width: '60%'}} />
-              <div className="h-full bg-[#B07B1C]" style={{width: mode==='fault' ? '25%' : '15%'}} />
-              <div className="h-full bg-[#C05043]" style={{width: mode==='fault' ? '15%' : '5%'}} />
+            <div className="h-2 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden flex">
+              <div className="h-full bg-[#2E7D5B]" style={{ width: isFault ? '60%' : '88%' }} title="Nominal Equipment" />
+              <div className="h-full bg-[#B07B1C]" style={{ width: isFault ? '25%' : '9%' }} title="Advisory Attention" />
+              <div className="h-full bg-[#C05043]" style={{ width: isFault ? '15%' : '3%' }} title="Critical Risk" />
             </div>
-            <div className="flex gap-3 font-mono text-[9px] text-[#A99F90]">
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#2E7D5B]" />Nominal 60%</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#B07B1C]" />Advisory {mode==='fault' ? '25%' : '15%'}</span>
-              <span className="flex items-center gap-1"><span className="w-2 h-2 rounded-full bg-[#C05043]" />Critical {mode==='fault' ? '15%' : '5%'}</span>
+            <div className="flex items-center justify-between text-[9px] font-mono text-[#8A8175] pt-0.5">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#2E7D5B]" /> 60% Safe
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#B07B1C]" /> 25% Watch
+              </span>
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-[#C05043]" /> 15% Intervention Window
+              </span>
             </div>
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };

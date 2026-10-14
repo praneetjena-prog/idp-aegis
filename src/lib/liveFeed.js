@@ -1,16 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useEffect, useMemo, useRef, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 /** Metrics the ESP32 node reports, mapped to the console's short names. */
 export const METRIC_MAP = {
-  vibration: 'vib',
-  current: 'cur',
-  temperature: 'temp',
-  humidity: 'humidity',
-  flow: 'flow',
-  light: 'light',
-  gas: 'gas',
-  acoustic: 'acoustic',
+  vibration: "vib",
+  current: "cur",
+  temperature: "temp",
+  humidity: "humidity",
+  flow: "flow",
+  light: "light",
+  gas: "gas",
+  acoustic: "acoustic",
 };
 
 const STALE_MS = 90_000;
@@ -30,9 +30,9 @@ export function useLiveFeed(feedMode) {
   useEffect(() => {
     let cancelled = false;
     supabase
-      .from('sensor_readings')
-      .select('metric, value, unit, recorded_at')
-      .order('recorded_at', { ascending: false })
+      .from("sensor_readings")
+      .select("metric, value, unit, recorded_at")
+      .order("recorded_at", { ascending: false })
       .limit(200)
       .then(({ data }) => {
         if (cancelled || !data?.length) return;
@@ -44,7 +44,9 @@ export function useLiveFeed(feedMode) {
         setLastSeen(data[0].recorded_at);
         seenRef.current = data[0].recorded_at;
       });
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const [backendStatus, setBackendStatus] = useState(null);
@@ -56,30 +58,37 @@ export function useLiveFeed(feedMode) {
     let active = true;
     const checkFlask = async () => {
       try {
-        const url = window.location.port === '8080' ? '/api/latest' : 'http://127.0.0.1:5000/api/latest';
-        const res = await fetch(url, { 
-          headers: { 'Accept': 'application/json' },
-          signal: AbortSignal.timeout(1500) 
+        const url =
+          window.location.port === "8080" ? "/api/latest" : "http://127.0.0.1:5000/api/latest";
+        const res = await fetch(url, {
+          headers: { Accept: "application/json" },
+          signal: AbortSignal.timeout(1500),
         });
         if (!res.ok) return;
         const data = await res.json();
         if (!active || !data || data.message || data.error) return;
 
         const next = {};
-        if (data.vibration != null) next.vibration = { metric: 'vibration', value: data.vibration, unit: 'mm/s' };
-        if (data.current != null) next.current = { metric: 'current', value: data.current, unit: 'A' };
-        if (data.temperature != null) next.temperature = { metric: 'temperature', value: data.temperature, unit: '°C' };
-        if (data.humidity != null) next.humidity = { metric: 'humidity', value: data.humidity, unit: '%' };
-        if (data.flow != null) next.flow = { metric: 'flow', value: data.flow, unit: 'L/min' };
-        if (data.light != null) next.light = { metric: 'light', value: data.light, unit: 'lux' };
-        if (data.gas != null) next.gas = { metric: 'gas', value: data.gas, unit: 'ppm' };
+        if (data.vibration != null)
+          next.vibration = { metric: "vibration", value: data.vibration, unit: "mm/s" };
+        if (data.current != null)
+          next.current = { metric: "current", value: data.current, unit: "A" };
+        if (data.temperature != null)
+          next.temperature = { metric: "temperature", value: data.temperature, unit: "°C" };
+        if (data.humidity != null)
+          next.humidity = { metric: "humidity", value: data.humidity, unit: "%" };
+        if (data.flow != null) next.flow = { metric: "flow", value: data.flow, unit: "L/min" };
+        if (data.light != null) next.light = { metric: "light", value: data.light, unit: "lux" };
+        if (data.gas != null) next.gas = { metric: "gas", value: data.gas, unit: "ppm" };
 
-        setReadings(prev => ({ ...prev, ...next }));
+        setReadings((prev) => ({ ...prev, ...next }));
         if (data.status) setBackendStatus(data.status);
         if (data.anomalies) setBackendAnomalies(data.anomalies);
         if (data.id) setRecordCount(data.id);
 
-        const ts = data.timestamp ? new Date(data.timestamp).toISOString() : new Date().toISOString();
+        const ts = data.timestamp
+          ? new Date(data.timestamp).toISOString()
+          : new Date().toISOString();
         setLastSeen(ts);
         seenRef.current = ts;
       } catch {
@@ -98,38 +107,45 @@ export function useLiveFeed(feedMode) {
   // Live stream of new readings.
   useEffect(() => {
     const channel = supabase
-      .channel('sensor-readings-live')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sensor_readings' }, (payload) => {
-        const row = payload.new;
-        setReadings(prev => ({ ...prev, [row.metric]: row }));
-        setLastSeen(row.recorded_at);
-        seenRef.current = row.recorded_at;
-      })
+      .channel("sensor-readings-live")
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "sensor_readings" },
+        (payload) => {
+          const row = payload.new;
+          setReadings((prev) => ({ ...prev, [row.metric]: row }));
+          setLastSeen(row.recorded_at);
+          seenRef.current = row.recorded_at;
+        },
+      )
       .subscribe();
-    return () => { supabase.removeChannel(channel); };
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   // Demonstration feed, used while no hardware is reporting.
   useEffect(() => {
-    const generateDemo = (mode) => (mode === 'fault'
-      ? {
-          vib: +(6.5 + Math.random() * 0.7).toFixed(1),
-          cur: +(17.2 + Math.random() * 0.9).toFixed(1),
-          temp: +(70 + Math.random() * 4).toFixed(1),
-          acoustic: Math.floor(10 + Math.random() * 5),
-        }
-      : {
-          vib: +(2.0 + Math.random() * 0.4).toFixed(1),
-          cur: +(14.0 + Math.random() * 0.4).toFixed(1),
-          temp: +(53 + Math.random() * 2.5).toFixed(1),
-          acoustic: Math.floor(Math.random() * 3),
-        });
+    const generateDemo = (mode) =>
+      mode === "fault"
+        ? {
+            vib: +(6.5 + Math.random() * 0.7).toFixed(1),
+            cur: +(17.2 + Math.random() * 0.9).toFixed(1),
+            temp: +(70 + Math.random() * 4).toFixed(1),
+            acoustic: Math.floor(10 + Math.random() * 5),
+          }
+        : {
+            vib: +(2.0 + Math.random() * 0.4).toFixed(1),
+            cur: +(14.0 + Math.random() * 0.4).toFixed(1),
+            temp: +(53 + Math.random() * 2.5).toFixed(1),
+            acoustic: Math.floor(Math.random() * 3),
+          };
 
     // Immediately reflect new mode baseline without waiting for the 1.8s tick
     setDemo(generateDemo(feedMode));
 
     const iv = setInterval(() => {
-      forceTick(t => t + 1);
+      forceTick((t) => t + 1);
       setDemo(generateDemo(feedMode));
     }, 1800);
     return () => clearInterval(iv);
@@ -144,25 +160,25 @@ export function useLiveFeed(feedMode) {
       return row ? +Number(row.value).toFixed(1) : fallback;
     };
     return {
-      vib: pick('vibration', demo.vib),
-      cur: pick('current', demo.cur),
-      temp: pick('temperature', demo.temp),
-      acoustic: pick('acoustic', demo.acoustic),
-      humidity: pick('humidity', null),
-      flow: pick('flow', null),
-      light: pick('light', null),
-      gas: pick('gas', null),
+      vib: pick("vibration", demo.vib),
+      cur: pick("current", demo.cur),
+      temp: pick("temperature", demo.temp),
+      acoustic: pick("acoustic", demo.acoustic),
+      humidity: pick("humidity", null),
+      flow: pick("flow", null),
+      light: pick("light", null),
+      gas: pick("gas", null),
     };
   }, [isLive, readings, demo]);
 
-  return { 
-    values, 
-    isLive, 
-    lastSeen, 
-    readings, 
-    source: isLive ? 'hardware' : 'demonstration',
+  return {
+    values,
+    isLive,
+    lastSeen,
+    readings,
+    source: isLive ? "hardware" : "demonstration",
     backendStatus,
     backendAnomalies,
-    recordCount
+    recordCount,
   };
 }

@@ -144,8 +144,12 @@ export const INITIAL_PM_TASKS = [
 ];
 
 export function generateIcsFile(task) {
-  const start = task.date.replace(/-/g, '') + 'T' + task.startTime.replace(/:/g, '') + '00Z';
-  const end = task.date.replace(/-/g, '') + 'T' + task.endTime.replace(/:/g, '') + '00Z';
+  if (!task) return;
+  const dateStr = String(task.date || '2026-10-14');
+  const startTimeStr = String(task.startTime || '08:00');
+  const endTimeStr = String(task.endTime || '10:00');
+  const start = dateStr.replace(/-/g, '') + 'T' + startTimeStr.replace(/:/g, '') + '00Z';
+  const end = dateStr.replace(/-/g, '') + 'T' + endTimeStr.replace(/:/g, '') + '00Z';
   const now = new Date().toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
   
   const ics = [
@@ -155,13 +159,13 @@ export function generateIcsFile(task) {
     'CALSCALE:GREGORIAN',
     'METHOD:PUBLISH',
     'BEGIN:VEVENT',
-    `UID:aegis-pm-${task.id}-${Date.now()}@aegis-open`,
+    `UID:aegis-pm-${task.id || 'unknown'}-${Date.now()}@aegis-open`,
     `DTSTAMP:${now}`,
     `DTSTART:${start}`,
     `DTEND:${end}`,
-    `SUMMARY:Aegis PM: ${task.assetCode} • ${task.title}`,
-    `DESCRIPTION:Asset: ${task.assetCode} (${task.subsystem})\\nLocation: ${task.location}\\nAssigned Technician: ${task.tech}\\nPriority: ${task.priority.toUpperCase()}\\nSOP: ${task.sop}\\nRequired Spare Parts: ${task.parts}\\nContext: ${task.windowReason}\\nPassport: https://praneetjena-prog.github.io/idp-aegis/#asset/${task.assetId}`,
-    `LOCATION:${task.location}, Campus Unit 01`,
+    `SUMMARY:Aegis PM: ${task.assetCode || 'EQUIP'} • ${task.title || 'Maintenance'}`,
+    `DESCRIPTION:Asset: ${task.assetCode || 'EQUIP'} (${task.subsystem || 'Facility'})\\nLocation: ${task.location || 'Facility'}\\nAssigned Technician: ${task.tech || 'Assigned Tech'}\\nPriority: ${String(task.priority || 'nominal').toUpperCase()}\\nSOP: ${task.sop || 'Standard SOP'}\\nRequired Spare Parts: ${task.parts || 'N/A'}\\nContext: ${task.windowReason || 'Scheduled window'}\\nPassport: https://praneetjena-prog.github.io/idp-aegis/#asset/${task.assetId || 'ahu-03'}`,
+    `LOCATION:${task.location || 'Facility'}, Campus Unit 01`,
     'STATUS:CONFIRMED',
     `PRIORITY:${task.priority === 'critical' ? '1' : '3'}`,
     'END:VEVENT',
@@ -172,7 +176,7 @@ export function generateIcsFile(task) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `aegis-pm-${task.assetCode.toLowerCase()}-${task.date}.ics`;
+  a.download = `aegis-pm-${String(task.assetCode || 'task').toLowerCase()}-${dateStr}.ics`;
   document.body.appendChild(a);
   a.click();
   document.body.removeChild(a);
@@ -180,20 +184,54 @@ export function generateIcsFile(task) {
 }
 
 export function getGoogleCalendarUrl(task) {
-  const start = task.date.replace(/-/g, '') + 'T' + task.startTime.replace(/:/g, '') + '00Z';
-  const end = task.date.replace(/-/g, '') + 'T' + task.endTime.replace(/:/g, '') + '00Z';
-  const title = encodeURIComponent(`Aegis PM: ${task.assetCode} • ${task.title}`);
+  if (!task) return '#';
+  const dateStr = String(task.date || '2026-10-14');
+  const startTimeStr = String(task.startTime || '08:00');
+  const endTimeStr = String(task.endTime || '10:00');
+  const start = dateStr.replace(/-/g, '') + 'T' + startTimeStr.replace(/:/g, '') + '00Z';
+  const end = dateStr.replace(/-/g, '') + 'T' + endTimeStr.replace(/:/g, '') + '00Z';
+  const title = encodeURIComponent(`Aegis PM: ${task.assetCode || 'EQUIP'} • ${task.title || 'Maintenance'}`);
   const details = encodeURIComponent(
-    `Asset: ${task.assetCode} (${task.subsystem})\n` +
-    `Location: ${task.location}\n` +
-    `Technician: ${task.tech}\n` +
-    `SOP: ${task.sop}\n` +
-    `Required Parts: ${task.parts}\n` +
-    `Window Context: ${task.windowReason}\n` +
-    `Direct QR Passport: https://praneetjena-prog.github.io/idp-aegis/#asset/${task.assetId}`
+    `Asset: ${task.assetCode || 'EQUIP'} (${task.subsystem || 'Facility'})\n` +
+    `Location: ${task.location || 'Facility'}\n` +
+    `Technician: ${task.tech || 'Assigned Tech'}\n` +
+    `SOP: ${task.sop || 'Standard SOP'}\n` +
+    `Required Parts: ${task.parts || 'N/A'}\n` +
+    `Window Context: ${task.windowReason || 'Scheduled window'}\n` +
+    `Direct QR Passport: https://praneetjena-prog.github.io/idp-aegis/#asset/${task.assetId || 'ahu-03'}`
   );
-  const location = encodeURIComponent(`${task.location}, Campus Facility Unit 01`);
+  const location = encodeURIComponent(`${task.location || 'Facility'}, Campus Facility Unit 01`);
   return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${start}/${end}&details=${details}&location=${location}`;
+}
+
+export function exportScheduleCsv(tasksList) {
+  const headers = ['TASK_ID', 'DATE', 'START_TIME', 'END_TIME', 'ASSET_CODE', 'TITLE', 'SUBSYSTEM', 'PRIORITY', 'STATUS', 'TECHNICIAN', 'LOCATION', 'PARTS', 'SOP', 'REASON'];
+  const rows = tasksList.map(t => [
+    t.id,
+    t.date,
+    t.startTime,
+    t.endTime,
+    t.assetCode,
+    `"${t.title.replace(/"/g, '""')}"`,
+    `"${t.subsystem}"`,
+    t.priority,
+    t.status,
+    `"${t.tech}"`,
+    `"${t.location}"`,
+    `"${t.parts}"`,
+    `"${t.sop}"`,
+    `"${t.windowReason.replace(/"/g, '""')}"`
+  ]);
+  const csvContent = [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `aegis-pm-schedule-${Date.now()}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 2000);
 }
 
 export const MaintenanceScheduler = ({
@@ -216,6 +254,12 @@ export const MaintenanceScheduler = ({
   const [filterType, setFilterType] = useState('all'); // 'all' | 'predictive' | 'preventive' | 'completed'
   const [selectedDay, setSelectedDay] = useState(null);
   const [showAddModal, setShowAddModal] = useState(false);
+
+  // Rescheduling modal state
+  const [rescheduleTask, setRescheduleTask] = useState(null);
+  const [rescheduleDate, setRescheduleDate] = useState('');
+  const [rescheduleStartTime, setRescheduleStartTime] = useState('');
+  const [rescheduleEndTime, setRescheduleEndTime] = useState('');
   
   // Custom new task form state
   const [newAssetId, setNewAssetId] = useState('ahu-03');
@@ -312,6 +356,39 @@ export const MaintenanceScheduler = ({
     if (showToast) showToast('✓ Downloading iCal (.ics) events for all scheduled PMs');
   };
 
+  const handleExportCsv = () => {
+    exportScheduleCsv(filteredTasks);
+    if (showToast) showToast(`✓ Exported ${filteredTasks.length} PM tasks to CSV`);
+  };
+
+  const handleOpenReschedule = (task) => {
+    setRescheduleTask(task);
+    setRescheduleDate(task.date);
+    setRescheduleStartTime(task.startTime);
+    setRescheduleEndTime(task.endTime);
+  };
+
+  const handleSaveReschedule = (e) => {
+    e.preventDefault();
+    if (!rescheduleTask) return;
+    setTasks(prev => prev.map(t => {
+      if (t.id === rescheduleTask.id) {
+        return {
+          ...t,
+          date: rescheduleDate || t.date,
+          startTime: rescheduleStartTime || t.startTime,
+          endTime: rescheduleEndTime || t.endTime,
+          windowReason: `Rescheduled to ${rescheduleDate} (${rescheduleStartTime}–${rescheduleEndTime})`
+        };
+      }
+      return t;
+    }));
+    if (showToast) {
+      showToast(`✓ Rescheduled ${rescheduleTask.assetCode} PM to ${rescheduleDate} (${rescheduleStartTime})`);
+    }
+    setRescheduleTask(null);
+  };
+
   // KPI Calculations
   const totalTasks = tasks.length;
   const completedTasks = tasks.filter(t => t.status === 'completed').length;
@@ -385,6 +462,17 @@ export const MaintenanceScheduler = ({
             >
               <Download size={12} />
               <span>Sync All (.ics)</span>
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCsv}
+              className="flex items-center gap-1.5"
+              title="Download full preventive maintenance schedule as CSV"
+            >
+              <FileSpreadsheet size={12} className="text-[#2E7D5B]" />
+              <span>Export CSV</span>
             </Button>
 
             <Button
@@ -464,31 +552,31 @@ export const MaintenanceScheduler = ({
             onClick={() => { setViewMode('calendar'); setSelectedDay(null); }}
             className={`flex items-center gap-1.5 px-3 py-1 rounded font-mono text-[11px] font-bold uppercase transition-all ${
               viewMode === 'calendar'
-                ? 'bg-[#2C6E9B] text-white shadow-sm'
+                ? 'bg-[#2C6E9B] text-white shadow-xs'
                 : 'text-[#6E6558] dark:text-[#C5BCAD] hover:text-[#1F2933]'
             }`}
           >
             <CalendarDays size={13} />
-            <span>Month Grid</span>
+            <span>Calendar View</span>
           </button>
           <button
             type="button"
             onClick={() => setViewMode('timeline')}
             className={`flex items-center gap-1.5 px-3 py-1 rounded font-mono text-[11px] font-bold uppercase transition-all ${
               viewMode === 'timeline'
-                ? 'bg-[#2C6E9B] text-white shadow-sm'
+                ? 'bg-[#2C6E9B] text-white shadow-xs'
                 : 'text-[#6E6558] dark:text-[#C5BCAD] hover:text-[#1F2933]'
             }`}
           >
             <ListFilter size={13} />
-            <span>Timeline</span>
+            <span>Agenda / List View</span>
           </button>
           <button
             type="button"
             onClick={() => setViewMode('roster')}
             className={`flex items-center gap-1.5 px-3 py-1 rounded font-mono text-[11px] font-bold uppercase transition-all ${
               viewMode === 'roster'
-                ? 'bg-[#2C6E9B] text-white shadow-sm'
+                ? 'bg-[#2C6E9B] text-white shadow-xs'
                 : 'text-[#6E6558] dark:text-[#C5BCAD] hover:text-[#1F2933]'
             }`}
           >
@@ -788,15 +876,26 @@ export const MaintenanceScheduler = ({
                       )}
                     </div>
 
-                    {/* Status Toggle Button */}
-                    <Button
-                      variant={isDone ? 'secondary' : 'teal'}
-                      size="xs"
-                      onClick={() => toggleTaskStatus(t.id)}
-                    >
-                      <CheckCircle2 size={12} className="mr-1" />
-                      <span>{isDone ? 'Undo Close' : 'Sign Off PM'}</span>
-                    </Button>
+                    <div className="flex items-center gap-1.5">
+                      {!isDone && (
+                        <button
+                          type="button"
+                          onClick={() => handleOpenReschedule(t)}
+                          className="px-2 py-1 rounded border border-[#D2C9BA] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] font-mono text-[10px] font-semibold text-[#6E6558] dark:text-[#A0988A] hover:border-[#2C6E9B] hover:text-[#2C6E9B] transition-all"
+                        >
+                          Reschedule
+                        </button>
+                      )}
+                      {/* Status Toggle Button */}
+                      <Button
+                        variant={isDone ? 'secondary' : 'teal'}
+                        size="xs"
+                        onClick={() => toggleTaskStatus(t.id)}
+                      >
+                        <CheckCircle2 size={12} className="mr-1" />
+                        <span>{isDone ? 'Undo Close' : 'Sign Off PM'}</span>
+                      </Button>
+                    </div>
                   </div>
                 </div>
               );
@@ -949,6 +1048,101 @@ export const MaintenanceScheduler = ({
           </div>
         </div>
       )}
+
+      {/* 6. Reschedule Task Dialog */}
+      {rescheduleTask && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in">
+          <div className="bg-white dark:bg-[#1A222B] border-2 border-[#1F2933] dark:border-[#2C3847] rounded-xl shadow-2xl w-full max-w-md overflow-hidden animate-in zoom-in-95">
+            <div className="p-4 border-b border-[#E6E0D6] dark:border-[#2C3847] flex items-center justify-between bg-[#FAF8F4] dark:bg-[#141B22]">
+              <div className="flex items-center gap-2">
+                <Clock size={16} className="text-[#2C6E9B]" />
+                <h3 className="font-display text-[14px] font-bold uppercase text-[#1F2933] dark:text-[#FAF8F4]">
+                  Reschedule PM Window &bull; {rescheduleTask.assetCode}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRescheduleTask(null)}
+                className="text-[#8A8175] hover:text-[#1F2933] dark:hover:text-white"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveReschedule} className="p-4 space-y-3 font-mono text-[11px]">
+              <div>
+                <span className="text-[10px] text-[#8A8175] block uppercase font-bold">Task:</span>
+                <span className="font-bold text-[#1F2933] dark:text-[#FAF8F4]">{rescheduleTask.title}</span>
+              </div>
+              <div>
+                <label className="block text-[#8A8175] uppercase text-[9px] font-bold mb-1">
+                  New Scheduled Date
+                </label>
+                <input
+                  type="date"
+                  value={rescheduleDate}
+                  onChange={(e) => setRescheduleDate(e.target.value)}
+                  className="w-full p-2 rounded border border-[#D2C9BA] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] text-[#1F2933] dark:text-[#FAF8F4]"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <label className="block text-[#8A8175] uppercase text-[9px] font-bold mb-1">
+                    Start Time
+                  </label>
+                  <input
+                    type="time"
+                    value={rescheduleStartTime}
+                    onChange={(e) => setRescheduleStartTime(e.target.value)}
+                    className="w-full p-2 rounded border border-[#D2C9BA] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] text-[#1F2933] dark:text-[#FAF8F4]"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-[#8A8175] uppercase text-[9px] font-bold mb-1">
+                    End Time
+                  </label>
+                  <input
+                    type="time"
+                    value={rescheduleEndTime}
+                    onChange={(e) => setRescheduleEndTime(e.target.value)}
+                    className="w-full p-2 rounded border border-[#D2C9BA] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] text-[#1F2933] dark:text-[#FAF8F4]"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-[#E6E0D6] dark:border-[#2C3847] flex items-center justify-end gap-2">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => setRescheduleTask(null)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  size="sm"
+                >
+                  Confirm Reschedule
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Clarification Callout */}
+      <div className="p-3 rounded-lg bg-[#FAF8F4] dark:bg-[#141B22] border border-[#D2C9BA] dark:border-[#2C3847] flex items-start gap-2.5 font-mono text-[10px] text-[#6E6558] dark:text-[#A0988A] leading-relaxed">
+        <Sparkles size={13} className="text-[#2C6E9B] shrink-0 mt-0.5" />
+        <div>
+          <strong>Preventive vs Corrective Workflow Integration:</strong> Scheduled PM slots coordinate routine servicing, technician shifts, and calendar sync. Signing off a completed PM automatically records a verified entry in the asset's permanent maintenance ledger. Critical corrective dispatches (e.g., WO #8821) are triggered from the live SCADA triage queue when vibration or temperature limits are breached.
+        </div>
+      </div>
 
     </div>
   );

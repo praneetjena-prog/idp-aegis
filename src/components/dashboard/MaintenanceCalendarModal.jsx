@@ -22,8 +22,8 @@ export const MaintenanceCalendarModal = ({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[90] flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-sm animate-in fade-in">
-      <div className="bg-[#F1EDE6] dark:bg-[#141B22] border-2 border-[#1F2933] dark:border-[#2C3847] rounded-2xl shadow-2xl w-full max-w-5xl max-h-[92vh] flex flex-col overflow-hidden animate-in zoom-in-95">
+    <div className="fixed inset-0 z-[140] flex items-center justify-center p-3 sm:p-5 bg-black/60 backdrop-blur-sm animate-in fade-in">
+      <div className="bg-[#F1EDE6] dark:bg-[#141B22] border-2 border-[#1F2933] dark:border-[#2C3847] rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95">
         
         {/* Modal Header */}
         <div className="p-4 bg-white dark:bg-[#1A222B] border-b border-[#D2C9BA] dark:border-[#2C3847] flex items-center justify-between shrink-0">

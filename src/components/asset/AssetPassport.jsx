@@ -18,7 +18,12 @@ import {
   Radio, 
   Printer,
   ChevronRight,
-  Calendar as CalendarIcon
+  ChevronDown,
+  ChevronUp,
+  Calendar as CalendarIcon,
+  Tag,
+  MapPin,
+  FileCheck
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle } from '../ui/Card';
 import { Badge } from '../ui/Badge';
@@ -97,94 +102,106 @@ function getAssetVitals(assetId, liveValues, feedMode) {
     case 'cw-pump-02':
       return [
         {
-          label: 'Hydraulic Flow Rate',
+          label: 'Hydraulic Flow',
           icon: Activity,
           value: isFault ? '4.1 L/s' : '5.8 L/s',
           isWarning: isFault,
-          sub: isFault ? 'Advisory: Strainer Inspection' : 'Nominal: 5.8 L/s Design'
+          limit: 'Min: 5.0 L/s',
+          sub: isFault ? 'Advisory: Strainer Basket Clean' : 'Optimal Operating Point'
         },
         {
           label: 'Discharge Head',
           icon: Zap,
           value: isFault ? '4.5 bar' : '4.2 bar',
           isWarning: isFault,
+          limit: 'Max: 4.8 bar',
           sub: isFault ? '+0.3 bar Head Loss' : 'Balanced Pressure'
         },
         {
-          label: 'Pump Motor Current',
+          label: 'Motor Current',
           icon: Zap,
           value: isFault ? '16.8 A' : '14.1 A',
           isWarning: isFault,
-          sub: 'Rated: 15.0 A FLC'
+          limit: 'Rated: 15.0 A',
+          sub: isFault ? '+12% Overload Drag' : 'Normal Current Draw'
         },
         {
           label: 'Seal Chamber Temp',
           icon: Thermometer,
           value: isFault ? '58.2°C' : '48.0°C',
           isWarning: false,
-          sub: 'Threshold: 75.0°C'
+          limit: 'Critical: 75.0°C',
+          sub: 'Mechanical Face Seal Normal'
         }
       ];
     case 'elec-01':
       return [
         {
-          label: '3-Phase Current Balance',
+          label: 'Phase Balance',
           icon: Activity,
           value: '94.1%',
           isWarning: false,
-          sub: 'Threshold: >92.0% Nominal'
+          limit: 'Min: 92.0%',
+          sub: 'Balanced Across 3 Phases'
         },
         {
-          label: 'Main Feeder Load',
+          label: 'Feeder Load',
           icon: Zap,
           value: '1,280 A',
           isWarning: false,
-          sub: 'Bus Rating: 2,000 A'
+          limit: 'Bus: 2,000 A',
+          sub: '64% Operational Loading'
         },
         {
-          label: 'L1/L2/L3 Busbar Temp',
+          label: 'Busbar Temp',
           icon: Thermometer,
           value: '42.5°C',
           isWarning: false,
-          sub: 'IR Delta: <2.8°C (Optimal)'
+          limit: 'Max: 65.0°C',
+          sub: 'IR Scan Delta <2.8°C'
         },
         {
-          label: 'Power Factor (PF)',
+          label: 'Power Factor',
           icon: Volume2,
           value: '0.96 pf',
           isWarning: false,
-          sub: 'Grid Compliance >0.95'
+          limit: 'Min: 0.95 pf',
+          sub: 'Grid Compliance Optimal'
         }
       ];
     case 'chiller-01':
       return [
         {
-          label: 'Cooling Plant Load',
+          label: 'Cooling Tonnage',
           icon: Activity,
           value: '385 Tons',
           isWarning: false,
-          sub: 'Capacity: 450 Tons'
+          limit: 'Capacity: 450 T',
+          sub: '85% Compressor Load'
         },
         {
           label: 'Evaporator Approach',
           icon: Thermometer,
           value: '1.1°C',
           isWarning: false,
-          sub: 'Threshold: <1.5°C'
+          limit: 'Max: 1.5°C',
+          sub: 'Clean Heat Exchange'
         },
         {
           label: 'Compressor Draw',
           icon: Zap,
           value: '72.0 A',
           isWarning: false,
-          sub: '4160V Medium Voltage'
+          limit: '4160V System',
+          sub: 'VFD Speed Controlled'
         },
         {
-          label: 'Refrigerant Pressure',
+          label: 'Suction Pressure',
           icon: Volume2,
           value: '3.2 bar',
           isWarning: false,
-          sub: 'R-134a Suction Normal'
+          limit: 'R-134a Safe Band',
+          sub: 'Zero Superheat Drift'
         }
       ];
     case 'vav-4b':
@@ -194,27 +211,31 @@ function getAssetVitals(assetId, liveValues, feedMode) {
           icon: Activity,
           value: isFault ? '20–80%' : '55%',
           isWarning: isFault,
-          sub: isFault ? 'Hunting Drift Detected' : 'Modulation Stable'
+          limit: 'Hunting <5%',
+          sub: isFault ? 'Hunting Oscillation Active' : 'Modulation Stable'
         },
         {
-          label: 'Plenum Airflow',
+          label: 'Airflow Delivery',
           icon: Zap,
           value: isFault ? '380 CFM' : '450 CFM',
           isWarning: isFault,
-          sub: 'Set: 450 CFM @ 21.5°C'
+          limit: 'Set: 450 CFM',
+          sub: isFault ? '-70 CFM Under-delivery' : 'Design Airflow Reached'
         },
         {
-          label: 'Discharge Air Temp',
+          label: 'Discharge Temp',
           icon: Thermometer,
           value: '21.4°C',
           isWarning: false,
-          sub: 'Room Setpoint: 22.0°C'
+          limit: 'Set: 22.0°C',
+          sub: 'Room Comfort Optimal'
         },
         {
           label: 'Actuator Torque',
           icon: Volume2,
           value: '4.8 Nm',
           isWarning: false,
+          limit: 'Max: 10 Nm',
           sub: 'Belimo 24VAC Feedback'
         }
       ];
@@ -226,28 +247,32 @@ function getAssetVitals(assetId, liveValues, feedMode) {
           icon: Activity,
           value: isFault ? `${liveValues?.vib ?? 6.8} mm/s` : `${liveValues?.vib ?? 2.1} mm/s`,
           isWarning: isFault,
-          sub: `ISO Limit: 2.5 mm/s • ${isFault ? '+172% Over' : 'Nominal'}`
+          limit: 'ISO Limit: 2.5 mm/s',
+          sub: isFault ? '+172% Over Limit • BPFO Peak' : 'ISO Class II Zone A (<2.8)'
         },
         {
-          label: 'Motor Phase Draw',
+          label: 'Motor Phase Current',
           icon: Zap,
           value: isFault ? `${liveValues?.cur ?? 17.6} A` : `${liveValues?.cur ?? 14.2} A`,
           isWarning: isFault,
-          sub: `Nominal: 14.2 A • ${isFault ? '+24% Surge' : 'Balanced'}`
+          limit: 'Rated: 14.2 A',
+          sub: isFault ? '+24% Surge Drag' : 'Balanced Phase Draw'
         },
         {
-          label: 'Bearing Outer Ring',
+          label: 'Bearing Outer Ring Temp',
           icon: Thermometer,
           value: isFault ? `${liveValues?.temp ?? 71.8}°C` : `${liveValues?.temp ?? 52.0}°C`,
           isWarning: isFault,
-          sub: `Critical Threshold: 65.0°C • ${isFault ? 'Overheating' : 'Cold Baseline'}`
+          limit: 'Critical: 65.0°C',
+          sub: isFault ? 'Thermal Runaway Risk' : 'Thermal Dissipation Nominal'
         },
         {
-          label: 'Acoustic HF Noise',
+          label: 'Acoustic Emission',
           icon: Volume2,
           value: isFault ? `+${liveValues?.acoustic ?? 14} dB` : `+${liveValues?.acoustic ?? 0} dB`,
           isWarning: isFault,
-          sub: `Spectral Peak: ${isFault ? '3.2 kHz Harmonic' : 'Smooth Baseline'}`
+          limit: 'Baseline: 0 dB',
+          sub: isFault ? '3.2x RPM Impact Harmonics' : 'Smooth Lubricated Baseline'
         }
       ];
   }
@@ -260,7 +285,7 @@ export const AssetPassport = ({
   liveValues,
   feedMode,
   isLive,
-  workOrders,
+  workOrders = [],
   onCreateWorkOrder,
   onShowQrModal,
   onPrintFieldSheet,
@@ -271,14 +296,14 @@ export const AssetPassport = ({
   const isAhu = currentAsset.id === 'ahu-03';
   const isFault = feedMode === 'fault' && isAhu;
 
+  const [specsExpanded, setSpecsExpanded] = useState(false);
   const [fieldTasks, setFieldTasks] = useState(() => {
     const list = ASSET_SOP_TASKS[currentAsset.id] || ASSET_SOP_TASKS['ahu-03'];
     return list.map(t => ({ ...t }));
   });
-
   const [serviceLogged, setServiceLogged] = useState(false);
 
-  // Sync field tasks whenever the technician switches to a different asset
+  // Sync field tasks when asset changes
   useEffect(() => {
     const list = ASSET_SOP_TASKS[currentAsset.id] || ASSET_SOP_TASKS['ahu-03'];
     setFieldTasks(list.map(t => ({ ...t })));
@@ -292,23 +317,29 @@ export const AssetPassport = ({
   const handleSignOff = () => {
     setServiceLogged(true);
     if (showToast) {
-      showToast(`✓ Shift service signed off for ${currentAsset.code} • Logged to Aegis audit history`);
+      showToast(`✓ Shift service signed off for ${currentAsset.code} • Logged to Aegis audit ledger`);
     }
   };
 
   const completedCount = fieldTasks.filter(t => t.done).length;
   const percentDone = Math.round((completedCount / fieldTasks.length) * 100);
 
+  // Relevant open work orders for this machine
+  const assetWorkOrders = workOrders.filter(w => 
+    w.asset?.toLowerCase().includes(currentAsset.code.toLowerCase()) || 
+    w.asset?.toLowerCase().includes(currentAsset.id)
+  );
+
   return (
-    <div className="space-y-5 animate-in fade-in duration-300">
+    <div className="space-y-5 animate-in fade-in duration-200">
       
-      {/* 1. Top Navigation & Quick Switcher */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] p-3.5 rounded-xl shadow-sm">
+      {/* 1. Header & Navigation Breadcrumb */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] p-3.5 rounded-xl shadow-xs">
         <div className="flex items-center gap-2">
           <button 
             type="button"
             onClick={onBack}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded border border-[#D2C9BA] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] font-mono text-[11px] font-bold text-[#1F2933] dark:text-[#FAF8F4] hover:border-[#2C6E9B] hover:text-[#2C6E9B] transition-all"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border border-[#D2C9BA] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] font-mono text-[11px] font-bold text-[#1F2933] dark:text-[#FAF8F4] hover:border-[#2C6E9B] hover:text-[#2C6E9B] transition-all"
           >
             <ArrowLeft size={13} />
             <span>Facility Console</span>
@@ -322,19 +353,31 @@ export const AssetPassport = ({
         </div>
 
         <div className="flex items-center gap-2">
-          <button
-            type="button"
+          <Button
+            variant="outline"
+            size="sm"
             onClick={onShowQrModal}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#2C6E9B] text-[#2C6E9B] font-mono text-[11px] font-bold rounded shadow-sm hover:bg-[#2C6E9B] hover:text-white transition-all"
+            className="flex items-center gap-1.5 font-mono text-[11px] border-[#2C6E9B] text-[#2C6E9B] hover:bg-[#2C6E9B] hover:text-white"
             title="View or Print Machine QR Tag"
           >
             <QrCode size={13} />
             <span>Show QR Sticker</span>
-          </button>
+          </Button>
+          {onPrintFieldSheet && (
+            <Button 
+              variant="secondary" 
+              size="sm" 
+              onClick={onPrintFieldSheet}
+              className="flex items-center gap-1.5 font-mono text-[11px]"
+            >
+              <Printer size={13} />
+              <span>Field Sheet</span>
+            </Button>
+          )}
         </div>
       </div>
 
-      {/* 2. Machine Switcher Bar (Quick Navigation Between Equipment) */}
+      {/* Campus Asset Quick Selector */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1">
         <span className="font-mono text-[9px] uppercase tracking-wider text-[#8A8175] font-bold shrink-0">
           Campus Assets:
@@ -346,7 +389,7 @@ export const AssetPassport = ({
             onClick={() => onSelectAsset(a.id)}
             className={`px-3 py-1 rounded-lg font-mono text-[10px] font-bold uppercase whitespace-nowrap transition-all border ${
               currentAsset.id === a.id
-                ? 'bg-[#2C6E9B] border-[#2C6E9B] text-white shadow-sm'
+                ? 'bg-[#2C6E9B] border-[#2C6E9B] text-white shadow-xs'
                 : 'bg-white dark:bg-[#1A222B] border-[#D2C9BA] dark:border-[#2C3847] text-[#554D42] dark:text-[#C5BCAD] hover:border-[#2C6E9B]'
             }`}
           >
@@ -355,17 +398,19 @@ export const AssetPassport = ({
         ))}
       </div>
 
-      {/* 3. Asset Identity Hero Card */}
-      <div className={`border-2 rounded-xl p-5 transition-all bg-white dark:bg-[#1A222B] ${
+      {/* SECTION 1: Identity & Location Hero Card */}
+      <div className={`border-2 rounded-xl p-5 bg-white dark:bg-[#1A222B] transition-all shadow-xs ${
         isFault 
-          ? 'border-[#C05043] shadow-[3px_3px_0_#C05043]'
-          : 'border-[#1F2933] dark:border-[#2C3847] shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C]'
+          ? 'border-[#C05043]'
+          : 'border-[#D2C9BA] dark:border-[#2C3847]'
       }`}>
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="flex items-start gap-4">
-            {/* Health Score Badge */}
-            <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 flex flex-col items-center justify-center shrink-0 shadow-inner ${
-              isFault ? 'bg-[#C05043]/10 border-[#C05043]' : 'bg-[#2E7D5B]/10 border-[#2E7D5B]'
+            {/* Health Score Pill */}
+            <div className={`w-16 h-16 sm:w-20 sm:h-20 rounded-xl border-2 flex flex-col items-center justify-center shrink-0 ${
+              isFault 
+                ? 'bg-[#C05043]/10 border-[#C05043]' 
+                : 'bg-[#2E7D5B]/10 border-[#2E7D5B]'
             }`}>
               <span className={`font-mono text-[22px] sm:text-[26px] font-bold leading-none ${
                 isFault ? 'text-[#C05043]' : 'text-[#2E7D5B]'
@@ -377,52 +422,45 @@ export const AssetPassport = ({
               </span>
             </div>
 
-            <div className="space-y-1">
+            <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="px-2 py-0.5 rounded bg-[#1F2933] text-white font-mono text-[11px] font-bold">
                   {currentAsset.code}
                 </span>
                 <Badge variant={isFault ? 'critical' : currentAsset.statusVariant}>
-                  {isFault ? 'Critical • 7 Day Action Window' : currentAsset.status}
+                  {isFault ? 'Action Required • 7-Day Window' : currentAsset.status}
                 </Badge>
-                <span className="font-mono text-[11px] text-[#8A8175]">
+                <span className="font-mono text-[11px] text-[#8A8175] font-semibold">
                   {currentAsset.subsystem}
                 </span>
               </div>
 
-              <h1 className="font-display text-[20px] sm:text-[24px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">
+              <h1 className="font-display text-[20px] sm:text-[22px] font-bold text-[#1F2933] dark:text-[#FAF8F4] leading-tight">
                 {currentAsset.name}
               </h1>
 
-              <div className="pt-1 flex flex-wrap items-center gap-3 text-[11px] font-mono text-[#6E6558] dark:text-[#A0988A]">
-                <span><strong>Location:</strong> {currentAsset.location}</span>
+              <div className="flex flex-wrap items-center gap-3 text-[11px] font-mono text-[#6E6558] dark:text-[#A0988A]">
+                <span className="flex items-center gap-1">
+                  <MapPin size={12} className="text-[#2C6E9B]" />
+                  <span>{currentAsset.location}</span>
+                </span>
                 <span>•</span>
-                <span><strong>Serial:</strong> {currentAsset.serial}</span>
+                <span>Serial: <strong>{currentAsset.serial}</strong></span>
                 <span>•</span>
-                <span><strong>Last PM:</strong> {currentAsset.lastPm}</span>
+                <span>Last PM: <strong>{currentAsset.lastPm}</strong></span>
               </div>
             </div>
           </div>
 
-          <div className="flex flex-wrap sm:flex-nowrap gap-2 shrink-0">
-            <Button 
-              variant="primary" 
-              size="sm" 
-              onClick={onShowQrModal}
-              className="flex items-center gap-1.5"
-            >
-              <QrCode size={13} />
-              <span>Print Asset Tag</span>
-            </Button>
-            {onPrintFieldSheet && (
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            {onCreateWorkOrder && isAhu && (
               <Button 
-                variant="secondary" 
+                variant="critical" 
                 size="sm" 
-                onClick={onPrintFieldSheet}
-                className="flex items-center gap-1.5"
+                onClick={() => onCreateWorkOrder('AHU-03', '8821')}
+                className="font-mono text-[11px]"
               >
-                <Printer size={13} />
-                <span>Field Sheet (PDF)</span>
+                Dispatch WO #8821
               </Button>
             )}
             {onOpenCalendar && (
@@ -430,58 +468,145 @@ export const AssetPassport = ({
                 variant="outline" 
                 size="sm" 
                 onClick={onOpenCalendar}
-                className="flex items-center gap-1.5 border-[#2C6E9B] text-[#2C6E9B] hover:bg-[#2C6E9B] hover:text-white"
-                title="View equipment maintenance window on calendar"
+                className="flex items-center gap-1.5 font-mono text-[11px]"
               >
-                <CalendarIcon size={13} />
-                <span>PM Calendar</span>
+                <CalendarIcon size={12} />
+                <span>Calendar Window</span>
               </Button>
             )}
           </div>
         </div>
       </div>
 
-      {/* 4. Live Sensor Vitals (Instant Field Diagnostic Readout) */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {getAssetVitals(currentAsset.id, liveValues, feedMode).map((v, idx) => {
-          const Icon = v.icon;
-          return (
-            <div 
-              key={idx} 
-              className={`p-4 rounded-xl border-2 transition-all ${
-                v.isWarning 
-                  ? 'bg-[#C05043]/5 border-[#C05043]' 
-                  : 'bg-white dark:bg-[#1A222B] border-[#D2C9BA] dark:border-[#2C3847]'
-              }`}
-            >
-              <div className="flex items-center justify-between text-[#8A8175] mb-1">
-                <span className="font-mono text-[10px] uppercase font-bold">{v.label}</span>
-                <Icon size={14} className={v.isWarning ? 'text-[#C05043]' : 'text-[#2E7D5B]'} />
+      {/* SECTION 2: Operating Status & Live Vitals */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-[10px] uppercase font-bold tracking-wider text-[#6E6558] dark:text-[#A0988A]">
+            Operating Status & Live Vitals
+          </span>
+          <span className="font-mono text-[9px] text-[#8A8175]">
+            Telemetry Stream • Sensor Gateway Active
+          </span>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {getAssetVitals(currentAsset.id, liveValues, feedMode).map((v, idx) => {
+            const Icon = v.icon;
+            return (
+              <div 
+                key={idx} 
+                className={`p-3.5 rounded-xl border transition-all ${
+                  v.isWarning 
+                    ? 'bg-[#C05043]/5 border-[#C05043]/50' 
+                    : 'bg-white dark:bg-[#1A222B] border-[#D2C9BA] dark:border-[#2C3847]'
+                }`}
+              >
+                <div className="flex items-center justify-between text-[#8A8175] mb-1">
+                  <span className="font-mono text-[10px] uppercase font-bold">{v.label}</span>
+                  <Icon size={14} className={v.isWarning ? 'text-[#C05043]' : 'text-[#2E7D5B]'} />
+                </div>
+                <div className={`font-mono text-[22px] font-bold ${
+                  v.isWarning ? 'text-[#C05043]' : 'text-[#1F2933] dark:text-[#FAF8F4]'
+                }`}>
+                  {v.value}
+                </div>
+                <div className="font-mono text-[10px] text-[#8A8175] mt-1 flex justify-between">
+                  <span>{v.limit}</span>
+                  <span className={v.isWarning ? 'text-[#C05043] font-semibold' : 'text-[#2E7D5B]'}>
+                    {v.sub}
+                  </span>
+                </div>
               </div>
-              <div className={`font-mono text-[22px] font-bold ${
-                v.isWarning ? 'text-[#C05043]' : 'text-[#1F2933] dark:text-[#FAF8F4]'
-              }`}>
-                {v.value}
-              </div>
-              <div className="font-mono text-[10px] text-[#8A8175] mt-1">
-                {v.sub}
-              </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
 
-      {/* 5. Active Work Orders & Mobile Field Checklist */}
+      {/* SECTION 3: Specifications & Nameplate (with Progressive Disclosure) */}
+      <Card>
+        <div className="p-4 flex items-center justify-between border-b border-[#E6E0D6] dark:border-[#2C3847]">
+          <div>
+            <CardTitle>Specifications & Nameplate Ratings</CardTitle>
+            <p className="text-[11px] text-[#8A8175] mt-0.5 font-mono">
+              Electrical characteristics, mechanical drive, bearings, and lubrication schedule
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSpecsExpanded(v => !v)}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[#D2C9BA] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] font-mono text-[11px] font-bold text-[#1F2933] dark:text-[#FAF8F4] hover:border-[#2C6E9B] transition-colors"
+          >
+            <span>{specsExpanded ? 'Hide Specifications' : 'Show Full Specifications'}</span>
+            {specsExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+          </button>
+        </div>
+
+        {/* Compact summary always visible */}
+        <div className="p-4 grid grid-cols-2 sm:grid-cols-4 gap-3 font-mono text-[11px]">
+          <div className="p-2.5 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
+            <span className="text-[9px] uppercase text-[#8A8175] block">Rated Power / Voltage</span>
+            <span className="font-bold text-[#1F2933] dark:text-[#FAF8F4] mt-0.5 block truncate">{currentAsset.voltage}</span>
+          </div>
+          <div className="p-2.5 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
+            <span className="text-[9px] uppercase text-[#8A8175] block">Operating Speed</span>
+            <span className="font-bold text-[#1F2933] dark:text-[#FAF8F4] mt-0.5 block">{currentAsset.rpm}</span>
+          </div>
+          <div className="p-2.5 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
+            <span className="text-[9px] uppercase text-[#8A8175] block">Installed Bearing</span>
+            <span className="font-bold text-[#1F2933] dark:text-[#FAF8F4] mt-0.5 block truncate">{currentAsset.bearing}</span>
+          </div>
+          <div className="p-2.5 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
+            <span className="text-[9px] uppercase text-[#8A8175] block">Approved Grease</span>
+            <span className="font-bold text-[#1F2933] dark:text-[#FAF8F4] mt-0.5 block truncate">{currentAsset.grease}</span>
+          </div>
+        </div>
+
+        {/* Expanded technical disclosure */}
+        {specsExpanded && (
+          <div className="px-4 pb-4 pt-1 border-t border-[#E6E0D6] dark:border-[#2C3847] grid sm:grid-cols-2 gap-4 font-mono text-[11px] animate-in fade-in">
+            <div className="space-y-2">
+              <div className="flex justify-between py-1 border-b border-[#E6E0D6] dark:border-[#2C3847]">
+                <span className="text-[#8A8175]">Drive Coupling / Belt:</span>
+                <span className="font-semibold text-[#1F2933] dark:text-[#FAF8F4]">{currentAsset.belt}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-[#E6E0D6] dark:border-[#2C3847]">
+                <span className="text-[#8A8175]">Installation Date:</span>
+                <span className="font-semibold text-[#1F2933] dark:text-[#FAF8F4]">2018-04-12</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-[#E6E0D6] dark:border-[#2C3847]">
+                <span className="text-[#8A8175]">Monitoring Standard:</span>
+                <span className="font-semibold text-[#1F2933] dark:text-[#FAF8F4]">ISO 10816-3 Class II</span>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <div className="flex justify-between py-1 border-b border-[#E6E0D6] dark:border-[#2C3847]">
+                <span className="text-[#8A8175]">Telemetry Protocol:</span>
+                <span className="font-semibold text-[#2C6E9B]">MQTT / JSON (Edge Gateway)</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-[#E6E0D6] dark:border-[#2C3847]">
+                <span className="text-[#8A8175]">Bearing Stock Replacement:</span>
+                <span className="font-semibold text-[#2E7D5B]">SKF 6205-2RS (4 in Central Store)</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-[#E6E0D6] dark:border-[#2C3847]">
+                <span className="text-[#8A8175]">Preventative Maintenance Cycle:</span>
+                <span className="font-semibold text-[#1F2933] dark:text-[#FAF8F4]">Quarterly (90 Days)</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </Card>
+
+      {/* SECTION 4 & 5: Maintenance History, Open Work Orders, & Digital SOP Checklist */}
       <div className="grid lg:grid-cols-12 gap-5">
         
-        {/* Left Column: Interactive Field Checklist */}
+        {/* SECTION 5: Digital SOP Checklist (7 Cols) */}
         <div className="lg:col-span-7 space-y-4">
           <Card className="border-2 border-[#1F2933] dark:border-[#2C3847]">
             <CardHeader>
               <div>
-                <CardTitle>On-Site Technician Inspection Checklist</CardTitle>
+                <CardTitle>Digital SOP Inspection Checklist</CardTitle>
                 <p className="text-[11px] text-[#8A8175] mt-0.5">
-                  Tap tasks on your phone as you complete them at the physical asset
+                  Standard operating procedure for field maintenance & post-repair validation
                 </p>
               </div>
               <Badge variant={percentDone === 100 ? 'nominal' : 'neutral'}>
@@ -522,79 +647,78 @@ export const AssetPassport = ({
             {/* 1-Tap Sign-off Button */}
             <div className="mt-4 pt-3 border-t border-[#E6E0D6] dark:border-[#2C3847] flex flex-col sm:flex-row items-center justify-between gap-3">
               <span className="font-mono text-[10px] text-[#8A8175]">
-                Technician: J. Rivera • Active Shift
+                Shift Technician: J. Rivera • Active Shift Lead
               </span>
               <Button
                 variant={serviceLogged ? 'secondary' : 'teal'}
                 size="sm"
                 onClick={handleSignOff}
                 disabled={serviceLogged}
-                className="w-full sm:w-auto"
+                className="w-full sm:w-auto font-mono text-[11px]"
               >
                 <CheckCircle2 size={13} className="mr-1.5" />
-                <span>{serviceLogged ? '✓ Service Signed Off & Audited' : 'Sign Off & Log Inspection'}</span>
+                <span>{serviceLogged ? '✓ Signed Off & Audited to Log' : 'Sign Off & Log Inspection'}</span>
               </Button>
             </div>
           </Card>
         </div>
 
-        {/* Right Column: Physical Specs, Field Kit, & Maintenance History */}
+        {/* SECTION 4: Maintenance History & Open Work Orders (5 Cols) */}
         <div className="lg:col-span-5 space-y-4">
           
-          {/* Machine Bill of Materials / Field Kit */}
+          {/* Active Work Orders for this asset */}
           <Card>
             <CardHeader>
-              <CardTitle>Required Field Kit & Spare Parts</CardTitle>
-              <Badge variant="neutral">Open Stock</Badge>
+              <CardTitle>Active Asset Work Orders</CardTitle>
+              <Badge variant={assetWorkOrders.length > 0 ? 'critical' : 'nominal'}>
+                {assetWorkOrders.length} Dispatched
+              </Badge>
             </CardHeader>
-            <div className="space-y-2 font-mono text-[11px] mt-2">
-              <div className="p-2.5 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded flex justify-between items-center">
-                <div>
-                  <div className="font-bold text-[#1F2933] dark:text-[#FAF8F4]">Bearing: {currentAsset.bearing}</div>
-                  <div className="text-[10px] text-[#8A8175]">Deep groove ball bearing</div>
+            <div className="space-y-2 font-mono text-[11px]">
+              {assetWorkOrders.length > 0 ? (
+                assetWorkOrders.map((wo) => (
+                  <div 
+                    key={wo.id}
+                    className="p-3 bg-[#C05043]/10 border border-[#C05043]/30 rounded-lg space-y-1"
+                  >
+                    <div className="flex items-center justify-between font-bold text-[#C05043]">
+                      <span>WO #{wo.id} • {wo.priority?.toUpperCase()}</span>
+                      <span className="text-[10px]">{new Date(wo.created).toLocaleDateString()}</span>
+                    </div>
+                    <div className="text-[11px] text-[#1F2933] dark:text-[#FAF8F4]">
+                      {wo.diagnosis}
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="p-3 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg text-[#8A8175] text-center">
+                  No active work orders dispatched for {currentAsset.code}.
                 </div>
-                <Badge variant="nominal">In Stock: 4</Badge>
-              </div>
-
-              <div className="p-2.5 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded flex justify-between items-center">
-                <div>
-                  <div className="font-bold text-[#1F2933] dark:text-[#FAF8F4]">Grease: {currentAsset.grease}</div>
-                  <div className="text-[10px] text-[#8A8175]">Purge & 2 pumps per port</div>
-                </div>
-                <Badge variant="nominal">In Stock: 12</Badge>
-              </div>
-
-              <div className="p-2.5 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded flex justify-between items-center">
-                <div>
-                  <div className="font-bold text-[#1F2933] dark:text-[#FAF8F4]">Belt: {currentAsset.belt}</div>
-                  <div className="text-[10px] text-[#8A8175]">Acoustic frequency tensioning</div>
-                </div>
-                <Badge variant="nominal">In Stock: 6</Badge>
-              </div>
+              )}
             </div>
           </Card>
 
           {/* Maintenance Audit History Log */}
           <Card>
             <CardHeader>
-              <CardTitle>Asset Service History</CardTitle>
-              <span className="font-mono text-[10px] text-[#8A8175]">Chronological</span>
+              <CardTitle>Chronological Service Log</CardTitle>
+              <span className="font-mono text-[10px] text-[#8A8175]">Audit Trail</span>
             </CardHeader>
-            <div className="space-y-2.5 font-mono text-[10px] mt-2">
+            <div className="space-y-2.5 font-mono text-[10px]">
               {serviceLogged && (
-                <div className="p-2.5 rounded bg-[#2E7D5B]/10 border border-[#2E7D5B]/30 animate-in fade-in">
+                <div className="p-2.5 rounded-lg bg-[#2E7D5B]/10 border border-[#2E7D5B]/30 animate-in fade-in">
                   <div className="flex justify-between items-center text-[#2E7D5B] font-bold">
-                    <span>Just Now • Preventive Service</span>
+                    <span>Just Now • Shift Sign-off</span>
                     <span>J. Rivera</span>
                   </div>
                   <div className="text-[#3E4650] dark:text-[#C5BCAD] mt-1">
-                    Checklist completed via QR passport for {currentAsset.code}. Field inspection tasks logged to Aegis audit ledger.
+                    Inspection checklist completed for {currentAsset.code}. Logged to permanent facility audit ledger.
                   </div>
                 </div>
               )}
 
               {(ASSET_HISTORIES[currentAsset.id] || ASSET_HISTORIES['ahu-03']).map((item, idx) => (
-                <div key={idx} className="p-2.5 rounded bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847]">
+                <div key={idx} className="p-2.5 rounded-lg bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847]">
                   <div className="flex justify-between items-center font-bold text-[#1F2933] dark:text-[#FAF8F4]">
                     <span>{item.date} • {item.type}</span>
                     <span className="text-[#8A8175]">{item.tech}</span>

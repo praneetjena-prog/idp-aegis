@@ -1,5 +1,26 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
-import { Shield, Activity, MapPin, Clock, Zap, Cpu, Layers, Radio, ChevronRight, ArrowLeft, Printer, FileJson, FileSpreadsheet, Thermometer, Waves, Volume2, Search, Filter, X, AlertTriangle, CheckCircle2, Settings, LayoutDashboard, ChartNoAxesCombined, Gauge, Cable, PanelLeftClose, PanelLeftOpen, Menu, Sun, Moon, QrCode } from 'lucide-react';
+import { 
+  Shield, 
+  Activity, 
+  Zap, 
+  Cpu, 
+  Layers, 
+  Radio, 
+  ChevronRight, 
+  ArrowLeft, 
+  Printer, 
+  Thermometer, 
+  Waves, 
+  Volume2, 
+  Filter, 
+  CheckCircle2, 
+  Gauge, 
+  QrCode,
+  CalendarDays,
+  Microscope,
+  AlertTriangle,
+  LayoutDashboard
+} from 'lucide-react';
 
 import { Card, CardHeader, CardTitle } from './components/ui/Card';
 import { Badge } from './components/ui/Badge';
@@ -16,30 +37,29 @@ import { CorrelationChart } from './components/dashboard/CorrelationChart';
 import { PredictiveSimulator } from './components/dashboard/PredictiveSimulator';
 import { FacilityOverview } from './components/dashboard/FacilityOverview';
 import { FieldSheetModal } from './components/dashboard/FieldSheetModal';
-import { MaintenanceCalendarModal } from './components/dashboard/MaintenanceCalendarModal';
 import { SettingsPanel } from './components/settings/SettingsPanel';
 import { AssetPassport } from './components/asset/AssetPassport';
 import { AssetQrModal } from './components/asset/AssetQrModal';
 import { useFacilityParams } from './lib/facility';
 import { useLiveFeed } from './lib/liveFeed';
-import { playDispatchChime, playAlertChime } from './lib/sound';
+import { isSoundEnabled, setSoundEnabled, playDispatchChime, playAlertChime } from './lib/sound';
 
-import { SideRail, TabBar, TABS } from './components/layout/SideRail';
+import { SideRail } from './components/layout/SideRail';
 import { TopHeader } from './components/layout/TopHeader';
+import { AlertsTriageView } from './components/analysis/AlertsTriageView';
+import { ReliabilityAuditView } from './components/analysis/ReliabilityAuditView';
+import { MaintenanceCalendarPage } from './components/dashboard/MaintenanceCalendarPage';
 
-import { OperationalReality } from './components/workflow/OperationalReality';
-import { ComparisonMatrix } from './components/workflow/ComparisonMatrix';
-import { Pillars } from './components/workflow/Pillars';
-import { ArchitectureDiagram } from './components/workflow/ArchitectureDiagram';
-import { HardwareTable } from './components/workflow/HardwareTable';
 import { RootCauseInspector } from './components/workflow/RootCauseInspector';
 import { MaintenanceChecklist } from './components/workflow/MaintenanceChecklist';
+import { ErrorBoundary } from './components/common/ErrorBoundary';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { GoogleSignInModal } from './components/auth/GoogleSignInModal';
+import { RoleAssignmentModal } from './components/auth/RoleAssignmentModal';
+import { FeatureOnlyPage } from './components/auth/FeatureOnlyPage';
 import { HomePage } from './components/home/HomePage';
 import { RoleContextBanner } from './components/layout/RoleContextBanner';
-import { AuditorComplianceCard } from './components/analysis/AuditorComplianceCard';
 
 const SectionLabel = ({ k, title, id }) => (
   <div id={id} className="flex items-center gap-3 mb-4 scroll-mt-[112px]">
@@ -49,7 +69,20 @@ const SectionLabel = ({ k, title, id }) => (
   </div>
 );
 
-const VALID_TABS = ['home', 'overview', 'console', 'analysis', 'simulator', 'platform', 'asset'];
+const VALID_TABS = [
+  'home',
+  'overview',
+  'console',
+  'alerts',
+  'analysis',
+  'calendar',
+  'maintenance-calendar',
+  'audit',
+  'compliance',
+  'simulator',
+  'asset',
+  'platform'
+];
 const STORAGE_WORK_ORDERS = 'aegis-work-orders';
 const STORAGE_ACKNOWLEDGED = 'aegis-acknowledged-alerts';
 
@@ -63,8 +96,17 @@ function parseHash() {
   if (tabName === 'asset') {
     return { tab: 'asset', assetId: parts[1]?.toLowerCase() || 'ahu-03' };
   }
-  if (['features', 'roles', 'hardware'].includes(tabName)) {
+  if (['features', 'roles'].includes(tabName)) {
     return { tab: 'home', assetId: 'ahu-03', scrollTo: tabName };
+  }
+  if (tabName === 'calendar' || tabName === 'maintenance-calendar') {
+    return { tab: 'calendar', assetId: 'ahu-03' };
+  }
+  if (tabName === 'audit' || tabName === 'compliance') {
+    return { tab: 'audit', assetId: 'ahu-03' };
+  }
+  if (tabName === 'alerts' || tabName === 'analysis') {
+    return { tab: 'alerts', assetId: 'ahu-03' };
   }
   if (VALID_TABS.includes(tabName)) {
     return { tab: tabName, assetId: 'ahu-03' };
@@ -104,85 +146,125 @@ function AppContent() {
   const { 
     user, 
     isAuthenticated, 
+    hasFacilityAccess,
+    authLoading,
     signInModalOpen, 
     openSignInModal, 
     closeSignInModal, 
+    roleModalOpen,
+    closeRoleModal,
     intendedRoute,
     roleConfig 
   } = useAuth();
 
-  const [range, setRange] = useState('24H');
-  const [feedMode, setFeedMode] = useState('fault');
-  const [activeSubsystem, setActiveSubsystem] = useState(null);
-  const [workOrders, setWorkOrders] = useState(getInitialWorkOrders);
-  const [acknowledged, setAcknowledged] = useState(getInitialAcknowledged);
+  const [darkMode, setDarkMode] = useState(false);
   const [toast, setToast] = useState(null);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showFieldSheet, setShowFieldSheet] = useState(false);
-  const [telemetryFilter, setTelemetryFilter] = useState('all');
+
   const initialNav = useMemo(() => parseHash(), []);
   const [tab, setTabState] = useState(initialNav.tab);
   const [selectedAssetId, setSelectedAssetId] = useState(initialNav.assetId);
-  const [showQrModal, setShowQrModal] = useState(false);
-  const [showCalendarModal, setShowCalendarModal] = useState(false);
-  const [settingsOpen, setSettingsOpen] = useState(false);
-  const [railCollapsed, setRailCollapsed] = useState(false);
-  const [railExpanded, setRailExpanded] = useState(false);
-  const [darkMode, setDarkMode] = useState(false);
-  const { params, setParams, save: saveParams, saving } = useFacilityParams();
 
-  // Sync tab changes to URL hash (deep linking) & Auth gate with natural history stack
+  const showToast = (msg) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3500);
+  };
+
+  useEffect(() => {
+    const storedTheme = window.localStorage.getItem('aegis-theme');
+    const useDark = storedTheme === 'dark';
+    setDarkMode(useDark);
+    document.documentElement.classList.toggle('dark', useDark);
+  }, []);
+
+  const toggleTheme = () => {
+    setDarkMode((current) => {
+      const next = !current;
+      document.documentElement.classList.toggle('dark', next);
+      window.localStorage.setItem('aegis-theme', next ? 'dark' : 'light');
+      return next;
+    });
+  };
+
+  // Sync tab changes with URL hash and check authorization
   const setTab = (nextTab, assetId) => {
     if (!VALID_TABS.includes(nextTab)) return;
+    
+    // Unauthenticated guard: opening any non-home tab prompts sign-in
     if (nextTab !== 'home' && !isAuthenticated) {
       openSignInModal(nextTab);
       return;
     }
+
+    // Feature-only guard: user without valid facility assignment can only access #platform or #home
+    if (isAuthenticated && !hasFacilityAccess && nextTab !== 'platform' && nextTab !== 'home') {
+      nextTab = 'platform';
+    }
+
     const prevTab = tab;
     setTabState(nextTab);
     const targetAsset = assetId || selectedAssetId || 'ahu-03';
     if (assetId) {
       setSelectedAssetId(assetId);
     }
+
     if (typeof window !== 'undefined') {
-      const newHash = nextTab === 'asset' 
-        ? `#asset/${targetAsset}` 
-        : (nextTab === 'home' ? '#home' : `#${nextTab}`);
+      let newHash = `#${nextTab}`;
+      if (nextTab === 'asset') {
+        newHash = `#asset/${targetAsset}`;
+      } else if (nextTab === 'calendar' || nextTab === 'maintenance-calendar') {
+        newHash = '#maintenance-calendar';
+      } else if (nextTab === 'audit' || nextTab === 'compliance') {
+        newHash = '#audit';
+      } else if (nextTab === 'alerts' || nextTab === 'analysis') {
+        newHash = '#alerts';
+      } else if (nextTab === 'home') {
+        newHash = '#home';
+      }
+
       if (window.location.hash !== newHash) {
         if (prevTab === 'home' && nextTab !== 'home') {
-          // Navigating from Home into Console/Modules: Push state so Back naturally returns to Home
           window.history.pushState({ tab: nextTab, from: 'home', initialized: true }, '', newHash);
         } else if (nextTab === 'home') {
-          // Returning to Home: If previous history entry was home, pop back; otherwise push
           if (window.history.state?.from === 'home' && window.history.length > 1) {
             window.history.back();
           } else {
             window.history.pushState({ tab: 'home', initialized: true }, '', '#home');
           }
         } else {
-          // Switching between sub-tabs within Console: Replace state so Back always goes straight to Home
           window.history.replaceState({ tab: nextTab, from: 'home', initialized: true }, '', newHash);
         }
       }
     }
   };
 
+  // Enforce access control on tab state whenever authentication changes
+  useEffect(() => {
+    if (authLoading) return;
 
-  const handleSelectAsset = (assetId) => {
-    setSelectedAssetId(assetId);
-    if (tab === 'asset' && typeof window !== 'undefined') {
-      const newHash = `#asset/${assetId}`;
-      if (window.location.hash !== newHash) {
-        window.history.replaceState({ tab: 'asset', assetId, from: 'home', initialized: true }, '', newHash);
+    if (!isAuthenticated) {
+      if (tab !== 'home') {
+        openSignInModal(tab);
+      }
+    } else if (!hasFacilityAccess) {
+      // feature_user or facility role missing facility_id -> lock to #platform
+      if (tab !== 'platform') {
+        setTabState('platform');
+        if (typeof window !== 'undefined' && window.location.hash !== '#platform') {
+          window.location.hash = '#platform';
+        }
+      }
+    } else if (hasFacilityAccess) {
+      // Approved facility role: if currently on #platform and had intended route or came from login
+      if (tab === 'home' && intendedRoute && intendedRoute !== 'home') {
+        setTab(intendedRoute);
       }
     }
-  };
+  }, [isAuthenticated, hasFacilityAccess, authLoading]);
 
-  // Listen to browser Back / Forward buttons & ensure Home is in history stack
+  // Listen to browser Back / Forward buttons & history navigation
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const currentParsed = parseHash();
-      // If user arrived directly on a console tab, seed history so Home is previous entry
       if (currentParsed.tab !== 'home' && !window.history.state?.initialized) {
         window.history.replaceState({ tab: 'home', initialized: true }, '', '#home');
         window.history.pushState(
@@ -204,6 +286,20 @@ function AppContent() {
 
     const onHistoryNavigation = () => {
       const parsed = parseHash();
+      
+      // Authorization-aware history handling
+      if (!isAuthenticated && parsed.tab !== 'home') {
+        openSignInModal(parsed.tab);
+        setTabState('home');
+        return;
+      }
+
+      if (isAuthenticated && !hasFacilityAccess && parsed.tab !== 'platform' && parsed.tab !== 'home') {
+        setTabState('platform');
+        if (typeof window !== 'undefined') window.location.hash = '#platform';
+        return;
+      }
+
       setTabState(parsed.tab);
       if (parsed.assetId) {
         setSelectedAssetId(parsed.assetId);
@@ -222,7 +318,140 @@ function AppContent() {
       window.removeEventListener('popstate', onHistoryNavigation);
       window.removeEventListener('hashchange', onHistoryNavigation);
     };
-  }, []);
+  }, [isAuthenticated, hasFacilityAccess, openSignInModal]);
+
+  // Loading state: prevent flashing protected content before session resolution
+  if (authLoading) {
+    return (
+      <div className={`min-h-screen bg-[#FAF8F4] dark:bg-[#0F151C] flex flex-col items-center justify-center p-4 transition-colors duration-200 ${darkMode ? 'dark' : ''}`}>
+        <div className="flex flex-col items-center gap-4 max-w-sm text-center">
+          <div className="w-12 h-12 rounded-2xl bg-[#2C6E9B] text-white flex items-center justify-center font-bold shadow-lg animate-pulse">
+            <Shield size={24} />
+          </div>
+          <div className="space-y-1">
+            <h2 className="font-display text-[18px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">
+              AEGIS Security Gateway
+            </h2>
+            <p className="font-mono text-[11px] text-[#8A8175]">
+              Verifying authentication & resolving database-assigned facility role...
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Render Path 1: Signed-out user
+  if (!isAuthenticated) {
+    return (
+      <div className={darkMode ? 'dark' : ''}>
+        <HomePage
+          onNavigate={(targetTab) => {
+            openSignInModal(targetTab || 'console');
+          }}
+          liveValues={{ vib: '2.34', cur: '14.2', temp: '54.2', acoustic: '1.8' }}
+          isLive={false}
+          feedMode="fault"
+          darkMode={darkMode}
+          toggleTheme={toggleTheme}
+          onOpenQrTags={() => openSignInModal('console')}
+          onOpenCalendar={() => openSignInModal('calendar')}
+        />
+        <GoogleSignInModal
+          open={signInModalOpen || tab !== 'home'}
+          onClose={() => {
+            closeSignInModal();
+            if (tab !== 'home') {
+              setTabState('home');
+              if (typeof window !== 'undefined') window.location.hash = '#home';
+            }
+          }}
+        />
+        {toast && (
+          <div className="fixed bottom-4 right-4 z-[130] bg-[#FFFFFF] border border-[#D2C9BA] text-[#1F2933] px-3 py-2.5 rounded-lg shadow-xl flex items-center gap-2 font-mono text-[11px] animate-in slide-in-from-bottom-2 max-w-[360px]">
+            <div className="w-1.5 h-1.5 rounded-full bg-[#2E7D5B] animate-pulse shrink-0" />
+            <span className="leading-relaxed">{toast}</span>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Render Path 2: Authenticated without approved facility access (feature_user or missing facility_id)
+  if (!hasFacilityAccess) {
+    return (
+      <>
+        <FeatureOnlyPage
+          darkMode={darkMode}
+          toggleTheme={toggleTheme}
+        />
+        <RoleAssignmentModal
+          open={roleModalOpen}
+          onClose={closeRoleModal}
+        />
+      </>
+    );
+  }
+
+  // Render Path 3: Authenticated with approved facility access (technician, manager, auditor + facility_id)
+  return (
+    <>
+      <OperationalCockpit
+        tab={tab}
+        setTab={setTab}
+        selectedAssetId={selectedAssetId}
+        setSelectedAssetId={setSelectedAssetId}
+        darkMode={darkMode}
+        toggleTheme={toggleTheme}
+        showToast={showToast}
+        toast={toast}
+      />
+      <RoleAssignmentModal
+        open={roleModalOpen}
+        onClose={closeRoleModal}
+      />
+    </>
+  );
+}
+
+/**
+ * Isolated operational cockpit component.
+ * Mounts and streams live telemetry ONLY when the user has an approved facility role and valid facility_id.
+ */
+function OperationalCockpit({
+  tab,
+  setTab,
+  selectedAssetId,
+  setSelectedAssetId,
+  darkMode,
+  toggleTheme,
+  showToast,
+  toast
+}) {
+  const { roleConfig } = useAuth();
+  const [range, setRange] = useState('24H');
+  const [feedMode, setFeedMode] = useState('fault');
+  const [activeSubsystem, setActiveSubsystem] = useState(null);
+  const [workOrders, setWorkOrders] = useState(getInitialWorkOrders);
+  const [acknowledged, setAcknowledged] = useState(getInitialAcknowledged);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showFieldSheet, setShowFieldSheet] = useState(false);
+  const [telemetryFilter, setTelemetryFilter] = useState('all');
+  const [showQrModal, setShowQrModal] = useState(false);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [railCollapsed, setRailCollapsed] = useState(false);
+  const [railExpanded, setRailExpanded] = useState(true);
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  const [soundOn, setSoundOn] = useState(isSoundEnabled);
+
+  const handleToggleSound = () => {
+    const next = !soundOn;
+    setSoundOn(next);
+    setSoundEnabled(next);
+    if (next) playDispatchChime();
+  };
+
+  const { params, setParams, save: saveParams, saving } = useFacilityParams();
 
   // Persist work orders across sessions
   useEffect(() => {
@@ -242,6 +471,7 @@ function AppContent() {
     }
   }, [acknowledged]);
 
+  // Live telemetry feed: only active in OperationalCockpit for authorized facility users
   const { 
     values: liveValues, 
     isLive, 
@@ -251,7 +481,6 @@ function AppContent() {
     recordCount 
   } = useLiveFeed(feedMode);
 
-  // When live backend is streaming, automatically reflect real hardware status
   const effectiveFeedMode = isLive && backendStatus
     ? (backendStatus === 'Alert' || backendStatus === 'Warning' ? 'fault' : 'normal')
     : feedMode;
@@ -263,37 +492,14 @@ function AppContent() {
 
   const scrollTo = (ref) => ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  const showToast = (msg) => {
-    setToast(msg);
-    setTimeout(() => setToast(null), 3500);
-  };
-
-  // Readings arrive from the sensor node via useLiveFeed; the demonstration
-  // bus is used only while no hardware is reporting.
-
-  // Shift clock: only after hydration, so server and client markup agree.
-  const [clock, setClock] = useState('');
-  useEffect(() => {
-    const tick = () => setClock(new Date().toLocaleTimeString());
-    tick();
-    const iv = setInterval(tick, 1000);
-    return () => clearInterval(iv);
-  }, []);
-
-  useEffect(() => {
-    const storedTheme = window.localStorage.getItem('aegis-theme');
-    const useDark = storedTheme === 'dark';
-    setDarkMode(useDark);
-    document.documentElement.classList.toggle('dark', useDark);
-  }, []);
-
-  const toggleTheme = () => {
-    setDarkMode((current) => {
-      const next = !current;
-      document.documentElement.classList.toggle('dark', next);
-      window.localStorage.setItem('aegis-theme', next ? 'dark' : 'light');
-      return next;
-    });
+  const handleSelectAsset = (assetId) => {
+    setSelectedAssetId(assetId);
+    if (tab === 'asset' && typeof window !== 'undefined') {
+      const newHash = `#asset/${assetId}`;
+      if (window.location.hash !== newHash) {
+        window.history.replaceState({ tab: 'asset', assetId, from: 'home', initialized: true }, '', newHash);
+      }
+    }
   };
 
   const handleCreateWorkOrder = (asset, id) => {
@@ -360,18 +566,7 @@ function AppContent() {
         { asset: 'CW-Pump-02', flow: '4.1 L/s', pressure: '4.5 bar', diagnosis: 'Strainer basket partial clog', conf: 0.84, rul: 'Inspection scheduled' },
         { asset: 'VAV-4B', damper: '20-80% hunting', diagnosis: 'Actuator calibration drift', conf: 0.79, rul: 'Optimal' }
       ],
-      work_orders: workOrders,
-      checklist: type === 'checklist' ? [
-        "Lockout/Tagout • Isolate AHU-03 at disconnect • Verify zero energy (SOP-EL-03)",
-        "Inspect bearing grease • Check for metal particulate (take photo log)",
-        "Lubricate bearing • NLGI #2 • 2 pumps • Wipe excess",
-        "Check pulley alignment (laser/straight-edge <0.5mm offset)",
-        "Verify belt tension • 45-55 Hz with acoustic tension gauge",
-        "Torque mounting bolts to 8 Nm • Apply Loctite 243",
-        "Phase current under manual bypass • Expected 14.2A ±0.5A • Check imbalance <2%",
-        "10-minute spin validation • Vibration target <2.5 mm/s • Current <14.8A",
-        "Log completion to Aegis • Close WO #8821"
-      ] : undefined
+      work_orders: workOrders
     };
 
     if (type === 'json' || type === 'checklist') {
@@ -383,10 +578,8 @@ function AppContent() {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 2000);
-      showToast(`✓ Exported ${type.toUpperCase()} • ${type === 'checklist' ? '9 tasks' : '1,428 points'}`);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+      showToast(`✓ Exported ${type.toUpperCase()} • Shift telemetry`);
     } else {
       const csvRows = [
         ['# AEGIS FACILITY INTELLIGENCE — TELEMETRY & SHIFT REPORT'],
@@ -400,28 +593,8 @@ function AppContent() {
         [timestamp, 'HVAC Air Handlers', 'AHU-03', 'Vibration Velocity RMS', liveValues.vib, 'mm/s', '2.5 mm/s', isFault ? 'CRITICAL' : 'NOMINAL', '91%', isFault ? '168h (7 days)' : '720h+'],
         [timestamp, 'HVAC Air Handlers', 'AHU-03', 'Motor Phase Current', liveValues.cur, 'A', '14.2 A', isFault ? 'ATTENTION' : 'NOMINAL', '91%', isFault ? '168h' : '720h+'],
         [timestamp, 'HVAC Air Handlers', 'AHU-03', 'Bearing Outer Race Temp', liveValues.temp, 'C', '65.0 C', isFault ? 'WARNING' : 'NOMINAL', '91%', isFault ? '168h' : '720h+'],
-        [timestamp, 'HVAC Air Handlers', 'AHU-03', 'Acoustic HF Emission', `+${liveValues.acoustic}`, 'dB', '0.0 dB', isFault ? 'ATTENTION' : 'NOMINAL', '88%', '-'],
-        [timestamp, 'Hydraulic / Water Loops', 'CW-Pump-02', 'Cooling Flow Rate', '4.1', 'L/s', '5.8 L/s', isFault ? 'ADVISORY' : 'NOMINAL', '84%', 'Strainer Inspect'],
-        [timestamp, 'Hydraulic / Water Loops', 'CW-Pump-02', 'Discharge Pressure', '4.5', 'bar', '4.2 bar', isFault ? 'DEVIATION' : 'NOMINAL', '84%', '-'],
-        [timestamp, 'HVAC Network', 'VAV-4B', 'Damper Modulation', '20-80', '%', 'Continuous', isFault ? 'HUNTING' : 'NOMINAL', '79%', 'Recalibrate'],
-        [timestamp, 'Electrical Infrastructure', 'SW-Panel-01', '3-Phase Current Balance', '94.1', '%', '>92.0%', 'NOMINAL', '95%', '-'],
-        [timestamp, 'Overall Energy Efficiency', 'Facility Bus', 'Power Factor (PF)', '0.96', 'pf', '>0.95', 'OPTIMAL', '98%', '-'],
-        [],
-        ['# ACTIVE DISPATCHED WORK ORDERS'],
-        ['WO_ID', 'ASSET', 'DESCRIPTION', 'STATUS', 'LOG_DATE', 'TECHNICIAN'],
-        ...workOrders.map(wo => [
-          wo.id,
-          wo.asset,
-          `"${(wo.diagnosis || (wo.asset === 'AHU-03' ? 'Bearing outer race wear — lubrication & belt tension' : 'Strainer partial clog')).replace(/"/g, '""')}"`,
-          wo.status,
-          wo.created ? new Date(wo.created).toLocaleDateString() : 'Today',
-          'J. Rivera'
-        ]),
-        ['8818', 'AHU-02', '"Belt tension adjustment"', 'completed', '2026-09-08', 'M. Singh'],
-        ['8819', 'ELEC-E3', '"Phase imbalance correction L2"', 'completed', '2026-09-09', 'J. Rivera'],
-        ['8820', 'CW-P01', '"Seal replacement"', 'in_progress', '2026-09-11', 'A. Kumar']
+        [timestamp, 'HVAC Air Handlers', 'AHU-03', 'Acoustic HF Emission', `+${liveValues.acoustic}`, 'dB', '0.0 dB', isFault ? 'ATTENTION' : 'NOMINAL', '88%', '-']
       ];
-
       const csvContent = csvRows.map(row => row.join(',')).join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       const url = URL.createObjectURL(blob);
@@ -431,9 +604,7 @@ function AppContent() {
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
-      setTimeout(() => {
-        URL.revokeObjectURL(url);
-      }, 2000);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
       showToast('✓ Exported CSV • Full Telemetry & Work Order Log');
     }
   };
@@ -469,33 +640,19 @@ function AppContent() {
     return all.filter(s => s.name.toLowerCase().includes(searchQuery.toLowerCase()) || s.id.includes(searchQuery.toLowerCase()));
   }, [searchQuery]);
 
-  // Render dedicated full-screen HomePage when tab is 'home'
+  // If user is on #home within authorized session
   if (tab === 'home') {
     return (
       <div className={darkMode ? 'dark' : ''}>
         <HomePage
-          onNavigate={(targetTab, assetId) => {
-            if (!isAuthenticated) {
-              openSignInModal(targetTab || 'console');
-            } else {
-              setTab(targetTab || 'console', assetId);
-            }
-          }}
+          onNavigate={(targetTab, assetId) => setTab(targetTab || 'console', assetId)}
           liveValues={liveValues}
           isLive={isLive}
           feedMode={effectiveFeedMode}
           darkMode={darkMode}
           toggleTheme={toggleTheme}
           onOpenQrTags={() => setShowQrModal(true)}
-          onOpenCalendar={() => setShowCalendarModal(true)}
-        />
-        <GoogleSignInModal
-          open={signInModalOpen}
-          onClose={closeSignInModal}
-          onSuccess={(role) => {
-            showToast(`✓ Authenticated as ${role.toUpperCase()} • Welcome to Console`);
-            setTab(intendedRoute || 'console');
-          }}
+          onOpenCalendar={() => setTab('calendar')}
         />
         {toast && (
           <div className="fixed bottom-4 right-4 z-[130] bg-[#FFFFFF] border border-[#D2C9BA] text-[#1F2933] px-3 py-2.5 rounded-lg shadow-xl flex items-center gap-2 font-mono text-[11px] animate-in slide-in-from-bottom-2 max-w-[360px]">
@@ -507,8 +664,11 @@ function AppContent() {
     );
   }
 
+  const unacknowledgedCount = effectiveFeedMode === 'fault' ? Math.max(0, 2 - acknowledged.size) : 0;
+
   return (
-    <div className="min-h-screen bg-[#F1EDE6] text-[#2A3138] selection:bg-[#2C6E9B]/30 transition-colors duration-300">
+    <div className={`flex min-h-screen bg-[#F1EDE6] dark:bg-[#0F151C] text-[#2A3138] selection:bg-[#2C6E9B]/30 transition-colors duration-200 ${darkMode ? 'dark' : ''}`}>
+      {/* Redesigned Sidebar Navigation with integrated utilities */}
       <SideRail 
         tab={tab} 
         setTab={setTab} 
@@ -521,71 +681,38 @@ function AppContent() {
         expanded={railExpanded}
         onToggleExpand={() => setRailExpanded(v => !v)}
         assetCode={selectedAssetId ? selectedAssetId.toUpperCase() : 'AHU-03'}
+        unacknowledgedAlertsCount={unacknowledgedCount}
+        mobileOpen={mobileDrawerOpen}
+        onCloseMobile={() => setMobileDrawerOpen(false)}
+        darkMode={darkMode}
+        toggleTheme={toggleTheme}
+        soundOn={soundOn}
+        toggleSound={handleToggleSound}
       />
 
-      <div className={`min-w-0 transition-[margin] duration-300 ${railCollapsed ? 'xl:ml-0' : (railExpanded ? 'xl:ml-[230px]' : 'xl:ml-[76px]')}`}>
+      {/* Main Content Shell */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen">
         <TopHeader
-          railCollapsed={railCollapsed}
-          setRailCollapsed={setRailCollapsed}
+          onToggleNavigation={() => {
+            if (typeof window !== 'undefined' && window.innerWidth >= 768) {
+              setRailExpanded(v => !v);
+            } else {
+              setMobileDrawerOpen(v => !v);
+            }
+          }}
           isLive={isLive}
+          lastSeen={lastSeen}
           feedMode={effectiveFeedMode}
           vibration={liveValues.vib}
-          darkMode={darkMode}
-          toggleTheme={toggleTheme}
-          clock={clock}
-          searchQuery={searchQuery}
-          setSearchQuery={setSearchQuery}
-          range={range}
-          setRange={setRange}
           setFeedMode={setFeedMode}
-          handleExport={handleExport}
-          setSettingsOpen={setSettingsOpen}
-          onPrintFieldSheet={() => setShowFieldSheet(true)}
-          onOpenQrTags={() => setShowQrModal(true)}
-          onOpenCalendar={() => setShowCalendarModal(true)}
         />
 
-      {/* Main Content */}
-      <div className="max-w-[1600px] mx-auto px-3 sm:px-4 lg:px-5 py-4 space-y-5">
+        {/* Page Content Surface */}
+        <main className="flex-1 min-w-0 max-w-[1600px] w-full mx-auto px-3 sm:px-4 lg:px-6 py-4 space-y-5">
+          <ErrorBoundary onReset={() => setTab('overview')}>
+            <RoleContextBanner setTab={setTab} />
 
-        {tab !== 'home' && (
-          <RoleContextBanner
-            onPrintFieldSheet={() => setShowFieldSheet(true)}
-            onOpenQrTags={() => setShowQrModal(true)}
-            onOpenCalendar={() => setShowCalendarModal(true)}
-            onOpenSettings={() => setSettingsOpen(true)}
-            onExport={handleExport}
-            setTab={setTab}
-          />
-        )}
-
-        <TabBar 
-          tab={tab} 
-          setTab={setTab} 
-          onSettings={() => setSettingsOpen(true)} 
-          assetCode={selectedAssetId ? selectedAssetId.toUpperCase() : 'AHU-03'} 
-        />
-
-        {/* Mobile / Direct Equipment Passport View (via QR Scan or Deep Link) */}
-        {tab === 'asset' && (
-          <AssetPassport
-            assetId={selectedAssetId}
-            onSelectAsset={handleSelectAsset}
-            onBack={() => setTab('console')}
-            liveValues={liveValues}
-            feedMode={effectiveFeedMode}
-            isLive={isLive}
-            workOrders={workOrders}
-            onCreateWorkOrder={handleCreateWorkOrder}
-            onShowQrModal={() => setShowQrModal(true)}
-            onPrintFieldSheet={() => setShowFieldSheet(true)}
-            onOpenCalendar={() => setShowCalendarModal(true)}
-            showToast={showToast}
-          />
-        )}
-
-        {/* Platform Header & Mission Overview */}
-        <section ref={overviewRef} className="space-y-6 scroll-mt-[120px]">
+          {/* 1. Overview Destination */}
           {tab === 'overview' && (
             <FacilityOverview
               feedMode={effectiveFeedMode}
@@ -598,384 +725,262 @@ function AppContent() {
             />
           )}
 
-
-          {tab === 'platform' && (
-          <div className="space-y-6">
-            {/* System Setup & Monitored Capacity Metrics */}
-            <div className="grid sm:grid-cols-3 gap-4">
-              <Card className="p-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] font-bold">Monitored Machines</span>
-                  <Cpu size={16} className="text-[#2C6E9B]" />
-                </div>
-                <div className="font-mono text-[24px] font-bold text-[#1F2933] dark:text-[#FAF8F4] mt-2">
-                  38 <span className="text-[13px] font-normal text-[#8A8175]">Units</span>
-                </div>
-                <p className="font-sans text-[11px] text-[#6E6558] dark:text-[#A0988A] mt-1.5">
-                  Air handling units, water pumps, cooling towers, and switchboards.
-                </p>
-              </Card>
-
-              <Card className="p-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] font-bold">Sensors Online</span>
-                  <Radio size={16} className="text-[#2C6E9B]" />
-                </div>
-                <div className="font-mono text-[24px] font-bold text-[#1F2933] dark:text-[#FAF8F4] mt-2">
-                  1,428 <span className="text-[13px] font-normal text-[#8A8175]">Points</span>
-                </div>
-                <p className="font-sans text-[11px] text-[#6E6558] dark:text-[#A0988A] mt-1.5">
-                  Actively measuring vibration, surface heat, current draw, and noise.
-                </p>
-              </Card>
-
-              <Card className="p-4">
-                <div className="flex items-center justify-between">
-                  <span className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] font-bold">Early Warning Window</span>
-                  <Clock size={16} className="text-[#2C6E9B]" />
-                </div>
-                <div className="font-mono text-[24px] font-bold text-[#1F2933] dark:text-[#FAF8F4] mt-2">
-                  7–14 <span className="text-[13px] font-normal text-[#8A8175]">Days</span>
-                </div>
-                <p className="font-sans text-[11px] text-[#6E6558] dark:text-[#A0988A] mt-1.5">
-                  Average lead time given to technicians before a motor stops running.
-                </p>
-              </Card>
-            </div>
-
-            {/* Technician 101: How Aegis Works (Onboarding Help) */}
-            <div className="bg-[#FFFFFF] dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] p-5 rounded-xl">
-              <div className="mb-4">
-                <span className="font-mono text-[10px] uppercase tracking-wider font-bold text-[#8A8175]">Technician 101 • Onboarding Guide</span>
-                <h3 className="font-display text-[16px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">
-                  How Aegis Predictive Monitoring Works
-                </h3>
-                <p className="text-[12px] text-[#6E6558] dark:text-[#A0988A] mt-0.5">
-                  A simple 3-step guide for apprentices and facility maintenance staff.
-                </p>
-              </div>
-
-              <div className="grid md:grid-cols-3 gap-4">
-                <div className="p-4 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
-                  <div className="w-7 h-7 rounded-md bg-[#2C6E9B]/10 text-[#2C6E9B] flex items-center justify-center font-mono text-[12px] font-bold mb-2">
-                    01
-                  </div>
-                  <h4 className="font-display text-[13px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">Sensors Listen 24/7</h4>
-                  <p className="text-[12px] text-[#554D42] dark:text-[#C5BCAD] mt-1 leading-relaxed">
-                    Inexpensive sensor nodes measure mechanical vibration (mm/s), motor temperature (°C), and electrical current (Amps) every second.
-                  </p>
-                </div>
-
-                <div className="p-4 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
-                  <div className="w-7 h-7 rounded-md bg-[#2F8A7E]/10 text-[#2F8A7E] flex items-center justify-center font-mono text-[12px] font-bold mb-2">
-                    02
-                  </div>
-                  <h4 className="font-display text-[13px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">Detects Tiny Drifts</h4>
-                  <p className="text-[12px] text-[#554D42] dark:text-[#C5BCAD] mt-1 leading-relaxed">
-                    When grease dries up or a belt loosens, vibration rises before anyone can hear or smell it. Aegis catches this drift days before failure.
-                  </p>
-                </div>
-
-                <div className="p-4 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg">
-                  <div className="w-7 h-7 rounded-md bg-[#2E7D5B]/10 text-[#2E7D5B] flex items-center justify-center font-mono text-[12px] font-bold mb-2">
-                    03
-                  </div>
-                  <h4 className="font-display text-[13px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">Step-by-Step Fix</h4>
-                  <p className="text-[12px] text-[#554D42] dark:text-[#C5BCAD] mt-1 leading-relaxed">
-                    Instead of guessing or replacing entire machines, you get a clear checklist: what grease to pump, what bolts to tighten, and what to log.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Platform & License Information */}
-            <Card className="p-4 border-[#2C6E9B]/30 bg-[#FAF8F4] dark:bg-[#141B22]">
-              <div className="flex flex-wrap items-center justify-between gap-3 font-mono text-[11px]">
-                <div className="flex items-center gap-2 text-[#1F2933] dark:text-[#FAF8F4] font-semibold">
-                  <Shield size={16} className="text-[#2C6E9B]" />
-                  <span>Aegis Open Facility Intelligence • MIT License</span>
-                </div>
-                <div className="flex items-center gap-2 text-[#6E6558] dark:text-[#A0988A]">
-                  <span>$180/Asset COTS Hardware</span>
-                  <span>•</span>
-                  <span>github.com/aegis-open</span>
-                </div>
-              </div>
-              <p className="font-mono text-[10px] text-[#8A8175] mt-2 leading-relaxed">
-                Open hardware: DHT22, ACS712, MPU6050, MQ-2, SCD40, PIR, YF-S201, ESP32, MQTT • Explainable models: Seasonal ARIMA, Isolation Forest, FFT spectral analysis • Built for field technicians, not boardrooms.
-              </p>
-            </Card>
-
-            <SectionLabel k="01" title="The Operational Reality — Workflow Bottlenecks" id="bottlenecks" />
-            <OperationalReality />
-
-            <SectionLabel k="02" title="Existing Approaches vs. Aegis Workflow Matrix" id="matrix" />
-            <ComparisonMatrix />
-
-            <SectionLabel k="03" title="The 5 Operational Pillars — Data → Maintenance Action" id="pillars" />
-            <Pillars />
-
-            <SectionLabel k="04" title="System Architecture — Transparent & Open Flow" id="architecture" />
-            <ArchitectureDiagram />
-
-            <SectionLabel k="05" title="Hardware Layer — Democratized Sensor Kit" id="hardware" />
-            <HardwareTable />
-          </div>
-          )}
-        </section>
-
-        {/* Central Operations Console */}
-        <section className="space-y-6">
+          {/* 2. Live Console Destination */}
           {tab === 'console' && (
-          <div className="space-y-6">
-          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-            <div className="self-start px-3 py-1 bg-[#2C6E9B]/10 border border-[#2C6E9B]/30 flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-[#2C6E9B] animate-pulse" />
-               <span className="font-display text-[12px] font-semibold text-[#2C6E9B]">Facility status</span>
-            </div>
-            <div className="hidden sm:block h-px flex-1 bg-[#E6E0D6]" />
-            <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-2">
-               <span className="font-mono text-[10px] text-[#8A8175]">Showing {range} · {feedMode === 'fault' ? 'Fault example' : 'Normal operation'} · Updates every 1.8s</span>
-              <div className="flex items-center gap-1 p-0.5 bg-[#F1EDE6] border border-[#E6E0D6] rounded-md">
-                {['all', 'critical', 'nominal'].map(f => (
-                  <button key={f} onClick={() => setTelemetryFilter(f)} className={`font-mono text-[9px] px-1.5 py-0.5 rounded uppercase ${telemetryFilter === f ? 'bg-[#E6E0D6] text-[#1F2933]' : 'text-[#A99F90]'}`}>{f}</button>
-                ))}
-              </div>
-            </div>
-          </div>
-
-           <LiveTelemetryTicker mode={effectiveFeedMode} values={isLive ? liveValues : null} params={params} isLive={isLive} />
-
-          <div ref={telemetryRef} className="space-y-4 scroll-mt-[120px]">
-            <FacilityHealth mode={effectiveFeedMode} />
-
-            <Card>
-              <CardHeader>
-                 <div>
-                   <CardTitle>Building systems</CardTitle>
-                   <p className="mt-1 text-[10px] text-[#8A8175]">Select a system to see its equipment and sensor details.</p>
-                 </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant="neutral">{range} Window</Badge>
-                  <div className="flex items-center gap-1">
-                    <Filter size={10} className="text-[#A99F90]" />
-                     <span className="font-mono text-[10px] text-[#8A8175]">{telemetryFilter === 'all' ? 'All systems' : telemetryFilter}</span>
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="self-start px-3 py-1 bg-[#2C6E9B]/10 border border-[#2C6E9B]/30 flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-[#2C6E9B] animate-pulse" />
+                  <span className="font-display text-[12px] font-semibold text-[#2C6E9B]">Facility status</span>
+                </div>
+                <div className="hidden sm:block h-px flex-1 bg-[#E6E0D6] dark:bg-[#2C3847]" />
+                <div className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-2">
+                  <span className="font-mono text-[10px] text-[#8A8175]">Showing {range} · {feedMode === 'fault' ? 'Fault example' : 'Normal operation'} · Updates every 1.8s</span>
+                  <div className="flex items-center gap-1 p-0.5 bg-[#F1EDE6] dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] rounded-md">
+                    {['all', 'critical', 'nominal'].map(f => (
+                      <button key={f} onClick={() => setTelemetryFilter(f)} className={`font-mono text-[9px] px-1.5 py-0.5 rounded uppercase ${telemetryFilter === f ? 'bg-[#E6E0D6] dark:bg-[#2C3847] text-[#1F2933] dark:text-[#FAF8F4]' : 'text-[#A99F90]'}`}>{f}</button>
+                    ))}
                   </div>
                 </div>
-              </CardHeader>
-              <SubsystemGrid mode={effectiveFeedMode} onSelect={(id) => setActiveSubsystem(id)} />
-              {searchQuery && (
-                <div className="mt-3 font-mono text-[10px] text-[#8A8175]">Filtered {filteredSubsystems.length} subsystems for "{searchQuery}" • <button onClick={() => setSearchQuery('')} className="text-[#2C6E9B] underline">Clear</button></div>
-              )}
-            </Card>
-
-            <div className="grid lg:grid-cols-12 gap-4 items-start">
-              <div className="lg:col-span-5">
-                <FailureForecast mode={effectiveFeedMode} />
               </div>
-              <div className="lg:col-span-7">
-                <WorkOrderHistory 
-                  workOrders={workOrders} 
-                  onExport={handleExport} 
-                  onClear={handleClearWorkOrders} 
-                  onOpenCalendar={() => setShowCalendarModal(true)} 
-                />
-              </div>
-            </div>
-          </div>
 
+              <LiveTelemetryTicker mode={effectiveFeedMode} values={isLive ? liveValues : null} params={params} isLive={isLive} />
 
-          </div>
-          )}
+              <div ref={telemetryRef} className="space-y-4 scroll-mt-[120px]">
+                <FacilityHealth mode={effectiveFeedMode} />
 
-          {tab === 'analysis' && (
-          <div className="space-y-6">
-          <div ref={rootCauseRef} className="space-y-4 scroll-mt-[120px]">
-            <SectionLabel k="06" title="Root Cause Inspector & Active Triage Queue" />
-            <RootCauseInspector mode={effectiveFeedMode} />
-            <AuditorComplianceCard liveVibration={liveValues.vib} onExport={handleExport} />
-            <TriageQueue
-              onCreateWorkOrder={handleCreateWorkOrder}
-              onViewTelemetry={handleViewTelemetry}
-              acknowledged={acknowledged}
-              onAcknowledge={handleAcknowledge}
-              workOrders={workOrders}
-              onPrintFieldSheet={() => setShowFieldSheet(true)}
-            />
-          </div>
-
-          <div ref={actionRef} className="grid lg:grid-cols-12 gap-4 items-start scroll-mt-[120px]">
-            <div className="lg:col-span-8 space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>24-Hour Operational Telemetry Chart • Baseline vs Actual • Correlation View</CardTitle>
-                  <div className="flex items-center gap-2">
-                    <Badge variant={effectiveFeedMode === 'fault' ? 'attention' : 'nominal'}>{effectiveFeedMode === 'fault' ? 'Anomaly Detected' : 'Nominal'}</Badge>
-                    <span className="font-mono text-[10px] text-[#8A8175]">AHU-03 • Power Envelope • Live: {liveValues.cur}A</span>
-                  </div>
-                </CardHeader>
-                <TelemetryChart mode={effectiveFeedMode} range={range} />
-              </Card>
-              <CorrelationChart mode={effectiveFeedMode} />
-            </div>
-            <div className="lg:col-span-4 space-y-4">
-              <MaintenanceChecklist onExport={handleExport} onPrintFieldSheet={() => setShowFieldSheet(true)} />
-              <Card>
-                <CardHeader>
-                  <CardTitle>Public Good Guardrail • Open Access</CardTitle>
-                  <Badge variant="nominal">MIT Licensed</Badge>
-                </CardHeader>
-                <div className="space-y-2 font-mono text-[10px] leading-relaxed text-[#6E6558]">
-                  <div>• Democratizes predictive maintenance using low-cost COTS sensors • No vendor lock-in</div>
-                  <div>• Transparent algorithms: Seasonal ARIMA, Isolation Forest, FFT — no black box</div>
-                  <div>• Eliminates alert fatigue: learns normal, flags subtle multi-param drift</div>
-                  <div>• Built for resource-constrained public infrastructure: schools, municipal, community hubs</div>
-                  <div className="mt-2 p-2 bg-[#2C6E9B]/5 border border-[#2C6E9B]/20 rounded text-[#2C6E9B]">Open Architecture: github.com/aegis-open • Docs • Sensor Kit • Edge Gateway • MIT</div>
-                </div>
-              </Card>
-            </div>
-          </div>
-          </div>
-          )}
-        </section>
-
-        {/* Subsystem Detail View */}
-        {tab === 'console' && activeSubsystem && (
-          <section className="space-y-4 animate-in fade-in">
-            <div className="flex items-center gap-2 font-mono text-[11px] text-[#8A8175]">
-              <button onClick={() => setActiveSubsystem(null)} className="flex items-center gap-1 hover:text-[#1F2933] transition-colors"><ArrowLeft size={12} /> Return to Facility Console</button>
-              <ChevronRight size={12} />
-              <span>Console</span>
-              <ChevronRight size={12} />
-              <span>Equipment</span>
-              <ChevronRight size={12} />
-              <span className="text-[#1F2933]">{activeSubsystem.toUpperCase()} Detailed Analysis</span>
-              {activeSubsystem === 'mechanical' || activeSubsystem === 'hvac' ? <Badge variant="critical">AHU-03 Focus • Live {liveValues.vib}mm/s</Badge> : null}
-            </div>
-
-            <div className="grid lg:grid-cols-12 gap-4 items-start">
-              <div className="lg:col-span-8">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Live Sensor Tiles • {activeSubsystem.toUpperCase()} • AHU-03 Primary Supply Fan • Real-Time</CardTitle>
-                    <div className="flex gap-1">
-                      <Button variant="ghost" size="xs" onClick={() => setActiveSubsystem(null)}>← Return</Button>
-                      <Button 
-                        variant="secondary" 
-                        size="xs" 
-                        onClick={() => {
-                          const assetMap = {
-                            water: 'cw-pump-02',
-                            electrical: 'elec-01',
-                            hvac: 'ahu-03',
-                            mechanical: 'ahu-03',
-                            energy: 'vav-4b'
-                          };
-                          const target = assetMap[activeSubsystem] || 'ahu-03';
-                          setSelectedAssetId(target);
-                          setShowQrModal(true);
-                        }}
-                      >
-                        <QrCode size={10} className="mr-1" /> QR Tag
-                      </Button>
-                      <Button variant="secondary" size="xs" onClick={() => setShowFieldSheet(true)}><Printer size={10} className="mr-1" /> Field Sheet</Button>
+                    <div>
+                      <CardTitle>Building systems</CardTitle>
+                      <p className="mt-1 text-[10px] text-[#8A8175]">Select a system to see its equipment and sensor details.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="neutral">{range} Window</Badge>
+                      <div className="flex items-center gap-1">
+                        <Filter size={10} className="text-[#A99F90]" />
+                        <span className="font-mono text-[10px] text-[#8A8175]">{telemetryFilter === 'all' ? 'All systems' : telemetryFilter}</span>
+                      </div>
                     </div>
                   </CardHeader>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                    <div className={`bg-[#F1EDE6] border rounded-lg p-3 transition-all ${parseFloat(liveValues.vib) > 4 ? 'border-[#C05043]/50 bg-[#C05043]/5' : 'border-[#E6E0D6]'}`}>
-                      <div className="flex items-center gap-1.5 mb-1"><Waves size={12} className={parseFloat(liveValues.vib) > 4 ? 'text-[#C05043]' : 'text-[#6E6558]'} /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Vibration Velocity</span></div>
-                      <div className={`font-mono text-[18px] font-bold ${parseFloat(liveValues.vib) > 4 ? 'text-[#C05043]' : 'text-[#1F2933]'}`}>{detailData.vibration}</div>
-                      <div className="font-mono text-[10px] text-[#8A8175]">Threshold: {detailData.thresholdVib} • <span className={parseFloat(liveValues.vib) > 4 ? 'text-[#C05043]' : 'text-[#2E7D5B]'}>{parseFloat(liveValues.vib) > 4 ? `+${Math.round((liveValues.vib/2.5-1)*100)}% over` : 'Nominal'}</span></div>
-                      <div className="mt-2 h-1 bg-[#E6E0D6] rounded-full overflow-hidden"><div className="h-full bg-[#C05043] transition-all duration-700" style={{ width: `${Math.min(100, (liveValues.vib/8)*100)}%` }} /></div>
-                    </div>
-                    <div className={`bg-[#F1EDE6] border rounded-lg p-3 transition-all ${liveValues.cur > 16 ? 'border-[#B07B1C]/50 bg-[#B07B1C]/5' : 'border-[#E6E0D6]'}`}>
-                      <div className="flex items-center gap-1.5 mb-1"><Zap size={12} className={liveValues.cur > 16 ? 'text-[#B07B1C]' : 'text-[#6E6558]'} /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Drive Current</span></div>
-                      <div className={`font-mono text-[18px] font-bold ${liveValues.cur > 16 ? 'text-[#B07B1C]' : 'text-[#1F2933]'}`}>{detailData.current}</div>
-                      <div className="font-mono text-[10px] text-[#8A8175]">Nominal: {detailData.nominalCurrent} • <span className={liveValues.cur > 16 ? 'text-[#B07B1C]' : 'text-[#2E7D5B]'}>{liveValues.cur > 16 ? `+${Math.round((liveValues.cur/14.2-1)*100)}% surge` : 'Nominal'}</span></div>
-                      <div className="mt-2 h-1 bg-[#E6E0D6] rounded-full overflow-hidden"><div className="h-full bg-[#B07B1C] transition-all duration-700" style={{ width: `${Math.min(100, (liveValues.cur/20)*100)}%` }} /></div>
-                    </div>
-                    <div className={`bg-[#F1EDE6] border rounded-lg p-3 transition-all ${liveValues.temp > 65 ? 'border-[#C05043]/30 bg-[#C05043]/5' : 'border-[#E6E0D6]'}`}>
-                      <div className="flex items-center gap-1.5 mb-1"><Thermometer size={12} className={liveValues.temp > 65 ? 'text-[#C05043]' : 'text-[#6E6558]'} /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Bearing Temp</span></div>
-                      <div className="font-mono text-[18px] font-bold text-[#1F2933]">{detailData.temp}</div>
-                      <div className="font-mono text-[10px] text-[#8A8175]">Nominal: {detailData.nominalTemp} • <span className={liveValues.temp > 65 ? 'text-[#C05043]' : 'text-[#2E7D5B]'}>{liveValues.temp > 65 ? 'Overheat' : 'Nominal'}</span></div>
-                      <div className="mt-2 h-1 bg-[#E6E0D6] rounded-full overflow-hidden"><div className="h-full bg-[#C05043] transition-all duration-700" style={{ width: `${Math.min(100, (liveValues.temp/90)*100)}%` }} /></div>
-                    </div>
-                    <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded-lg p-3">
-                      <div className="flex items-center gap-1.5 mb-1"><Volume2 size={12} className="text-[#6E6558]" /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Acoustic HF Noise</span></div>
-                      <div className="font-mono text-[18px] font-bold text-[#1F2933]">{detailData.acoustic}</div>
-                      <div className="font-mono text-[10px] text-[#8A8175]">Baseline 0 dB • Spectral peak 3.2kHz</div>
-                      <div className="mt-2 h-1 bg-[#E6E0D6] rounded-full overflow-hidden"><div className="h-full bg-[#2C6E9B] transition-all duration-700" style={{ width: `${feedMode === 'fault' ? 80 : 20}%` }} /></div>
-                    </div>
+                  <SubsystemGrid mode={effectiveFeedMode} onSelect={(id) => setActiveSubsystem(id)} />
+                  {searchQuery && (
+                    <div className="mt-3 font-mono text-[10px] text-[#8A8175]">Filtered {filteredSubsystems.length} subsystems for "{searchQuery}" • <button onClick={() => setSearchQuery('')} className="text-[#2C6E9B] underline">Clear</button></div>
+                  )}
+                </Card>
+
+                <div className="grid lg:grid-cols-12 gap-4 items-start">
+                  <div className="lg:col-span-5">
+                    <FailureForecast mode={effectiveFeedMode} />
+                  </div>
+                  <div className="lg:col-span-7">
+                    <WorkOrderHistory 
+                      workOrders={workOrders} 
+                      onExport={handleExport} 
+                      onClear={handleClearWorkOrders} 
+                      onOpenCalendar={() => setTab('calendar')} 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Subsystem Detail Drilldown */}
+              {activeSubsystem && (
+                <section className="space-y-4 animate-in fade-in">
+                  <div className="flex items-center gap-2 font-mono text-[11px] text-[#8A8175]">
+                    <button onClick={() => setActiveSubsystem(null)} className="flex items-center gap-1 hover:text-[#1F2933] transition-colors"><ArrowLeft size={12} /> Return to Facility Console</button>
+                    <ChevronRight size={12} />
+                    <span>Console</span>
+                    <ChevronRight size={12} />
+                    <span>Equipment</span>
+                    <ChevronRight size={12} />
+                    <span className="text-[#1F2933] dark:text-[#FAF8F4]">{activeSubsystem.toUpperCase()} Detailed Analysis</span>
+                    {activeSubsystem === 'mechanical' || activeSubsystem === 'hvac' ? <Badge variant="critical">AHU-03 Focus • Live {liveValues.vib}mm/s</Badge> : null}
                   </div>
 
-                  <div className="mt-4 grid md:grid-cols-2 gap-4">
-                    <div>
-                      <div className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] mb-2">Multi-line Trend • Last 24H • Correlation: Current ↑ + Vibration ↑</div>
-                      <TelemetryChart mode={feedMode} range="24H" />
+                  <div className="grid lg:grid-cols-12 gap-4 items-start">
+                    <div className="lg:col-span-8">
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Live Sensor Tiles • {activeSubsystem.toUpperCase()} • AHU-03 Primary Supply Fan</CardTitle>
+                          <div className="flex gap-1">
+                            <Button variant="ghost" size="xs" onClick={() => setActiveSubsystem(null)}>← Return</Button>
+                            <Button 
+                              variant="secondary" 
+                              size="xs" 
+                              onClick={() => {
+                                const assetMap = {
+                                  water: 'cw-pump-02',
+                                  electrical: 'elec-01',
+                                  hvac: 'ahu-03',
+                                  mechanical: 'ahu-03',
+                                  energy: 'vav-4b'
+                                };
+                                const target = assetMap[activeSubsystem] || 'ahu-03';
+                                setSelectedAssetId(target);
+                                setShowQrModal(true);
+                              }}
+                            >
+                              <QrCode size={10} className="mr-1" /> QR Tag
+                            </Button>
+                            <Button variant="secondary" size="xs" onClick={() => setShowFieldSheet(true)}><Printer size={10} className="mr-1" /> Field Sheet</Button>
+                          </div>
+                        </CardHeader>
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                          <div className={`bg-[#F1EDE6] dark:bg-[#141B22] border rounded-lg p-3 transition-all ${parseFloat(liveValues.vib) > 4 ? 'border-[#C05043]/50 bg-[#C05043]/5' : 'border-[#E6E0D6] dark:border-[#2C3847]'}`}>
+                            <div className="flex items-center gap-1.5 mb-1"><Waves size={12} className={parseFloat(liveValues.vib) > 4 ? 'text-[#C05043]' : 'text-[#6E6558]'} /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Vibration Velocity</span></div>
+                            <div className={`font-mono text-[18px] font-bold ${parseFloat(liveValues.vib) > 4 ? 'text-[#C05043]' : 'text-[#1F2933] dark:text-[#FAF8F4]'}`}>{detailData.vibration}</div>
+                            <div className="font-mono text-[10px] text-[#8A8175]">Threshold: {detailData.thresholdVib} • <span className={parseFloat(liveValues.vib) > 4 ? 'text-[#C05043]' : 'text-[#2E7D5B]'}>{parseFloat(liveValues.vib) > 4 ? `+${Math.round((liveValues.vib/2.5-1)*100)}% over` : 'Nominal'}</span></div>
+                            <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden"><div className="h-full bg-[#C05043] transition-all duration-700" style={{ width: `${Math.min(100, (liveValues.vib/8)*100)}%` }} /></div>
+                          </div>
+                          <div className={`bg-[#F1EDE6] dark:bg-[#141B22] border rounded-lg p-3 transition-all ${liveValues.cur > 16 ? 'border-[#B07B1C]/50 bg-[#B07B1C]/5' : 'border-[#E6E0D6] dark:border-[#2C3847]'}`}>
+                            <div className="flex items-center gap-1.5 mb-1"><Zap size={12} className={liveValues.cur > 16 ? 'text-[#B07B1C]' : 'text-[#6E6558]'} /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Drive Current</span></div>
+                            <div className={`font-mono text-[18px] font-bold ${liveValues.cur > 16 ? 'text-[#B07B1C]' : 'text-[#1F2933] dark:text-[#FAF8F4]'}`}>{detailData.current}</div>
+                            <div className="font-mono text-[10px] text-[#8A8175]">Nominal: {detailData.nominalCurrent} • <span className={liveValues.cur > 16 ? 'text-[#B07B1C]' : 'text-[#2E7D5B]'}>{liveValues.cur > 16 ? `+${Math.round((liveValues.cur/14.2-1)*100)}% surge` : 'Nominal'}</span></div>
+                            <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden"><div className="h-full bg-[#B07B1C] transition-all duration-700" style={{ width: `${Math.min(100, (liveValues.cur/20)*100)}%` }} /></div>
+                          </div>
+                          <div className={`bg-[#F1EDE6] dark:bg-[#141B22] border rounded-lg p-3 transition-all ${liveValues.temp > 65 ? 'border-[#C05043]/30 bg-[#C05043]/5' : 'border-[#E6E0D6] dark:border-[#2C3847]'}`}>
+                            <div className="flex items-center gap-1.5 mb-1"><Thermometer size={12} className={liveValues.temp > 65 ? 'text-[#C05043]' : 'text-[#6E6558]'} /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Bearing Temp</span></div>
+                            <div className="font-mono text-[18px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">{detailData.temp}</div>
+                            <div className="font-mono text-[10px] text-[#8A8175]">Nominal: {detailData.nominalTemp} • <span className={liveValues.temp > 65 ? 'text-[#C05043]' : 'text-[#2E7D5B]'}>{liveValues.temp > 65 ? 'Overheat' : 'Nominal'}</span></div>
+                            <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden"><div className="h-full bg-[#C05043] transition-all duration-700" style={{ width: `${Math.min(100, (liveValues.temp/90)*100)}%` }} /></div>
+                          </div>
+                          <div className="bg-[#F1EDE6] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg p-3">
+                            <div className="flex items-center gap-1.5 mb-1"><Volume2 size={12} className="text-[#6E6558]" /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Acoustic HF Noise</span></div>
+                            <div className="font-mono text-[18px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">{detailData.acoustic}</div>
+                            <div className="font-mono text-[10px] text-[#8A8175]">Baseline 0 dB • Spectral peak 3.2kHz</div>
+                            <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden"><div className="h-full bg-[#2C6E9B] transition-all duration-700" style={{ width: `${feedMode === 'fault' ? 80 : 20}%` }} /></div>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 grid md:grid-cols-2 gap-4">
+                          <div>
+                            <div className="font-mono text-[10px] uppercase tracking-wider text-[#8A8175] mb-2">Multi-line Trend • Last 24H • Correlation: Current ↑ + Vibration ↑</div>
+                            <TelemetryChart mode={feedMode} range="24H" />
+                          </div>
+                          <div className="space-y-4">
+                            <FailureForecast mode={feedMode} />
+                            <CorrelationChart mode={feedMode} />
+                          </div>
+                        </div>
+                      </Card>
                     </div>
-                    <div className="space-y-4">
-                      <FailureForecast mode={feedMode} />
-                      <CorrelationChart mode={feedMode} />
+                    <div className="lg:col-span-4 space-y-3">
+                      <Card className="border-[#C05043]/20">
+                        <CardTitle>Root Cause Chain • Explainable</CardTitle>
+                        <div className="mt-3 space-y-3 font-mono text-[11px]">
+                          <div className="bg-[#F1EDE6] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded p-2.5">
+                            <div className="text-[#8A8175] text-[10px] uppercase mb-1">Observed Pattern • Live</div>
+                            <div className="text-[#2A3138] dark:text-[#FAF8F4] leading-relaxed">Vibration ↑ ({liveValues.vib} mm/s) + Current Draw ↑ ({liveValues.cur}A) + Delta-T ↓ (3.1°C) → <span className="text-[#C05043] font-bold">Mechanical Drag & Bearing Wear</span></div>
+                          </div>
+                          <div className="bg-[#F1EDE6] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded p-2.5">
+                            <div className="text-[#8A8175] text-[10px] uppercase mb-1">Explainability • Transparent</div>
+                            <div className="text-[#6E6558] dark:text-[#A0988A]">Model: Multivariate Isolation Forest + FFT • Spectral defect at 3.2x RPM (outer race) • Confidence 91% • RUL 168h ±24h • No black box • Seasonal ARIMA baseline 8–10 kWh</div>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <Button variant="critical" size="sm" onClick={() => handleCreateWorkOrder('AHU-03', '8821')}>Create WO #8821</Button>
+                            <Button variant="secondary" size="sm" onClick={() => setShowFieldSheet(true)}>Print Field Sheet</Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => {
+                                setSelectedAssetId('ahu-03');
+                                setTab('asset', 'ahu-03');
+                              }}
+                              className="col-span-2 flex items-center justify-center gap-1.5 font-mono text-[10px]"
+                            >
+                              <QrCode size={12} className="text-[#2C6E9B]" />
+                              <span>Open AHU-03 Asset Passport</span>
+                            </Button>
+                          </div>
+                        </div>
+                      </Card>
+                      <Card>
+                        <CardTitle>Asset Context • Open Data</CardTitle>
+                        <div className="mt-2 space-y-2 font-mono text-[10px] text-[#6E6558] dark:text-[#A0988A]">
+                          <div className="flex justify-between"><span>Location</span><span className="text-[#1F2933] dark:text-[#FAF8F4]">East Wing • Roof Level 3</span></div>
+                          <div className="flex justify-between"><span>Model</span><span className="text-[#1F2933] dark:text-[#FAF8F4]">Trane M-Series • 2018</span></div>
+                          <div className="flex justify-between"><span>Last PM</span><span className="text-[#1F2933] dark:text-[#FAF8F4]">2026-08-14 • 29 days ago</span></div>
+                          <div className="flex justify-between"><span>Motor</span><span className="text-[#1F2933] dark:text-[#FAF8F4]">15 kW • 3-Phase • 1750 RPM</span></div>
+                          <div className="flex justify-between"><span>Bearing</span><span className="text-[#1F2933] dark:text-[#FAF8F4]">6205-2RS • SKF • 2x • Stock: 4</span></div>
+                          <div className="flex justify-between"><span>MQTT Topic</span><span className="text-[#2C6E9B] dark:text-[#58A6FF]">facility/unit01/ahu03/telemetry</span></div>
+                          <div className="flex justify-between"><span>Sampling</span><span className="text-[#1F2933] dark:text-[#FAF8F4]">{range} @ {range === '1H' ? '1m' : range === '24H' ? '15m' : '1h'}</span></div>
+                        </div>
+                      </Card>
+                      <MaintenanceChecklist onExport={handleExport} onPrintFieldSheet={() => setShowFieldSheet(true)} />
                     </div>
                   </div>
-                </Card>
-              </div>
-              <div className="lg:col-span-4 space-y-3">
-                <Card className="border-[#C05043]/20">
-                  <CardTitle>Root Cause Chain • Explainable</CardTitle>
-                  <div className="mt-3 space-y-3 font-mono text-[11px]">
-                    <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded p-2.5">
-                      <div className="text-[#8A8175] text-[10px] uppercase mb-1">Observed Pattern • Live</div>
-                      <div className="text-[#2A3138] leading-relaxed">Vibration ↑ ({liveValues.vib} mm/s) + Current Draw ↑ ({liveValues.cur}A) + Delta-T ↓ (3.1°C) → <span className="text-[#C05043] font-bold">Mechanical Drag & Bearing Wear</span></div>
-                    </div>
-                    <div className="bg-[#F1EDE6] border border-[#E6E0D6] rounded p-2.5">
-                      <div className="text-[#8A8175] text-[10px] uppercase mb-1">Explainability • Transparent</div>
-                      <div className="text-[#6E6558]">Model: Multivariate Isolation Forest + FFT • Spectral defect at 3.2x RPM (outer race) • Confidence 91% • RUL 168h ±24h • No black box • Seasonal ARIMA baseline 8–10 kWh</div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-2">
-                      <Button variant="critical" size="sm" onClick={() => handleCreateWorkOrder('AHU-03', '8821')}>Create WO #8821</Button>
-                      <Button variant="secondary" size="sm" onClick={() => setShowFieldSheet(true)}>Print Field Sheet</Button>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => {
-                          setSelectedAssetId('ahu-03');
-                          setTab('asset', 'ahu-03');
-                        }}
-                        className="col-span-2 flex items-center justify-center gap-1.5 font-mono text-[10px]"
-                      >
-                        <QrCode size={12} className="text-[#2C6E9B]" />
-                        <span>Open AHU-03 Asset Passport</span>
-                      </Button>
-                    </div>
-                  </div>
-                </Card>
-                <Card>
-                  <CardTitle>Asset Context • Open Data</CardTitle>
-                  <div className="mt-2 space-y-2 font-mono text-[10px] text-[#6E6558]">
-                    <div className="flex justify-between"><span>Location</span><span className="text-[#1F2933]">East Wing • Roof Level 3</span></div>
-                    <div className="flex justify-between"><span>Model</span><span className="text-[#1F2933]">Trane M-Series • 2018</span></div>
-                    <div className="flex justify-between"><span>Last PM</span><span className="text-[#1F2933]">2026-08-14 • 29 days ago</span></div>
-                    <div className="flex justify-between"><span>Motor</span><span className="text-[#1F2933]">15 kW • 3-Phase • 1750 RPM</span></div>
-                    <div className="flex justify-between"><span>Bearing</span><span className="text-[#1F2933]">6205-2RS • SKF • 2x • Stock: 4</span></div>
-                    <div className="flex justify-between"><span>MQTT Topic</span><span className="text-[#2C6E9B]">facility/unit01/ahu03/telemetry</span></div>
-                    <div className="flex justify-between"><span>Sampling</span><span className="text-[#1F2933]">{range} @ {range === '1H' ? '1m' : range === '24H' ? '15m' : '1h'}</span></div>
-                  </div>
-                </Card>
-                <MaintenanceChecklist onExport={handleExport} onPrintFieldSheet={() => setShowFieldSheet(true)} />
-              </div>
+                </section>
+              )}
             </div>
-          </section>
-        )}
+          )}
 
-        {/* Interactive Scenario Simulator */}
-        {tab === 'simulator' && (
-        <section className="space-y-4 pb-10">
-          <SectionLabel k="07" title='Interactive Scenario Simulator: "Normal Run" vs. "Mechanical Degradation"' id="simulator" />
-          <PredictiveSimulator params={params} liveValues={liveValues} isLive={isLive} />
-        </section>
-        )}
-      </div>
+          {/* 3. Alerts & Triage Dedicated View */}
+          {(tab === 'alerts' || tab === 'analysis') && (
+            <AlertsTriageView
+              feedMode={effectiveFeedMode}
+              liveValues={liveValues}
+              range={range}
+              setRange={setRange}
+              workOrders={workOrders}
+              acknowledged={acknowledged}
+              onAcknowledge={handleAcknowledge}
+              onCreateWorkOrder={handleCreateWorkOrder}
+              onViewTelemetry={handleViewTelemetry}
+              onPrintFieldSheet={() => setShowFieldSheet(true)}
+              onExport={handleExport}
+              onSelectAsset={handleSelectAsset}
+            />
+          )}
+
+          {/* 4. Asset Passport Dedicated View */}
+          {tab === 'asset' && (
+            <AssetPassport
+              assetId={selectedAssetId}
+              onSelectAsset={handleSelectAsset}
+              onBack={() => setTab('console')}
+              liveValues={liveValues}
+              feedMode={effectiveFeedMode}
+              isLive={isLive}
+              workOrders={workOrders}
+              onCreateWorkOrder={handleCreateWorkOrder}
+              onShowQrModal={() => setShowQrModal(true)}
+              onPrintFieldSheet={() => setShowFieldSheet(true)}
+              onOpenCalendar={() => setTab('calendar')}
+              showToast={showToast}
+            />
+          )}
+
+          {/* 5. Maintenance Calendar Dedicated Full Page */}
+          {(tab === 'calendar' || tab === 'maintenance-calendar') && (
+            <MaintenanceCalendarPage
+              feedMode={effectiveFeedMode}
+              onSelectAsset={handleSelectAsset}
+              onPrintFieldSheet={() => setShowFieldSheet(true)}
+              showToast={showToast}
+              canManageSchedules={roleConfig?.canManageSchedules ?? true}
+            />
+          )}
+
+          {/* 6. Reliability Audit Dedicated View */}
+          {(tab === 'audit' || tab === 'compliance') && (
+            <ReliabilityAuditView
+              liveValues={liveValues}
+              feedMode={effectiveFeedMode}
+              onExport={handleExport}
+              onSelectAsset={handleSelectAsset}
+            />
+          )}
+
+          {/* 7. Physics Simulator View */}
+          {tab === 'simulator' && (
+            <section className="space-y-4 pb-10">
+              <SectionLabel k="07" title='Interactive Scenario Simulator: "Normal Run" vs. "Mechanical Degradation"' id="simulator" />
+              <PredictiveSimulator params={params} liveValues={liveValues} isLive={isLive} />
+            </section>
+          )}
+          </ErrorBoundary>
+        </main>
       </div>
 
       {/* Field Sheet Modal */}
@@ -999,55 +1004,15 @@ function AppContent() {
         }}
       />
 
-      {/* Maintenance Calendar Modal */}
-      <MaintenanceCalendarModal
-        open={showCalendarModal}
-        onClose={() => setShowCalendarModal(false)}
-        feedMode={effectiveFeedMode}
-        onSelectAsset={handleSelectAsset}
-        onPrintFieldSheet={() => setShowFieldSheet(true)}
-        showToast={showToast}
-      />
-
-      {/* Google Sign-In Gate if visiting operational tabs while unauthenticated */}
-      <GoogleSignInModal
-        open={!isAuthenticated || signInModalOpen}
-        onClose={() => {
-          closeSignInModal();
-          if (!isAuthenticated) {
-            setTab('home');
-          }
-        }}
-        onSuccess={(role) => {
-          showToast(`✓ Authenticated as ${role.toUpperCase()} • Welcome to Console`);
-        }}
-      />
-
-      {/* Toast */}
+      {/* Toast Alert */}
       {toast && (
-        <div className="fixed bottom-4 right-4 z-[100] bg-[#FFFFFF] border border-[#D2C9BA] text-[#1F2933] px-3 py-2.5 rounded-lg shadow-xl flex items-center gap-2 font-mono text-[11px] animate-in slide-in-from-bottom-2 max-w-[360px]">
+        <div className="fixed bottom-4 right-4 z-[100] bg-[#FFFFFF] dark:bg-[#1A222B] border border-[#D2C9BA] dark:border-[#2C3847] text-[#1F2933] dark:text-[#FAF8F4] px-3 py-2.5 rounded-lg shadow-xl flex items-center gap-2 font-mono text-[11px] animate-in slide-in-from-bottom-2 max-w-[360px]">
           <div className="w-1.5 h-1.5 rounded-full bg-[#2E7D5B] animate-pulse shrink-0" />
           <span className="leading-relaxed">{toast}</span>
         </div>
       )}
 
-      {/* Mobile jump nav */}
-      <div className="xl:hidden fixed bottom-0 left-0 right-0 bg-[#FFFFFF]/95 dark:bg-[#141B22]/95 backdrop-blur border-t border-[#E6E0D6] dark:border-[#2C3847] p-2 flex gap-1 overflow-x-auto z-40">
-        {TABS.map(t => (
-          <button key={t.id} onClick={() => { setTab(t.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className={`whitespace-nowrap font-mono text-[10px] px-3 py-1.5 rounded border uppercase transition-colors ${tab === t.id ? 'bg-[#2C6E9B] border-[#2C6E9B] text-[#FFFFFF]' : 'bg-[#E6E0D6] dark:bg-[#1A222B] border-[#D2C9BA] dark:border-[#2C3847] text-[#3E4650] dark:text-[#C5BCAD] hover:bg-[#D2C9BA]'}`}>{t.label}</button>
-        ))}
-        {tab === 'asset' && (
-          <button onClick={() => { setTab('asset'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} className="whitespace-nowrap font-mono text-[10px] px-3 py-1.5 rounded border uppercase bg-[#2C6E9B] border-[#2C6E9B] text-[#FFFFFF] flex items-center gap-1.5 shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-            <span>Passport: {selectedAssetId ? selectedAssetId.toUpperCase() : 'ASSET'}</span>
-          </button>
-        )}
-        <div className="ml-auto flex items-center gap-1 pl-2 border-l border-[#E6E0D6] dark:border-[#2C3847]">
-          <div className="w-1 h-1 rounded-full bg-[#2E7D5B] animate-pulse" />
-          <span className="font-mono text-[9px] text-[#8A8175] whitespace-nowrap">Live {liveValues.vib}mm/s</span>
-        </div>
-      </div>
-
+      {/* Settings Panel */}
       <SettingsPanel
         open={settingsOpen}
         onClose={() => setSettingsOpen(false)}
@@ -1060,3 +1025,4 @@ function AppContent() {
     </div>
   );
 }
+

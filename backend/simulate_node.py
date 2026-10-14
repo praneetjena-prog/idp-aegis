@@ -45,9 +45,11 @@ def send_telemetry(fault_mode=False):
     )
 
     try:
-        with urllib.request.urlopen(req) as resp:
+        with urllib.request.urlopen(req, timeout=2.5) as resp:
             body = json.loads(resp.read().decode("utf-8"))
             print(f"[AEGIS NODE] Sent: Vib={vib}mm/s Temp={temp}°C Cur={cur}A -> Status: {body.get('status')}")
+    except urllib.error.URLError as e:
+        print(f"[AEGIS NODE] Cannot reach server on {SERVER_URL}. (Is 'py app.py' running?)")
     except Exception as e:
         print(f"[AEGIS NODE] Failed to send: {e}")
 
@@ -58,9 +60,12 @@ if __name__ == "__main__":
     print("=" * 60)
     
     cycle = 0
-    while True:
-        cycle += 1
-        # Toggle fault every 15 cycles for dynamic testing
-        fault = (cycle % 10 == 0 or cycle % 10 == 1 or cycle % 10 == 2)
-        send_telemetry(fault_mode=fault)
-        time.sleep(2.0)
+    try:
+        while True:
+            cycle += 1
+            # Toggle fault periodically for dynamic testing
+            fault = (cycle % 10 in [0, 1, 2])
+            send_telemetry(fault_mode=fault)
+            time.sleep(2.0)
+    except KeyboardInterrupt:
+        print("\n[AEGIS NODE] Simulation stopped by user.")

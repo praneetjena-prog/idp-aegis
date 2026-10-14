@@ -1,4 +1,4 @@
-import { supabase } from '@/integrations/supabase/client';
+import { supabase } from "@/integrations/supabase/client";
 
 export type DeviceCredentials = {
   deviceId: string;
@@ -11,9 +11,9 @@ export type DeviceCredentials = {
 export async function getDeviceCredentials(): Promise<DeviceCredentials | null> {
   try {
     const { data } = await supabase
-      .from('devices')
-      .select('id, label, ingest_key, last_seen_at')
-      .order('created_at', { ascending: true })
+      .from("devices")
+      .select("id, label, ingest_key, last_seen_at")
+      .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
 

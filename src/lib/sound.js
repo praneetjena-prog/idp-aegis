@@ -3,21 +3,21 @@
  * Pure native browser audio - zero external audio asset files or network dependencies.
  */
 
-const STORAGE_SOUND_KEY = 'aegis-sound-enabled';
+const STORAGE_SOUND_KEY = "aegis-sound-enabled";
 
 export function isSoundEnabled() {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === "undefined") return false;
   const val = window.localStorage.getItem(STORAGE_SOUND_KEY);
-  return val === 'true';
+  return val === "true";
 }
 
 export function setSoundEnabled(enabled) {
-  if (typeof window === 'undefined') return;
-  window.localStorage.setItem(STORAGE_SOUND_KEY, enabled ? 'true' : 'false');
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(STORAGE_SOUND_KEY, enabled ? "true" : "false");
 }
 
 function getAudioContext() {
-  if (typeof window === 'undefined') return null;
+  if (typeof window === "undefined") return null;
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtx) return null;
   return new AudioCtx();
@@ -33,7 +33,7 @@ export function playDispatchChime() {
     const ctx = getAudioContext();
     if (!ctx) return;
 
-    if (ctx.state === 'suspended') {
+    if (ctx.state === "suspended") {
       ctx.resume();
     }
 
@@ -42,7 +42,7 @@ export function playDispatchChime() {
     // Tone 1
     const osc1 = ctx.createOscillator();
     const gain1 = ctx.createGain();
-    osc1.type = 'sine';
+    osc1.type = "sine";
     osc1.frequency.setValueAtTime(523.25, now); // C5
     gain1.gain.setValueAtTime(0.12, now);
     gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.18);
@@ -54,7 +54,7 @@ export function playDispatchChime() {
     // Tone 2
     const osc2 = ctx.createOscillator();
     const gain2 = ctx.createGain();
-    osc2.type = 'sine';
+    osc2.type = "sine";
     osc2.frequency.setValueAtTime(659.25, now + 0.12); // E5
     gain2.gain.setValueAtTime(0.12, now + 0.12);
     gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.35);
@@ -65,7 +65,7 @@ export function playDispatchChime() {
 
     setTimeout(() => ctx.close(), 500);
   } catch (err) {
-    console.warn('[AEGIS Audio] Failed to play chime', err);
+    console.warn("[AEGIS Audio] Failed to play chime", err);
   }
 }
 
@@ -79,7 +79,7 @@ export function playAlertChime() {
     const ctx = getAudioContext();
     if (!ctx) return;
 
-    if (ctx.state === 'suspended') {
+    if (ctx.state === "suspended") {
       ctx.resume();
     }
 
@@ -87,7 +87,7 @@ export function playAlertChime() {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
 
-    osc.type = 'triangle';
+    osc.type = "triangle";
     osc.frequency.setValueAtTime(440, now);
     osc.frequency.setValueAtTime(880, now + 0.15);
 
@@ -101,6 +101,6 @@ export function playAlertChime() {
 
     setTimeout(() => ctx.close(), 500);
   } catch (err) {
-    console.warn('[AEGIS Audio] Failed to play alert', err);
+    console.warn("[AEGIS Audio] Failed to play alert", err);
   }
 }

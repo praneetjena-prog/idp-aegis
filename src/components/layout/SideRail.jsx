@@ -1,103 +1,120 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { 
   Shield, 
   Radio, 
   Gauge, 
   Settings, 
   LayoutDashboard, 
-  ChartNoAxesCombined, 
-  Cable, 
-  Menu,
-  QrCode 
+  AlertTriangle, 
+  QrCode,
+  CalendarDays,
+  Microscope,
+  ChevronLeft,
+  ChevronRight,
+  Sun,
+  Moon,
+  Volume2,
+  VolumeX,
+  X
 } from 'lucide-react';
 
-export const TABS = [
-  { 
-    id: 'overview', 
-    label: 'Overview', 
-    shortLabel: 'Overview', 
-    subtitle: 'Command Center',
-    tooltipTitle: 'Facility Overview',
-    tooltipDesc: 'Overall health score, problem spotlight & system status',
-    icon: LayoutDashboard 
+/**
+ * Standardized AEGIS Information Architecture:
+ * - MONITOR: Overview, Live Console, Alerts & Triage
+ * - ASSETS & MAINTENANCE: Asset Passports, Maintenance Calendar
+ * - RELIABILITY & INTELLIGENCE: Reliability Audit, Physics Simulator
+ * - ADMINISTRATION: Facility Settings
+ */
+export const NAV_GROUPS = [
+  {
+    title: 'Monitor',
+    items: [
+      {
+        id: 'overview',
+        label: 'Overview',
+        subtitle: 'Facility Summary',
+        icon: LayoutDashboard,
+        route: 'overview'
+      },
+      {
+        id: 'console',
+        label: 'Live Console',
+        subtitle: 'Telemetry & SCADA',
+        icon: Radio,
+        route: 'console'
+      },
+      {
+        id: 'alerts',
+        label: 'Alerts & Triage',
+        subtitle: 'Active Fault Queue',
+        icon: AlertTriangle,
+        route: 'alerts',
+        hasBadge: true
+      }
+    ]
   },
-  { 
-    id: 'console', 
-    label: 'Live Console', 
-    shortLabel: 'Console', 
-    subtitle: 'Telemetry & Equipment',
-    tooltipTitle: 'Live Operations Console',
-    tooltipDesc: 'Real-time telemetry streams, equipment grid & sensor tiles',
-    icon: Radio,
-    alertOnFault: true
+  {
+    title: 'Assets & Maintenance',
+    items: [
+      {
+        id: 'asset',
+        label: 'Asset Passports',
+        subtitle: 'Digital Twins & SOPs',
+        icon: QrCode,
+        route: 'asset'
+      },
+      {
+        id: 'calendar',
+        label: 'Maintenance Calendar',
+        subtitle: 'PM Schedule & Sync',
+        icon: CalendarDays,
+        route: 'calendar'
+      }
+    ]
   },
-  { 
-    id: 'analysis', 
-    label: 'Analysis & Action', 
-    shortLabel: 'Analysis', 
-    subtitle: 'Root Cause & Triage',
-    tooltipTitle: 'Analysis & Triage Queue',
-    tooltipDesc: 'Vibration spectrum, failure forecasting & work orders',
-    icon: ChartNoAxesCombined,
-    alertOnFault: true
+  {
+    title: 'Reliability & Intelligence',
+    items: [
+      {
+        id: 'audit',
+        label: 'Reliability Audit',
+        subtitle: 'ISO 10816 Class II',
+        icon: Microscope,
+        route: 'audit'
+      },
+      {
+        id: 'simulator',
+        label: 'Physics Simulator',
+        subtitle: 'Degradation Sandbox',
+        icon: Gauge,
+        route: 'simulator'
+      }
+    ]
   },
-  { 
-    id: 'simulator', 
-    label: 'Scenario Simulator', 
-    shortLabel: 'Simulator', 
-    subtitle: 'Physics Wear Engine',
-    tooltipTitle: 'Predictive Simulator',
-    tooltipDesc: 'Run what-if wear scenarios and verify early warning limits',
-    icon: Gauge 
-  },
-  { 
-    id: 'platform', 
-    label: 'Platform & Hardware', 
-    shortLabel: 'Platform', 
-    subtitle: 'ESP32 & Schematics',
-    tooltipTitle: 'Hardware & Architecture',
-    tooltipDesc: 'Democratized sensor specs, gateway pinouts & open docs',
-    icon: Cable 
-  },
+  {
+    title: 'Administration',
+    items: [
+      {
+        id: 'settings',
+        label: 'Facility Settings',
+        subtitle: 'Limits & Calibration',
+        icon: Settings,
+        isAction: true,
+        actionType: 'settings'
+      }
+    ]
+  }
 ];
 
-export const TabBar = React.memo(({ tab, setTab, onSettings, assetCode }) => (
-  <div className="flex xl:hidden overflow-x-auto items-center bg-[#FFFFFF] dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] justify-between">
-    <div className="flex items-center overflow-x-auto">
-      {TABS.map(t => (
-        <button
-          key={t.id}
-          onClick={() => setTab(t.id)}
-          className={`whitespace-nowrap font-display text-[10px] font-bold uppercase px-3.5 py-2.5 border-b-2 transition-colors ${tab === t.id ? 'border-[#2C6E9B] text-[#2C6E9B] bg-[#2C6E9B]/5' : 'border-transparent text-[#6E6558] dark:text-[#C5BCAD] hover:bg-[#F1EDE6] dark:hover:bg-[#141B22] hover:text-[#1F2933]'}`}
-        >
-          {t.shortLabel}
-        </button>
-      ))}
-      {tab === 'asset' && (
-        <button
-          type="button"
-          onClick={() => setTab('asset')}
-          className="whitespace-nowrap font-display text-[10px] font-bold uppercase px-3.5 py-2.5 border-b-2 border-[#2C6E9B] text-[#2C6E9B] bg-[#2C6E9B]/10 flex items-center gap-1.5"
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-[#2C6E9B] animate-pulse" />
-          <span>Passport • {assetCode || 'Asset'}</span>
-        </button>
-      )}
-    </div>
-    {onSettings && (
-      <button
-        type="button"
-        onClick={onSettings}
-        title="Facility Settings & Sensor Calibration"
-        aria-label="Settings"
-        className="group shrink-0 flex items-center gap-1 font-display text-[10px] font-bold uppercase px-3 py-2 text-[#6E6558] dark:text-[#C5BCAD] hover:text-[#2C6E9B] transition-colors border-l border-[#E6E0D6] dark:border-[#2C3847]"
-      >
-        <Settings size={13} className="transition-transform duration-500 ease-out group-hover:rotate-90 text-[#2C6E9B]" />
-        <span>Settings</span>
-      </button>
-    )}
-  </div>
-));
+export const TABS = [
+  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'console', label: 'Live Console', icon: Radio },
+  { id: 'alerts', label: 'Alerts & Triage', icon: AlertTriangle },
+  { id: 'asset', label: 'Asset Passport', icon: QrCode },
+  { id: 'calendar', label: 'Maintenance Calendar', icon: CalendarDays },
+  { id: 'audit', label: 'Reliability Audit', icon: Microscope },
+  { id: 'simulator', label: 'Simulator', icon: Gauge }
+];
 
 export const SideRail = React.memo(({ 
   tab, 
@@ -106,240 +123,324 @@ export const SideRail = React.memo(({
   settingsOpen, 
   isLive, 
   feedMode,
-  collapsed, 
+  collapsed = false, 
   onToggleCollapse, 
-  expanded,
+  expanded = true,
   onToggleExpand,
-  assetCode
+  assetCode,
+  unacknowledgedAlertsCount = 0,
+  mobileOpen = false,
+  onCloseMobile,
+  darkMode = false,
+  toggleTheme,
+  soundOn = true,
+  toggleSound
 }) => {
   const isFault = feedMode === 'fault';
-  const widthClass = collapsed ? 'w-0' : (expanded ? 'w-[230px]' : 'w-[76px]');
+  const widthClass = collapsed ? 'w-0' : (expanded ? 'w-[240px]' : 'w-[68px]');
 
-  return (
-    <div className={`hidden xl:block transition-[width] duration-300 ${widthClass}`}>
-      <aside className={`hidden xl:flex fixed inset-y-0 left-0 z-[60] flex-col bg-[#FFFFFF] dark:bg-[#141B22] border-r-2 border-[#1F2933] dark:border-[#2C3847] transition-[width,transform] duration-300 ${
-        collapsed ? '-translate-x-full w-[76px]' : `translate-x-0 ${expanded ? 'w-[230px]' : 'w-[76px]'}`
-      }`}>
-        
-        {/* Top Header Section */}
-        <div className={`h-[76px] w-full border-b-2 border-[#1F2933] dark:border-[#2C3847] flex items-center ${
-          expanded ? 'justify-between px-4' : 'justify-center'
+  // Close mobile drawer on Escape key
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && mobileOpen && onCloseMobile) {
+        onCloseMobile();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileOpen, onCloseMobile]);
+
+  const handleNavClick = (item) => {
+    if (item.isAction && item.actionType === 'settings') {
+      if (onSettings) onSettings();
+      if (mobileOpen && onCloseMobile) onCloseMobile();
+      return;
+    }
+
+    if (item.route) {
+      setTab(item.route);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      if (mobileOpen && onCloseMobile) {
+        onCloseMobile();
+      }
+    }
+  };
+
+  const isItemActive = (item) => {
+    if (item.id === 'settings') return Boolean(settingsOpen);
+    if (item.route === 'overview' && tab === 'overview') return true;
+    if (item.route === 'console' && tab === 'console') return true;
+    if (item.route === 'alerts' && (tab === 'alerts' || tab === 'analysis')) return true;
+    if (item.route === 'asset' && tab === 'asset') return true;
+    if (item.route === 'calendar' && (tab === 'calendar' || tab === 'maintenance-calendar')) return true;
+    if (item.route === 'audit' && (tab === 'audit' || tab === 'compliance')) return true;
+    if (item.route === 'simulator' && tab === 'simulator') return true;
+    return false;
+  };
+
+  // Compute alert badge count strictly from real application state
+  const alertBadgeCount = isFault && unacknowledgedAlertsCount > 0 ? unacknowledgedAlertsCount : 0;
+
+  const renderNavContent = (isDrawer = false) => {
+    const isExpandedState = isDrawer || expanded;
+
+    return (
+      <div className="flex flex-col h-full bg-[#FAF8F4] dark:bg-[#141B22] border-r border-[#D2C9BA] dark:border-[#2C3847] text-[#1F2933] dark:text-[#FAF8F4] select-none">
+        {/* Brand Header */}
+        <div className={`h-14 border-b border-[#D2C9BA] dark:border-[#2C3847] flex items-center px-3.5 shrink-0 ${
+          isExpandedState ? 'justify-between' : 'justify-center'
         }`}>
-          {expanded ? (
+          {isExpandedState ? (
             <>
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-lg bg-[#2C6E9B] flex items-center justify-center shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C]">
-                  <Shield size={16} className="text-[#FFFFFF]" />
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div className="w-8 h-8 rounded-lg bg-[#2C6E9B] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <Shield size={16} />
                 </div>
-                <div>
-                  <div className="font-display text-[15px] font-bold leading-none uppercase text-[#1F2933] dark:text-[#FAF8F4] tracking-wider">
+                <div className="min-w-0">
+                  <div className="font-display text-[14px] font-bold text-[#1F2933] dark:text-[#FAF8F4] tracking-tight leading-none">
                     AEGIS
                   </div>
-                  <div className="font-mono text-[9px] uppercase tracking-widest text-[#8A8175] mt-0.5">
-                    Console
+                  <div className="font-mono text-[9px] uppercase tracking-wider text-[#8A8175] mt-1 font-semibold truncate">
+                    Facility Intel
                   </div>
                 </div>
               </div>
-              <button
-                type="button"
-                onClick={onToggleExpand}
-                title="Collapse to compact icon rail"
-                aria-label="Collapse to compact icon rail"
-                className="w-8 h-8 rounded border border-[#E6E0D6] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#6E6558] dark:text-[#FAF8F4] hover:text-[#2C6E9B] hover:border-[#2C6E9B] flex items-center justify-center transition-colors"
-              >
-                <Menu size={16} />
-              </button>
+
+              {isDrawer ? (
+                <button
+                  type="button"
+                  onClick={onCloseMobile}
+                  title="Close navigation"
+                  aria-label="Close navigation"
+                  className="w-7 h-7 rounded-md border border-[#D2C9BA] dark:border-[#2C3847] bg-white dark:bg-[#1A222B] text-[#8A8175] hover:text-[#1F2933] dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <X size={15} />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onToggleExpand}
+                  title="Collapse sidebar to icon rail"
+                  aria-label="Collapse sidebar to icon rail"
+                  className="w-7 h-7 rounded-md border border-[#D2C9BA] dark:border-[#2C3847] bg-white dark:bg-[#1A222B] text-[#8A8175] hover:text-[#1F2933] dark:hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                >
+                  <ChevronLeft size={14} />
+                </button>
+              )}
             </>
           ) : (
             <button
               type="button"
               onClick={onToggleExpand}
-              title="Expand navigation sidebar"
-              aria-label="Expand navigation sidebar"
-              className="w-10 h-10 rounded-lg bg-[#2C6E9B] flex items-center justify-center text-white shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:opacity-90 transition-opacity"
+              title="Expand sidebar navigation"
+              aria-label="Expand sidebar navigation"
+              className="w-8 h-8 rounded-lg bg-[#2C6E9B] text-white flex items-center justify-center shadow-xs hover:bg-[#255C83] transition-colors cursor-pointer"
             >
-              <Shield size={20} className="text-[#FFFFFF]" />
+              <Shield size={16} />
             </button>
           )}
         </div>
 
-        {/* Navigation Items */}
-        <nav className="flex-1 py-4 flex flex-col gap-2 items-center px-2">
-          {tab === 'asset' && (
-            expanded ? (
-              <button
-                type="button"
-                onClick={() => { setTab('asset'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                className="w-full p-2.5 mb-1 rounded-lg border-2 border-[#2C6E9B] bg-[#2C6E9B] text-white shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C] flex items-center justify-between text-left"
-              >
-                <div className="flex items-center gap-2.5 min-w-0">
-                  <div className="w-8 h-8 rounded-md bg-white/20 flex items-center justify-center shrink-0">
-                    <QrCode size={16} className="text-white" />
-                  </div>
-                  <div className="min-w-0 truncate">
-                    <div className="font-display text-[12px] font-bold uppercase tracking-wider truncate">
-                      Asset Passport
-                    </div>
-                    <div className="font-mono text-[9px] text-white/80 truncate">
-                      {assetCode || 'Active Tag'}
-                    </div>
-                  </div>
+        {/* Navigation Categories Container */}
+        <nav className="flex-1 overflow-y-auto px-2 py-3 space-y-3 font-sans" aria-label="Facility Navigation">
+          {NAV_GROUPS.map((group) => (
+            <div key={group.title} className="space-y-0.5">
+              {isExpandedState && (
+                <div className="px-2.5 py-1 text-[10px] font-mono uppercase tracking-wider font-bold text-[#8A8175] dark:text-[#A0988A]">
+                  {group.title}
                 </div>
-                <span className="w-2 h-2 rounded-full bg-white animate-pulse shrink-0" />
-              </button>
-            ) : (
-              <div className="relative group flex items-center justify-center mb-1">
-                <button
-                  type="button"
-                  onClick={() => { setTab('asset'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className="w-12 h-12 flex items-center justify-center border-2 border-[#2C6E9B] bg-[#2C6E9B] text-white shadow-[3px_3px_0_#D2C9BA] dark:shadow-[3px_3px_0_#0F151C]"
-                  title={`Asset Passport: ${assetCode || 'Active Tag'}`}
-                >
-                  <QrCode size={18} />
-                </button>
-              </div>
-            )
-          )}
-          {TABS.map((item) => {
-            const Icon = item.icon;
-            const isActive = tab === item.id;
-            const hasAlert = item.alertOnFault && isFault;
+              )}
 
-            if (expanded) {
-              return (
-                <button
-                  key={item.id}
-                  type="button"
-                  onClick={() => { setTab(item.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  className={`w-full p-2.5 rounded-lg border text-left flex items-center justify-between transition-all ${
-                    isActive
-                      ? 'bg-[#2C6E9B] border-[#1F2933] text-[#FFFFFF] shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C]'
-                      : 'bg-[#FAF8F4] dark:bg-[#1A222B] border-[#E6E0D6] dark:border-[#2C3847] text-[#554D42] dark:text-[#C5BCAD] hover:border-[#2C6E9B] hover:text-[#1F2933] dark:hover:text-white'
-                  }`}
-                >
-                  <div className="flex items-center gap-3 min-w-0">
-                    <div className={`w-8 h-8 rounded-md flex items-center justify-center shrink-0 ${
-                      isActive ? 'bg-[#FFFFFF]/20 text-[#FFFFFF]' : 'bg-[#E6E0D6] dark:bg-[#141B22] text-[#2C6E9B]'
-                    }`}>
-                      <Icon size={16} />
-                    </div>
-                    <div className="min-w-0 truncate">
-                      <div className={`font-display text-[12px] font-bold uppercase tracking-wider leading-tight truncate ${
-                        isActive ? 'text-[#FFFFFF]' : 'text-[#1F2933] dark:text-[#FAF8F4]'
-                      }`}>
-                        {item.label}
+              {group.items.map((item) => {
+                const Icon = item.icon;
+                const isActive = isItemActive(item);
+                const showBadge = item.hasBadge && alertBadgeCount > 0;
+
+                if (isExpandedState) {
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => handleNavClick(item)}
+                      title={`${item.label} — ${item.subtitle}`}
+                      aria-label={item.label}
+                      className={`w-full px-2.5 py-2 rounded-lg text-left flex items-center justify-between transition-colors group cursor-pointer focus-visible:ring-2 focus-visible:ring-[#2C6E9B] ${
+                        isActive
+                          ? 'bg-[#2C6E9B] text-white font-semibold shadow-xs'
+                          : 'text-[#4A4237] dark:text-[#C5BCAD] hover:bg-[#EAE4D9] dark:hover:bg-[#1E2733] hover:text-[#1F2933] dark:hover:text-[#FAF8F4]'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Icon 
+                          size={16} 
+                          className={`shrink-0 ${
+                            isActive 
+                              ? 'text-white' 
+                              : item.id === 'alerts' && isFault && alertBadgeCount > 0
+                              ? 'text-[#C05043]'
+                              : 'text-[#6E6558] dark:text-[#9CA3AF] group-hover:text-[#2C6E9B]'
+                          }`} 
+                        />
+                        <div className="min-w-0 truncate">
+                          <div className="text-[12px] font-medium leading-tight truncate">
+                            {item.label}
+                          </div>
+                          <div className={`text-[9px] font-mono truncate mt-0.5 ${
+                            isActive ? 'text-white/80' : 'text-[#8A8175] dark:text-[#8A8175]'
+                          }`}>
+                            {item.id === 'asset' && assetCode ? `Active: ${assetCode}` : item.subtitle}
+                          </div>
+                        </div>
                       </div>
-                      <div className={`font-mono text-[9px] truncate mt-0.5 ${
-                        isActive ? 'text-[#FFFFFF]/80' : 'text-[#8A8175]'
-                      }`}>
-                        {item.subtitle}
-                      </div>
-                    </div>
-                  </div>
 
-                  {hasAlert && (
-                    <span className="shrink-0 font-mono text-[8px] font-bold px-1.5 py-0.5 rounded uppercase bg-[#C05043] text-white animate-pulse">
-                      Alert
-                    </span>
-                  )}
-                </button>
-              );
-            }
-
-            return (
-              <div key={item.id} className="relative group flex items-center justify-center">
-                <button
-                  type="button"
-                  onClick={() => { setTab(item.id); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-                  aria-label={item.label}
-                  aria-current={isActive ? 'page' : undefined}
-                  className={`relative w-12 h-12 flex items-center justify-center border transition-all ${
-                    isActive 
-                      ? 'bg-[#2C6E9B] border-[#1F2933] text-[#FFFFFF] shadow-[3px_3px_0_#D2C9BA] dark:shadow-[3px_3px_0_#0F151C]' 
-                      : 'bg-[#FAF8F4] dark:bg-[#1A222B] border-[#E6E0D6] dark:border-[#2C3847] text-[#6E6558] dark:text-[#C5BCAD] hover:border-[#2C6E9B] hover:text-[#2C6E9B]'
-                  }`}
-                >
-                  <Icon size={18} />
-                  {isActive && <span className="absolute -left-[15px] h-6 w-1 bg-[#2C6E9B]" />}
-                  
-                  {hasAlert && (
-                    <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-[#C05043] ring-2 ring-white dark:ring-[#141B22] animate-pulse" />
-                  )}
-                </button>
-
-                <div className="absolute left-[64px] top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[100] pointer-events-none">
-                  <div className="bg-[#1F2933] dark:bg-[#0F151C] text-white border-2 border-[#1F2933] dark:border-[#2C3847] shadow-[3px_3px_0_rgba(0,0,0,0.3)] rounded-lg px-3 py-2 whitespace-nowrap">
-                    <div className="flex items-center gap-2 font-display text-[11px] font-bold uppercase tracking-wider text-white">
-                      <span>{item.tooltipTitle}</span>
-                      {hasAlert && (
-                        <span className="px-1.5 py-0.2 rounded bg-[#C05043] text-[8px] font-mono">
-                          Attention Needed
+                      {showBadge && (
+                        <span className={`px-1.5 py-0.2 rounded-full text-[9px] font-mono font-bold shrink-0 ${
+                          isActive 
+                            ? 'bg-white text-[#C05043]' 
+                            : 'bg-[#C05043] text-white'
+                        }`}>
+                          {alertBadgeCount}
                         </span>
                       )}
-                    </div>
+                    </button>
+                  );
+                }
+
+                // Collapsed Icon-Rail Button
+                return (
+                  <div key={item.id} className="relative flex justify-center py-0.5">
+                    <button
+                      type="button"
+                      onClick={() => handleNavClick(item)}
+                      title={`${item.label} — ${item.subtitle}`}
+                      aria-label={`${item.label} — ${item.subtitle}`}
+                      className={`w-10 h-10 rounded-lg flex items-center justify-center transition-colors relative cursor-pointer focus-visible:ring-2 focus-visible:ring-[#2C6E9B] ${
+                        isActive
+                          ? 'bg-[#2C6E9B] text-white shadow-xs'
+                          : 'text-[#6E6558] dark:text-[#C5BCAD] hover:bg-[#EAE4D9] dark:hover:bg-[#1E2733] hover:text-[#1F2933]'
+                      }`}
+                    >
+                      <Icon size={18} />
+                      {showBadge && (
+                        <span className="absolute top-1 right-1 w-2 h-2 rounded-full bg-[#C05043] ring-2 ring-white dark:ring-[#141B22]" />
+                      )}
+                    </button>
                   </div>
-                </div>
-              </div>
-            );
-          })}
+                );
+              })}
+            </div>
+          ))}
         </nav>
 
-        {/* Bottom Action Section: Settings & Controls */}
-        <div className={`mt-auto mb-5 ${expanded ? 'px-3 w-full' : 'relative group'}`}>
-          {expanded ? (
-            <button
-              type="button"
-              onClick={onSettings}
-              className={`w-full p-2.5 rounded-lg border text-left flex items-center justify-between transition-all ${
-                settingsOpen
-                  ? 'bg-[#2C6E9B] border-[#1F2933] text-white shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C]'
-                  : 'bg-[#FAF8F4] dark:bg-[#1A222B] border-[#E6E0D6] dark:border-[#2C3847] text-[#554D42] dark:text-[#C5BCAD] hover:border-[#2C6E9B]'
-              }`}
-            >
-              <div className="flex items-center gap-2.5 min-w-0">
-                <Settings size={18} className="transition-transform duration-500 ease-out group-hover:rotate-90 shrink-0 text-[#2C6E9B]" />
-                <div className="min-w-0">
-                  <div className="font-display text-[11px] font-bold uppercase tracking-wider text-[#1F2933] dark:text-[#FAF8F4]">
-                    Facility Settings
-                  </div>
-                  <div className="font-mono text-[9px] text-[#8A8175] truncate">
-                    Thresholds & Node Tare
-                  </div>
-                </div>
+        {/* Unified Sidebar Footer: Utilities (Sound, Theme, Facility Context) */}
+        <div className={`p-2.5 border-t border-[#D2C9BA] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] shrink-0 ${
+          isExpandedState ? 'space-y-2' : 'flex flex-col items-center gap-1.5'
+        }`}>
+          {isExpandedState ? (
+            <>
+              {/* Utility Icons Strip: Mute + Theme (moved from top bar to sidebar to prevent header collision) */}
+              <div className="grid grid-cols-2 gap-1.5 pt-0.5">
+                <button
+                  type="button"
+                  onClick={toggleSound}
+                  title={soundOn ? 'Audible Alarms: ENABLED (Click to mute)' : 'Audible Alarms: MUTED (Click to unmute)'}
+                  aria-label={soundOn ? 'Mute audible alarms' : 'Enable audible alarms'}
+                  className={`px-2 py-1.5 rounded-lg border text-[11px] font-mono flex items-center justify-center gap-1.5 transition-colors cursor-pointer ${
+                    soundOn 
+                      ? 'border-[#2C6E9B] bg-[#2C6E9B]/10 text-[#2C6E9B] font-semibold' 
+                      : 'border-[#D2C9BA] dark:border-[#2C3847] bg-white dark:bg-[#1A222B] text-[#8A8175] hover:text-[#1F2933]'
+                  }`}
+                >
+                  {soundOn ? <Volume2 size={13} /> : <VolumeX size={13} />}
+                  <span>{soundOn ? 'Audio On' : 'Muted'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={toggleTheme}
+                  title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                  className="px-2 py-1.5 rounded-lg border border-[#D2C9BA] dark:border-[#2C3847] bg-white dark:bg-[#1A222B] text-[11px] font-mono text-[#554D42] dark:text-[#C5BCAD] hover:border-[#2C6E9B] hover:text-[#2C6E9B] flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+                >
+                  {darkMode ? (
+                    <>
+                      <Sun size={13} className="text-[#E0A83B]" />
+                      <span>Light</span>
+                    </>
+                  ) : (
+                    <>
+                      <Moon size={13} className="text-[#2C6E9B]" />
+                      <span>Dark</span>
+                    </>
+                  )}
+                </button>
               </div>
-              <span className={`w-2 h-2 rounded-full shrink-0 ${isLive ? 'bg-[#2E7D5B] animate-pulse' : 'bg-[#B07B1C]'}`} />
-            </button>
+
+              {/* Facility Identifier Tag */}
+              <div className="px-2 py-1.5 rounded-md bg-white dark:bg-[#1A222B] border border-[#E6E0D6] dark:border-[#2C3847] text-[10px] font-mono text-[#8A8175] flex items-center justify-between">
+                <span>Facility</span>
+                <span className="font-bold text-[#1F2933] dark:text-[#FAF8F4]">UNIT-01</span>
+              </div>
+            </>
           ) : (
             <>
-              <button 
-                type="button" 
-                onClick={onSettings} 
-                title="Facility Settings & Sensor Calibration" 
-                aria-label="Facility Settings & Sensor Calibration"
-                aria-expanded={settingsOpen}
-                className={`relative w-12 h-12 flex items-center justify-center border-2 transition-all ${
-                  settingsOpen
-                    ? 'bg-[#2C6E9B] border-[#1F2933] dark:border-[#2C3847] text-[#FFFFFF] shadow-[3px_3px_0_#1F2933] dark:shadow-[3px_3px_0_#0F151C]'
-                    : 'border-[#1F2933] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:border-[#2C6E9B] hover:text-[#2C6E9B] active:translate-x-[1px] active:translate-y-[1px]'
+              {/* Collapsed Utility Buttons */}
+              <button
+                type="button"
+                onClick={toggleSound}
+                title={soundOn ? 'Audio Alarms: Enabled (Click to mute)' : 'Audio Alarms: Muted (Click to unmute)'}
+                aria-label={soundOn ? 'Mute audio alarms' : 'Enable audio alarms'}
+                className={`w-10 h-10 rounded-lg flex items-center justify-center border transition-colors cursor-pointer ${
+                  soundOn
+                    ? 'border-[#2C6E9B] bg-[#2C6E9B]/10 text-[#2C6E9B]'
+                    : 'border-[#D2C9BA] dark:border-[#2C3847] text-[#8A8175] hover:text-[#1F2933]'
                 }`}
               >
-                <Settings size={20} className="transition-transform duration-500 ease-out group-hover:rotate-90" />
-                <span 
-                  className={`absolute top-1 right-1 w-2 h-2 rounded-full border border-white dark:border-gray-900 ${isLive ? 'bg-[#2E7D5B] animate-pulse' : 'bg-[#B07B1C]'}`} 
-                  title={isLive ? 'ESP32 Hardware Connected' : 'Demonstration Mode'} 
-                />
+                {soundOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
               </button>
 
-              <div className="absolute left-[64px] top-1/2 -translate-y-1/2 hidden group-hover:flex items-center z-[100] pointer-events-none">
-                <div className="bg-[#1F2933] text-white text-[11px] font-mono px-2.5 py-1 rounded shadow-lg whitespace-nowrap border border-[#3E4650]">
-                  Facility Settings & Calibration
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={toggleTheme}
+                title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                aria-label={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+                className="w-10 h-10 rounded-lg flex items-center justify-center border border-[#D2C9BA] dark:border-[#2C3847] bg-white dark:bg-[#1A222B] text-[#554D42] dark:text-[#C5BCAD] hover:border-[#2C6E9B] hover:text-[#2C6E9B] transition-colors cursor-pointer"
+              >
+                {darkMode ? <Sun size={16} className="text-[#E0A83B]" /> : <Moon size={16} className="text-[#2C6E9B]" />}
+              </button>
             </>
           )}
         </div>
+      </div>
+    );
+  };
 
+  return (
+    <>
+      {/* 1. Desktop & Laptop Sidebar: Active on medium, large, and high-zoom desktop screens (md: 768px+) */}
+      <aside 
+        className={`hidden md:flex flex-col shrink-0 transition-[width] duration-200 z-30 sticky top-0 h-screen ${widthClass}`}
+        aria-label="Desktop Navigation"
+      >
+        {renderNavContent(false)}
       </aside>
-    </div>
+
+      {/* 2. Mobile Responsive Navigation Drawer: Active only on genuinely narrow handheld screens (< 768px) */}
+      {mobileOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex animate-in fade-in duration-200">
+          {/* Backdrop Overlay */}
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs transition-opacity"
+            onClick={onCloseMobile}
+            aria-hidden="true"
+          />
+
+          {/* Drawer Slide-out Surface */}
+          <div className="relative w-[280px] max-w-[85vw] h-full shadow-2xl z-10 animate-in slide-in-from-left duration-200">
+            {renderNavContent(true)}
+          </div>
+        </div>
+      )}
+    </>
   );
 });

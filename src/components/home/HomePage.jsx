@@ -28,6 +28,7 @@ import {
 } from 'lucide-react';
 import { useAuth, ROLES } from '../../context/AuthContext';
 import { GoogleIcon } from '../auth/GoogleSignInModal';
+import { UserRoleDropdown } from '../layout/UserRoleDropdown';
 
 export function HomePage({ 
   onNavigate, 
@@ -101,18 +102,18 @@ export function HomePage({
       actionText: 'Run Wear Simulator'
     },
     {
-      id: 'platform',
-      tab: 'platform',
-      title: 'Open Hardware & Sensor Layer',
-      category: 'Democratized Hardware',
-      icon: Cpu,
-      color: '#8A8175',
-      borderClass: 'hover:border-[#8A8175]',
-      badge: '$180 BOM',
-      badgeColor: 'bg-[#8A8175]/10 text-[#8A8175] border-[#8A8175]/30',
-      description: 'Complete bill of materials built on standard commercial off-the-shelf (COTS) electronics: ESP32 microcontrollers, MPU-6050 accelerometers, ACS712 current transformers, and MQTT broker pinouts.',
-      metrics: ['$180 Per Machine Cost', 'Zero Vendor Lock-in', 'Open Schematics'],
-      actionText: 'View Hardware Specs'
+      id: 'audit',
+      tab: 'audit',
+      title: 'ISO 10816 Reliability Audit',
+      category: 'Compliance & Standards',
+      icon: Microscope,
+      color: '#B07B1C',
+      borderClass: 'hover:border-[#B07B1C]',
+      badge: 'Regulatory Audit',
+      badgeColor: 'bg-[#B07B1C]/10 text-[#B07B1C] border-[#B07B1C]/30',
+      description: 'Continuous ISO 10816-3 Class II vibration severity monitoring, Remaining Useful Life (RUL) statistical validation, and immutable SHA-256 tamper-evident compliance audit ledgers.',
+      metrics: ['ISO 10816 Severity Zones', 'SHA-256 Ledger', 'Explainable Models'],
+      actionText: 'View Reliability Audit'
     },
     {
       id: 'asset',
@@ -209,51 +210,20 @@ export function HomePage({
               {darkMode ? <Sun size={14} className="text-[#E0A83B]" /> : <Moon size={14} className="text-[#2C6E9B]" />}
             </button>
 
-            {/* Auth State Button */}
-            {isAuthenticated ? (
-              <div className="flex items-center gap-2">
-                <div className="hidden sm:flex items-center gap-2 pl-2 border-l border-[#E6E0D6] dark:border-[#2C3847]">
-                  <img 
-                    src={user.avatar} 
-                    alt={user.name} 
-                    className="w-7 h-7 rounded-full border border-[#D2C9BA] dark:border-[#2C3847] object-cover" 
-                  />
-                  <div className="text-left">
-                    <div className="font-display text-[11px] font-bold leading-tight">{user.name}</div>
-                    <div className="font-mono text-[9px] text-[#8A8175]">{roleConfig?.shortName}</div>
-                  </div>
-                </div>
-
+            {/* Auth State & User Menu */}
+            <div className="flex items-center gap-2">
+              <UserRoleDropdown />
+              {isAuthenticated && (
                 <button
                   type="button"
                   onClick={() => handleLaunchConsole('console')}
-                  className="px-3.5 py-1.5 rounded-lg bg-[#2C6E9B] text-white font-display text-[12px] font-bold shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:bg-[#255C83] active:translate-x-[1px] active:translate-y-[1px] transition-all flex items-center gap-1.5"
+                  className="px-3.5 py-1.5 rounded-lg bg-[#2C6E9B] text-white font-display text-[12px] font-bold shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:bg-[#255C83] active:translate-x-[1px] active:translate-y-[1px] transition-all flex items-center gap-1.5 cursor-pointer"
                 >
                   <span>Enter Console</span>
                   <ArrowRight size={13} />
                 </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => openSignInModal('console')}
-                  className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg border border-[#D2C9BA] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] font-mono text-[11px] font-bold hover:border-[#2C6E9B] transition-all"
-                >
-                  <GoogleIcon size={14} />
-                  <span>Sign In</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={() => handleLaunchConsole('console')}
-                  className="px-3.5 py-1.5 rounded-lg bg-[#2C6E9B] text-white font-display text-[12px] font-bold shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] hover:bg-[#255C83] active:translate-x-[1px] active:translate-y-[1px] transition-all flex items-center gap-1.5"
-                >
-                  <span>Launch Console</span>
-                  <ArrowRight size={13} />
-                </button>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -535,7 +505,7 @@ export function HomePage({
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
-            {Object.values(ROLES).map((r) => {
+            {Object.values(ROLES).filter((r) => r.id !== 'feature_user').map((r) => {
               const icons = {
                 technician: Wrench,
                 manager: BarChart3,
@@ -592,7 +562,7 @@ export function HomePage({
                     }}
                     className="mt-6 w-full py-2 px-3 rounded-lg border border-[#D2C9BA] dark:border-[#2C3847] bg-[#FAF8F4] dark:bg-[#141B22] text-[#1F2933] dark:text-[#FAF8F4] font-display text-[12px] font-bold hover:bg-[#2C6E9B] hover:text-white hover:border-[#2C6E9B] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    <span>Sign In as {r.shortName}</span>
+                    <span>{isAuthenticated ? 'Enter Console' : 'Sign in with Google'}</span>
                     <ArrowRight size={13} />
                   </button>
                 </div>
@@ -728,7 +698,7 @@ export function HomePage({
             <button onClick={() => handleLaunchConsole('console')} className="hover:text-white transition-colors">Console</button>
             <button onClick={() => handleLaunchConsole('analysis')} className="hover:text-white transition-colors">Triage Queue</button>
             <button onClick={() => handleLaunchConsole('simulator')} className="hover:text-white transition-colors">Simulator</button>
-            <button onClick={() => handleLaunchConsole('platform')} className="hover:text-white transition-colors">Hardware BOM</button>
+            <button onClick={() => handleLaunchConsole('audit')} className="hover:text-white transition-colors">Reliability Audit</button>
             <a href="https://github.com/praneetjena-prog/idp-aegis" target="_blank" rel="noreferrer" className="hover:text-white transition-colors">GitHub Repository</a>
           </div>
 

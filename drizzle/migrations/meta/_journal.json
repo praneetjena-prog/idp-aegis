@@ -15,6 +15,20 @@
       "when": 1789319804238,
       "tag": "0001_restrict_facility_settings_writes",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789322000000,
+      "tag": "0002_create_profiles_table",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1789323000000,
+      "tag": "0003_secure_oauth_role_assignment",
+      "breakpoints": true
     }
   ]
 }

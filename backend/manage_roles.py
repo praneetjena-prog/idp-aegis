@@ -69,7 +69,48 @@ def ensure_tables():
     """)
     conn.commit()
     deduplicate_users(conn)
+    sync_file_requests(conn)
     conn.close()
+
+
+def sync_file_requests(conn):
+    try:
+        req_path = os.path.join(BACKEND_DIR, "..", "public", "role_requests.json")
+        if os.path.exists(req_path):
+            with open(req_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            for email, req in data.items():
+                if req.get("status") == "pending":
+                    clean_email = str(email).strip().lower()
+                    cursor = conn.execute(
+                        "SELECT id FROM role_requests WHERE lower(email) = ? AND status = 'pending'",
+                        (clean_email,)
+                    )
+                    existing = cursor.fetchone()
+                    req_role = str(req.get("requested_role") or "technician").strip()
+                    req_fac = str(req.get("facility_id") or "FACILITY-01").strip()
+                    req_time = req.get("created_at") or datetime.now().isoformat()
+                    if existing:
+                        conn.execute("""
+                            UPDATE role_requests
+                            SET requested_role = ?, facility_id = ?, created_at = ?
+                            WHERE id = ?
+                        """, (req_role, req_fac, req_time, existing["id"]))
+                    else:
+                        conn.execute("""
+                            INSERT INTO role_requests (user_id, email, name, requested_role, facility_id, status, created_at)
+                            VALUES (?, ?, ?, ?, ?, 'pending', ?)
+                        """, (
+                            str(req.get("user_id") or req.get("id") or clean_email),
+                            clean_email,
+                            str(req.get("name") or clean_email.split("@")[0]),
+                            req_role,
+                            req_fac,
+                            req_time
+                        ))
+            conn.commit()
+    except Exception:
+        pass
 
 
 def deduplicate_users(conn):

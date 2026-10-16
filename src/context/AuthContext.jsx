@@ -269,39 +269,75 @@ export function AuthProvider({ children }) {
     }
 
     // 4. Resolve pending access request status
-    if (hasFacilityAccess) {
-      setPendingRequest(null);
-      try {
-        if (typeof window !== 'undefined') {
-          window.localStorage.removeItem(`aegis_pending_${normalizedEmail}`);
-        }
-      } catch {}
-    } else {
-      try {
-        const pendingRaw = typeof window !== 'undefined' ? window.localStorage.getItem(`aegis_pending_${normalizedEmail}`) : null;
-        if (pendingRaw) {
-          setPendingRequest(JSON.parse(pendingRaw));
-        }
-      } catch {}
+    let activePending = null;
 
-      try {
-        const reqRes = await fetch('./role_requests.json');
-        if (reqRes.ok) {
-          const reqMap = await reqRes.json();
-          const existingReq = reqMap[normalizedEmail];
-          if (existingReq && existingReq.status === 'pending') {
-            setPendingRequest({
+    // A. Check localStorage first
+    try {
+      const pendingRaw = typeof window !== 'undefined' ? window.localStorage.getItem(`aegis_pending_${normalizedEmail}`) : null;
+      if (pendingRaw) {
+        const parsed = JSON.parse(pendingRaw);
+        if (parsed?.status === 'pending' && parsed?.role && parsed.role !== role) {
+          activePending = parsed;
+        } else {
+          if (typeof window !== 'undefined') {
+            window.localStorage.removeItem(`aegis_pending_${normalizedEmail}`);
+          }
+        }
+      }
+    } catch {}
+
+    // B. Check static role_requests.json (synced by backend when app.py / manage_roles runs)
+    try {
+      const reqRes = await fetch('./role_requests.json');
+      if (reqRes.ok) {
+        const reqMap = await reqRes.json();
+        const existingReq = reqMap[normalizedEmail];
+        if (existingReq) {
+          if (existingReq.status === 'pending' && existingReq.requested_role !== role) {
+            activePending = {
               role: existingReq.requested_role,
               facilityId: existingReq.facility_id || 'FACILITY-01',
               status: 'pending',
               requestedAt: existingReq.created_at
-            });
-          } else if (existingReq && existingReq.status !== 'pending') {
-            setPendingRequest(null);
+            };
+          } else if (existingReq.status !== 'pending' || existingReq.requested_role === role) {
+            activePending = null;
+            if (typeof window !== 'undefined') {
+              window.localStorage.removeItem(`aegis_pending_${normalizedEmail}`);
+            }
           }
         }
-      } catch {}
-    }
+      }
+    } catch {}
+
+    // C. Check live backend /api/roles/status if available
+    try {
+      const statusUrl = typeof window !== 'undefined' && window.location.port === '8080'
+        ? `/api/roles/status?email=${encodeURIComponent(normalizedEmail)}`
+        : `http://127.0.0.1:5000/api/roles/status?email=${encodeURIComponent(normalizedEmail)}`;
+      const statusRes = await fetch(statusUrl, { signal: AbortSignal.timeout(1200) });
+      if (statusRes.ok) {
+        const statusData = await statusRes.json();
+        if (statusData?.has_request && statusData.request) {
+          const req = statusData.request;
+          if (req.status === 'pending' && req.requested_role !== role) {
+            activePending = {
+              role: req.requested_role,
+              facilityId: req.facility_id || 'FACILITY-01',
+              status: 'pending',
+              requestedAt: req.created_at
+            };
+          } else if (req.status !== 'pending' || req.requested_role === role) {
+            activePending = null;
+            if (typeof window !== 'undefined') {
+              window.localStorage.removeItem(`aegis_pending_${normalizedEmail}`);
+            }
+          }
+        }
+      }
+    } catch {}
+
+    setPendingRequest(activePending);
 
     return {
       id: session.user.id,
@@ -579,11 +615,22 @@ export function AuthProvider({ children }) {
     };
   }, [user?.email, user?.id, user?.name]);
 
-  const cancelRoleRequest = useCallback(() => {
+  const cancelRoleRequest = useCallback(async () => {
+    const targetEmail = user?.email;
     setPendingRequest(null);
-    if (user?.email && typeof window !== 'undefined') {
+    if (targetEmail && typeof window !== 'undefined') {
       try {
-        window.localStorage.removeItem(`aegis_pending_${user.email.toLowerCase()}`);
+        window.localStorage.removeItem(`aegis_pending_${targetEmail.toLowerCase()}`);
+      } catch {}
+      try {
+        const cancelUrl = window.location.port === '8080'
+          ? '/api/roles/approve-request'
+          : 'http://127.0.0.1:5000/api/roles/approve-request';
+        await fetch(cancelUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email: targetEmail, action: 'reject', reviewer: 'User (Withdrawn)' })
+        });
       } catch {}
     }
   }, [user?.email]);

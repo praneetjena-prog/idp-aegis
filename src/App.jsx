@@ -443,6 +443,7 @@ function OperationalCockpit({
   const [railExpanded, setRailExpanded] = useState(true);
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   const [soundOn, setSoundOn] = useState(isSoundEnabled);
+  const [drilldownTab, setDrilldownTab] = useState('specs');
 
   const handleToggleSound = () => {
     const next = !soundOn;
@@ -827,29 +828,128 @@ function OperationalCockpit({
                           </div>
                         </CardHeader>
                         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-                          <div className={`bg-[#F1EDE6] dark:bg-[#141B22] border rounded-lg p-3 transition-all ${parseFloat(liveValues.vib) > 4 ? 'border-[#C05043]/50 bg-[#C05043]/5' : 'border-[#E6E0D6] dark:border-[#2C3847]'}`}>
-                            <div className="flex items-center gap-1.5 mb-1"><Waves size={12} className={parseFloat(liveValues.vib) > 4 ? 'text-[#C05043]' : 'text-[#6E6558]'} /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Vibration Velocity</span></div>
-                            <div className={`font-mono text-[18px] font-bold ${parseFloat(liveValues.vib) > 4 ? 'text-[#C05043]' : 'text-[#1F2933] dark:text-[#FAF8F4]'}`}>{detailData.vibration}</div>
-                            <div className="font-mono text-[10px] text-[#8A8175]">Threshold: {detailData.thresholdVib} • <span className={parseFloat(liveValues.vib) > 4 ? 'text-[#C05043]' : 'text-[#2E7D5B]'}>{parseFloat(liveValues.vib) > 4 ? `+${Math.round((liveValues.vib/2.5-1)*100)}% over` : 'Nominal'}</span></div>
-                            <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden"><div className="h-full bg-[#C05043] transition-all duration-700" style={{ width: `${Math.min(100, (liveValues.vib/8)*100)}%` }} /></div>
+                          <div className={`border rounded-lg p-3 transition-all ${
+                            parseFloat(liveValues.vib) > 4 
+                              ? 'border-[#C05043]/40 bg-[#FFFFFF] dark:bg-[#1A222B] shadow-xs' 
+                              : 'border-[#D2C9BA] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#1A222B]'
+                          }`}>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <div className="flex items-center gap-1.5">
+                                <Waves size={13} className={parseFloat(liveValues.vib) > 4 ? 'text-[#C05043]' : 'text-[#6E6558]'} />
+                                <span className="font-mono text-[9px] uppercase tracking-wider text-[#8A8175] font-semibold">Vibration Velocity</span>
+                              </div>
+                              <span className={`font-mono text-[9px] px-1.5 py-0.5 rounded ${
+                                parseFloat(liveValues.vib) > 4 
+                                  ? 'bg-[#C05043]/10 text-[#C05043] font-bold' 
+                                  : 'bg-[#2E7D5B]/10 text-[#2E7D5B]'
+                              }`}>
+                                {parseFloat(liveValues.vib) > 4 ? `+${Math.round((liveValues.vib/2.5-1)*100)}% over` : 'Nominal'}
+                              </span>
+                            </div>
+                            <div className={`font-mono text-[20px] font-bold leading-tight ${
+                              parseFloat(liveValues.vib) > 4 ? 'text-[#C05043]' : 'text-[#1F2933] dark:text-[#FAF8F4]'
+                            }`}>
+                              {detailData.vibration}
+                            </div>
+                            <div className="font-mono text-[10px] text-[#8A8175] mt-1">
+                              Threshold: {detailData.thresholdVib} • ISO 10816
+                            </div>
+                            <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-[#C05043] transition-all duration-700" 
+                                style={{ width: `${Math.min(100, (liveValues.vib/8)*100)}%` }} 
+                              />
+                            </div>
                           </div>
-                          <div className={`bg-[#F1EDE6] dark:bg-[#141B22] border rounded-lg p-3 transition-all ${liveValues.cur > 16 ? 'border-[#B07B1C]/50 bg-[#B07B1C]/5' : 'border-[#E6E0D6] dark:border-[#2C3847]'}`}>
-                            <div className="flex items-center gap-1.5 mb-1"><Zap size={12} className={liveValues.cur > 16 ? 'text-[#B07B1C]' : 'text-[#6E6558]'} /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Drive Current</span></div>
-                            <div className={`font-mono text-[18px] font-bold ${liveValues.cur > 16 ? 'text-[#B07B1C]' : 'text-[#1F2933] dark:text-[#FAF8F4]'}`}>{detailData.current}</div>
-                            <div className="font-mono text-[10px] text-[#8A8175]">Nominal: {detailData.nominalCurrent} • <span className={liveValues.cur > 16 ? 'text-[#B07B1C]' : 'text-[#2E7D5B]'}>{liveValues.cur > 16 ? `+${Math.round((liveValues.cur/14.2-1)*100)}% surge` : 'Nominal'}</span></div>
-                            <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden"><div className="h-full bg-[#B07B1C] transition-all duration-700" style={{ width: `${Math.min(100, (liveValues.cur/20)*100)}%` }} /></div>
+
+                          <div className={`border rounded-lg p-3 transition-all ${
+                            liveValues.cur > 16 
+                              ? 'border-[#B07B1C]/40 bg-[#FFFFFF] dark:bg-[#1A222B] shadow-xs' 
+                              : 'border-[#D2C9BA] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#1A222B]'
+                          }`}>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <div className="flex items-center gap-1.5">
+                                <Zap size={13} className={liveValues.cur > 16 ? 'text-[#B07B1C]' : 'text-[#6E6558]'} />
+                                <span className="font-mono text-[9px] uppercase tracking-wider text-[#8A8175] font-semibold">Drive Current</span>
+                              </div>
+                              <span className={`font-mono text-[9px] px-1.5 py-0.5 rounded ${
+                                liveValues.cur > 16 
+                                  ? 'bg-[#B07B1C]/10 text-[#B07B1C] font-bold' 
+                                  : 'bg-[#2E7D5B]/10 text-[#2E7D5B]'
+                              }`}>
+                                {liveValues.cur > 16 ? `+${Math.round((liveValues.cur/14.2-1)*100)}% surge` : 'Nominal'}
+                              </span>
+                            </div>
+                            <div className={`font-mono text-[20px] font-bold leading-tight ${
+                              liveValues.cur > 16 ? 'text-[#B07B1C]' : 'text-[#1F2933] dark:text-[#FAF8F4]'
+                            }`}>
+                              {detailData.current}
+                            </div>
+                            <div className="font-mono text-[10px] text-[#8A8175] mt-1">
+                              Nominal: {detailData.nominalCurrent} • 15 kW Motor
+                            </div>
+                            <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-[#B07B1C] transition-all duration-700" 
+                                style={{ width: `${Math.min(100, (liveValues.cur/20)*100)}%` }} 
+                              />
+                            </div>
                           </div>
-                          <div className={`bg-[#F1EDE6] dark:bg-[#141B22] border rounded-lg p-3 transition-all ${liveValues.temp > 65 ? 'border-[#C05043]/30 bg-[#C05043]/5' : 'border-[#E6E0D6] dark:border-[#2C3847]'}`}>
-                            <div className="flex items-center gap-1.5 mb-1"><Thermometer size={12} className={liveValues.temp > 65 ? 'text-[#C05043]' : 'text-[#6E6558]'} /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Bearing Temp</span></div>
-                            <div className="font-mono text-[18px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">{detailData.temp}</div>
-                            <div className="font-mono text-[10px] text-[#8A8175]">Nominal: {detailData.nominalTemp} • <span className={liveValues.temp > 65 ? 'text-[#C05043]' : 'text-[#2E7D5B]'}>{liveValues.temp > 65 ? 'Overheat' : 'Nominal'}</span></div>
-                            <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden"><div className="h-full bg-[#C05043] transition-all duration-700" style={{ width: `${Math.min(100, (liveValues.temp/90)*100)}%` }} /></div>
+
+                          <div className={`border rounded-lg p-3 transition-all ${
+                            liveValues.temp > 65 
+                              ? 'border-[#C05043]/40 bg-[#FFFFFF] dark:bg-[#1A222B] shadow-xs' 
+                              : 'border-[#D2C9BA] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#1A222B]'
+                          }`}>
+                            <div className="flex items-center justify-between mb-1.5">
+                              <div className="flex items-center gap-1.5">
+                                <Thermometer size={13} className={liveValues.temp > 65 ? 'text-[#C05043]' : 'text-[#6E6558]'} />
+                                <span className="font-mono text-[9px] uppercase tracking-wider text-[#8A8175] font-semibold">Bearing Temp</span>
+                              </div>
+                              <span className={`font-mono text-[9px] px-1.5 py-0.5 rounded ${
+                                liveValues.temp > 65 
+                                  ? 'bg-[#C05043]/10 text-[#C05043] font-bold' 
+                                  : 'bg-[#2E7D5B]/10 text-[#2E7D5B]'
+                              }`}>
+                                {liveValues.temp > 65 ? 'Elevated' : 'Nominal'}
+                              </span>
+                            </div>
+                            <div className="font-mono text-[20px] font-bold leading-tight text-[#1F2933] dark:text-[#FAF8F4]">
+                              {detailData.temp}
+                            </div>
+                            <div className="font-mono text-[10px] text-[#8A8175] mt-1">
+                              Nominal: {detailData.nominalTemp} • Class F
+                            </div>
+                            <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-[#C05043] transition-all duration-700" 
+                                style={{ width: `${Math.min(100, (liveValues.temp/90)*100)}%` }} 
+                              />
+                            </div>
                           </div>
-                          <div className="bg-[#F1EDE6] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded-lg p-3">
-                            <div className="flex items-center gap-1.5 mb-1"><Volume2 size={12} className="text-[#6E6558]" /><span className="font-mono text-[9px] uppercase text-[#8A8175]">Acoustic HF Noise</span></div>
-                            <div className="font-mono text-[18px] font-bold text-[#1F2933] dark:text-[#FAF8F4]">{detailData.acoustic}</div>
-                            <div className="font-mono text-[10px] text-[#8A8175]">Baseline 0 dB • Spectral peak 3.2kHz</div>
-                            <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden"><div className="h-full bg-[#2C6E9B] transition-all duration-700" style={{ width: `${feedMode === 'fault' ? 80 : 20}%` }} /></div>
+
+                          <div className="border border-[#D2C9BA] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#1A222B] rounded-lg p-3 transition-all">
+                            <div className="flex items-center justify-between mb-1.5">
+                              <div className="flex items-center gap-1.5">
+                                <Volume2 size={13} className="text-[#6E6558]" />
+                                <span className="font-mono text-[9px] uppercase tracking-wider text-[#8A8175] font-semibold">Acoustic HF</span>
+                              </div>
+                              <span className="font-mono text-[9px] px-1.5 py-0.5 rounded bg-[#2C6E9B]/10 text-[#2C6E9B]">
+                                3.2 kHz Peak
+                              </span>
+                            </div>
+                            <div className="font-mono text-[20px] font-bold leading-tight text-[#1F2933] dark:text-[#FAF8F4]">
+                              {detailData.acoustic}
+                            </div>
+                            <div className="font-mono text-[10px] text-[#8A8175] mt-1">
+                              Baseline: 0 dB • Spectral Peak
+                            </div>
+                            <div className="mt-2 h-1 bg-[#E6E0D6] dark:bg-[#2C3847] rounded-full overflow-hidden">
+                              <div 
+                                className="h-full bg-[#2C6E9B] transition-all duration-700" 
+                                style={{ width: `${feedMode === 'fault' ? 80 : 20}%` }} 
+                              />
+                            </div>
                           </div>
                         </div>
 
@@ -866,20 +966,32 @@ function OperationalCockpit({
                       </Card>
                     </div>
                     <div className="lg:col-span-4 space-y-3">
-                      <Card className="border-[#C05043]/20">
-                        <CardTitle>Root Cause Chain • Explainable</CardTitle>
-                        <div className="mt-3 space-y-3 font-mono text-[11px]">
-                          <div className="bg-[#F1EDE6] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded p-2.5">
-                            <div className="text-[#8A8175] text-[10px] uppercase mb-1">Observed Pattern • Live</div>
-                            <div className="text-[#2A3138] dark:text-[#FAF8F4] leading-relaxed">Vibration ↑ ({liveValues.vib} mm/s) + Current Draw ↑ ({liveValues.cur}A) + Delta-T ↓ (3.1°C) → <span className="text-[#C05043] font-bold">Mechanical Drag & Bearing Wear</span></div>
+                      {/* Diagnostic & Quick Action Card */}
+                      <Card className="border-[#D2C9BA] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#1A222B]">
+                        <div className="flex items-center justify-between mb-2">
+                          <CardTitle>Root Cause Diagnosis</CardTitle>
+                          <Badge variant="critical">91% Bearing Spall</Badge>
+                        </div>
+
+                        <div className="space-y-2.5 font-mono text-[11px]">
+                          <div className="p-2.5 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#D2C9BA] dark:border-[#2C3847] rounded-md">
+                            <div className="text-[#8A8175] text-[10px] uppercase font-bold mb-1">Observed Correlation Chain</div>
+                            <div className="text-[#2A3138] dark:text-[#FAF8F4] leading-relaxed">
+                              Vib ↑ <strong className="text-[#C05043]">{liveValues.vib} mm/s</strong> + Current ↑ <strong className="text-[#B07B1C]">{liveValues.cur}A</strong> + ΔT ↓ <strong className="text-[#2C6E9B]">3.1°C</strong> → <span className="text-[#C05043] font-bold">Mechanical Drag & Spall</span>
+                            </div>
                           </div>
-                          <div className="bg-[#F1EDE6] dark:bg-[#141B22] border border-[#E6E0D6] dark:border-[#2C3847] rounded p-2.5">
-                            <div className="text-[#8A8175] text-[10px] uppercase mb-1">Explainability • Transparent</div>
-                            <div className="text-[#6E6558] dark:text-[#A0988A]">Model: Multivariate Isolation Forest + FFT • Spectral defect at 3.2x RPM (outer race) • Confidence 91% • RUL 168h ±24h • No black box • Seasonal ARIMA baseline 8–10 kWh</div>
+
+                          <div className="text-[10px] text-[#6E6558] dark:text-[#A0988A] leading-relaxed">
+                            Model: Multivariate Isolation Forest + FFT • Defect: 3.2x RPM (outer race) • RUL: ~168 hrs • ARIMA baseline: 8–10 kWh
                           </div>
-                          <div className="grid grid-cols-2 gap-2">
-                            <Button variant="critical" size="sm" onClick={() => handleCreateWorkOrder('AHU-03', '8821')}>Create WO #8821</Button>
-                            <Button variant="secondary" size="sm" onClick={() => setShowFieldSheet(true)}>Print Field Sheet</Button>
+
+                          <div className="pt-1 grid grid-cols-2 gap-2">
+                            <Button variant="critical" size="sm" onClick={() => handleCreateWorkOrder('AHU-03', '8821')}>
+                              Create WO #8821
+                            </Button>
+                            <Button variant="secondary" size="sm" onClick={() => setShowFieldSheet(true)}>
+                              Print Field Sheet
+                            </Button>
                             <Button 
                               variant="outline" 
                               size="sm" 
@@ -895,19 +1007,68 @@ function OperationalCockpit({
                           </div>
                         </div>
                       </Card>
-                      <Card>
-                        <CardTitle>Asset Context • Open Data</CardTitle>
-                        <div className="mt-2 space-y-2 font-mono text-[10px] text-[#6E6558] dark:text-[#A0988A]">
-                          <div className="flex justify-between"><span>Location</span><span className="text-[#1F2933] dark:text-[#FAF8F4]">East Wing • Roof Level 3</span></div>
-                          <div className="flex justify-between"><span>Model</span><span className="text-[#1F2933] dark:text-[#FAF8F4]">Trane M-Series • 2018</span></div>
-                          <div className="flex justify-between"><span>Last PM</span><span className="text-[#1F2933] dark:text-[#FAF8F4]">2026-08-14 • 29 days ago</span></div>
-                          <div className="flex justify-between"><span>Motor</span><span className="text-[#1F2933] dark:text-[#FAF8F4]">15 kW • 3-Phase • 1750 RPM</span></div>
-                          <div className="flex justify-between"><span>Bearing</span><span className="text-[#1F2933] dark:text-[#FAF8F4]">6205-2RS • SKF • 2x • Stock: 4</span></div>
-                          <div className="flex justify-between"><span>MQTT Topic</span><span className="text-[#2C6E9B] dark:text-[#58A6FF]">facility/unit01/ahu03/telemetry</span></div>
-                          <div className="flex justify-between"><span>Sampling</span><span className="text-[#1F2933] dark:text-[#FAF8F4]">{range} @ {range === '1H' ? '1m' : range === '24H' ? '15m' : '1h'}</span></div>
+
+                      {/* Tabbed Asset Specs & Maintenance Checklist */}
+                      <Card className="border-[#D2C9BA] dark:border-[#2C3847] bg-[#FFFFFF] dark:bg-[#1A222B]">
+                        <div className="flex items-center justify-between border-b border-[#E6E0D6] dark:border-[#2C3847] pb-2 mb-3">
+                          <div className="flex items-center gap-1 p-0.5 bg-[#FAF8F4] dark:bg-[#141B22] border border-[#D2C9BA] dark:border-[#2C3847] rounded-md font-mono text-[10px]">
+                            <button
+                              type="button"
+                              onClick={() => setDrilldownTab('specs')}
+                              className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
+                                drilldownTab === 'specs'
+                                  ? 'bg-[#2C6E9B] text-white font-bold'
+                                  : 'text-[#6E6558] dark:text-[#C5BCAD] hover:text-[#1F2933]'
+                              }`}
+                            >
+                              Asset Specs
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setDrilldownTab('checklist')}
+                              className={`px-2.5 py-1 rounded transition-colors cursor-pointer ${
+                                drilldownTab === 'checklist'
+                                  ? 'bg-[#2C6E9B] text-white font-bold'
+                                  : 'text-[#6E6558] dark:text-[#C5BCAD] hover:text-[#1F2933]'
+                              }`}
+                            >
+                              Field SOP Checklist
+                            </button>
+                          </div>
+                          <span className="font-mono text-[10px] text-[#8A8175]">AHU-03</span>
                         </div>
+
+                        {drilldownTab === 'specs' ? (
+                          <div className="space-y-2 font-mono text-[10px] text-[#6E6558] dark:text-[#A0988A]">
+                            <div className="flex justify-between py-1 border-b border-[#F1EDE6] dark:border-[#2C3847]">
+                              <span>Location</span>
+                              <span className="text-[#1F2933] dark:text-[#FAF8F4] font-medium">East Wing • Roof Level 3</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-[#F1EDE6] dark:border-[#2C3847]">
+                              <span>Model</span>
+                              <span className="text-[#1F2933] dark:text-[#FAF8F4] font-medium">Trane M-Series • 2018</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-[#F1EDE6] dark:border-[#2C3847]">
+                              <span>Motor</span>
+                              <span className="text-[#1F2933] dark:text-[#FAF8F4] font-medium">15 kW • 3-Phase • 1750 RPM</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-[#F1EDE6] dark:border-[#2C3847]">
+                              <span>Bearing</span>
+                              <span className="text-[#1F2933] dark:text-[#FAF8F4] font-medium">6205-2RS • SKF (Stock: 4)</span>
+                            </div>
+                            <div className="flex justify-between py-1 border-b border-[#F1EDE6] dark:border-[#2C3847]">
+                              <span>Last PM</span>
+                              <span className="text-[#1F2933] dark:text-[#FAF8F4] font-medium">2026-08-14 (29 days ago)</span>
+                            </div>
+                            <div className="flex justify-between py-1">
+                              <span>MQTT Stream</span>
+                              <span className="text-[#2C6E9B] dark:text-[#58A6FF] font-medium truncate max-w-[150px]">facility/unit01/ahu03</span>
+                            </div>
+                          </div>
+                        ) : (
+                          <MaintenanceChecklist onExport={handleExport} onPrintFieldSheet={() => setShowFieldSheet(true)} />
+                        )}
                       </Card>
-                      <MaintenanceChecklist onExport={handleExport} onPrintFieldSheet={() => setShowFieldSheet(true)} />
                     </div>
                   </div>
                 </section>

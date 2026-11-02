@@ -1,17 +1,17 @@
 import React from 'react';
 
 export const Button = ({ variant = 'primary', size = 'sm', children, className = '', ...props }) => {
-  const base = "inline-flex items-center justify-center font-mono text-[10px] font-bold uppercase tracking-wider rounded-lg border-2 border-[#1F2933] dark:border-[#2C3847] shadow-[2px_2px_0_#1F2933] dark:shadow-[2px_2px_0_#0F151C] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none transition-all focus:outline-none disabled:opacity-50 disabled:pointer-events-none cursor-pointer";
+  const base = "inline-flex items-center justify-center font-display text-[10px] font-bold uppercase rounded-[3px] border transition-colors focus:outline-none focus:ring-2 focus:ring-offset-1 disabled:opacity-50";
   const variants = {
-    primary: "bg-[#2C6E9B] text-[#FFFFFF] hover:bg-[#23587c]",
-    secondary: "bg-[#FFFFFF] dark:bg-[#1A222B] text-[#1F2933] dark:text-[#FAF8F4] hover:bg-[#FAF8F4] dark:hover:bg-[#202B37]",
-    ghost: "bg-transparent border-transparent shadow-none text-[#6E6558] dark:text-[#A0988A] hover:text-[#1F2933] dark:hover:text-[#FAF8F4] hover:bg-[#FAF8F4] dark:hover:bg-[#1A222B]",
-    critical: "bg-[#C05043] text-[#FFFFFF] hover:bg-[#9E3E33]",
-    teal: "bg-[#2E7D5B] text-[#FFFFFF] hover:bg-[#246348]"
+    primary: "bg-[#2C6E9B] border-[#2C6E9B] text-[#FFFFFF] hover:bg-[#1F5679] hover:border-[#1F5679] focus:ring-[#2C6E9B]/50",
+    secondary: "bg-[#FFFFFF] text-[#3E4650] border-[#D2C9BA] hover:bg-[#F1EDE6] hover:text-[#1F2933]",
+    ghost: "bg-transparent border-transparent text-[#6E6558] hover:text-[#1F2933] hover:bg-[#F1EDE6]",
+    critical: "bg-[#C05043] border-[#C05043] text-[#FFFFFF] hover:bg-[#9E3E33] hover:border-[#9E3E33]",
+    teal: "bg-[#2F8A7E] border-[#2F8A7E] text-[#FFFFFF] hover:bg-[#23665D] hover:border-[#23665D]"
   };
   const sizes = {
-    xs: "px-2 py-0.5 text-[9px]",
-    sm: "px-3 py-1.5 text-[10px]",
+    xs: "px-2.5 py-1 text-[10px]",
+    sm: "px-3 py-1.5",
     md: "px-4 py-2 text-xs"
   };
   return (

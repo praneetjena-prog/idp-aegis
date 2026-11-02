@@ -2,14 +2,14 @@ import React from 'react';
 
 export const Badge = ({ variant = 'nominal', children, className = '' }) => {
   const variants = {
-    nominal: "bg-[#2E7D5B]/10 text-[#2E7D5B] border-[#2E7D5B]/30",
-    attention: "bg-[#B07B1C]/10 text-[#B07B1C] border-[#B07B1C]/30",
-    critical: "bg-[#C05043]/10 text-[#C05043] border-[#C05043]/30",
-    info: "bg-[#2C6E9B]/10 text-[#2C6E9B] border-[#2C6E9B]/30",
-    neutral: "bg-[#E6E0D6] text-[#6E6558] border-[#D2C9BA]"
+    nominal: "bg-[#EAF5EE] dark:bg-[#2E7D5B]/20 text-[#1E563E] dark:text-[#72c987] border-[#2E7D5B]",
+    attention: "bg-[#FEF6E6] dark:bg-[#B07B1C]/20 text-[#7A530F] dark:text-[#e5b158] border-[#B07B1C]",
+    critical: "bg-[#FDECE9] dark:bg-[#C05043]/20 text-[#8C2E24] dark:text-[#e07569] border-[#C05043]",
+    info: "bg-[#E8F2F8] dark:bg-[#2C6E9B]/20 text-[#1D5174] dark:text-[#62a8d2] border-[#2C6E9B]",
+    neutral: "bg-[#F1EDE6] dark:bg-[#1A222B] text-[#4F463B] dark:text-[#A0988A] border-[#1F2933] dark:border-[#3D5355]"
   };
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[10px] font-mono font-semibold tracking-wider uppercase border ${variants[variant]} ${className}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] sm:text-[10px] font-mono font-bold tracking-wider uppercase border-[1.5px] shadow-[1px_1px_0_#1F2933] dark:shadow-none ${variants[variant]} ${className}`}>
       {children}
     </span>
   );

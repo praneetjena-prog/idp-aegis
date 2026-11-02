@@ -59,10 +59,10 @@
 }
 
 :root {
-  --radius: 0.75rem;
+  --radius: 0.25rem;
 
-  --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
-  --font-display: "Sora", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
 
   /* Cloud white canvas, pastel beige surfaces */
@@ -201,6 +201,41 @@
 
 @utility animate-reveal {
   animation: reveal 0.8s var(--ease-out-expo) both;
+}
+
+/* Minimal Neo-Brutalist Editorial Design Utilities */
+.editorial-grid {
+  background-image: 
+    linear-gradient(to right, rgba(31, 41, 51, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(31, 41, 51, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.dark .editorial-grid {
+  background-image: 
+    linear-gradient(to right, rgba(250, 248, 244, 0.04) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(250, 248, 244, 0.04) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.neo-box {
+  border: 2px solid #1F2933;
+  box-shadow: 4px 4px 0 #1F2933;
+}
+
+.dark .neo-box {
+  border: 2px solid #304346;
+  box-shadow: 4px 4px 0 #0F151C;
+}
+
+.neo-box-sm {
+  border: 2px solid #1F2933;
+  box-shadow: 2px 2px 0 #1F2933;
+}
+
+.dark .neo-box-sm {
+  border: 2px solid #304346;
+  box-shadow: 2px 2px 0 #0F151C;
 }
 
 /* Print Styles for Maintenance Work Orders */
